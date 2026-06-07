@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -6,14 +8,14 @@ plugins {
 
 // Signing: read keystore.properties locally; in CI values come from env vars.
 val keystoreProps = rootProject.file("keystore.properties").takeIf { it.exists() }
-    ?.let { java.util.Properties().apply { load(it.inputStream()) } }
+    ?.let { Properties().apply { load(it.inputStream()) } }
 
 android {
-    namespace = "ntufar.github.io.deltasleep"
+    namespace = "io.github.ntufar.deltasleep"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "ntufar.github.io.deltasleep"
+        applicationId = "io.github.ntufar.deltasleep"
         minSdk = 26
         targetSdk = 34
         versionCode = 1
