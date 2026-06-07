@@ -221,6 +221,11 @@ jobs:
           files: app/build/outputs/apk/release/app-release*.apk
           body_path: release-notes.md
 
+      - name: Prepare Play Store release notes
+        run: |
+          mkdir -p play-store-notes/en-US
+          cp release-notes.md play-store-notes/en-US/default.txt
+
       - name: Publish to Play Store — Internal Testing
         uses: r0adkll/upload-google-play@v1
         with:
@@ -230,3 +235,4 @@ jobs:
           track: internal
           status: completed
           releaseName: ${{ github.ref_name }}
+          whatsNewDirectory: play-store-notes

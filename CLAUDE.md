@@ -97,6 +97,9 @@ cd dsp && cargo ndk -t arm64-v8a -t x86_64 -o ../app/src/main/jniLibs build --re
 
 # Check Rust code
 cd dsp && cargo clippy && cargo test
+
+# Verify 16 KB page-size alignment of the ARM64 .so (must show max-page-size=16384)
+readelf -l app/src/main/jniLibs/arm64-v8a/libdeltasleep_dsp.so | grep -E "LOAD|alignment"
 ```
 
 ### CI network-egress check

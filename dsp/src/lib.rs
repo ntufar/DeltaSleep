@@ -63,7 +63,7 @@ fn acc() -> &'static Mutex<Accumulator> {
 /// Process one 10 ms frame of 16 kHz mono PCM.
 /// Returns float[3]: [rms, zcr, band_power_ratio].
 #[no_mangle]
-pub extern "system" fn Java_ntufar_github_io_deltasleep_audio_DspBridge_processFrame<'local>(
+pub extern "system" fn Java_io_github_ntufar_deltasleep_audio_DspBridge_processFrame<'local>(
     env: JNIEnv<'local>,
     _obj: JObject<'local>,
     samples: JShortArray<'local>,
@@ -88,7 +88,7 @@ pub extern "system" fn Java_ntufar_github_io_deltasleep_audio_DspBridge_processF
 /// Summarise the accumulated epoch.
 /// Returns float[6]: [mean_rms, rms_variance, mean_zcr, mean_band_ratio, phase_ordinal, snore_flag].
 #[no_mangle]
-pub extern "system" fn Java_ntufar_github_io_deltasleep_audio_DspBridge_computeEpoch<'local>(
+pub extern "system" fn Java_io_github_ntufar_deltasleep_audio_DspBridge_computeEpoch<'local>(
     env: JNIEnv<'local>,
     _obj: JObject<'local>,
 ) -> JFloatArray<'local> {
@@ -110,7 +110,7 @@ pub extern "system" fn Java_ntufar_github_io_deltasleep_audio_DspBridge_computeE
 
 /// Discard accumulated epoch data and reset IIR filter state.
 #[no_mangle]
-pub extern "system" fn Java_ntufar_github_io_deltasleep_audio_DspBridge_resetEpoch<'local>(
+pub extern "system" fn Java_io_github_ntufar_deltasleep_audio_DspBridge_resetEpoch<'local>(
     _env: JNIEnv<'local>,
     _obj: JObject<'local>,
 ) {
