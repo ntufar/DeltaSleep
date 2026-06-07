@@ -2,7 +2,7 @@ name: Deploy Web
 
 on:
   push:
-    branches: [main]
+    branches: [master]
     paths: ['web/**']
   workflow_dispatch:
 
