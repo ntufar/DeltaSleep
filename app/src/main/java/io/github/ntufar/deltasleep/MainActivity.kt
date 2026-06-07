@@ -12,6 +12,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import io.github.ntufar.deltasleep.ui.ActiveSleepScreen
 import io.github.ntufar.deltasleep.ui.HomeScreen
 import io.github.ntufar.deltasleep.ui.SessionScreen
 import io.github.ntufar.deltasleep.ui.theme.DeltaSleepTheme
@@ -49,6 +50,23 @@ private fun DeltaSleepNavGraph() {
         composable("home") {
             HomeScreen(
                 onSessionTap = { sessionId -> nav.navigate("session/$sessionId") },
+                onActiveSession = { sessionId ->
+                    nav.navigate("active/$sessionId") {
+                        launchSingleTop = true
+                    }
+                },
+            )
+        }
+        composable(
+            route = "active/{sessionId}",
+            arguments = listOf(navArgument("sessionId") { type = NavType.LongType }),
+        ) {
+            ActiveSleepScreen(
+                onStop = { sessionId ->
+                    nav.navigate("session/$sessionId") {
+                        popUpTo("home")
+                    }
+                },
             )
         }
         composable(

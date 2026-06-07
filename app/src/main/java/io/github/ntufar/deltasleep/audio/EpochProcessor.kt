@@ -17,8 +17,12 @@ class EpochProcessor(private val dsp: DspBridge) {
     private var frameCount = 0
     private val framesPerEpoch = (EPOCH_DURATION_MS / FRAME_DURATION_MS).toInt()
 
+    /** Most recent per-frame metrics: [rms, zcr, band_power_ratio]. Updated on every frame. */
+    var lastFrameMetrics: FloatArray = FloatArray(3)
+        private set
+
     fun onFrame(samples: ShortArray): SleepEpoch? {
-        dsp.processFrame(samples)
+        lastFrameMetrics = dsp.processFrame(samples)
         frameCount++
         return if (frameCount >= framesPerEpoch) flush() else null
     }

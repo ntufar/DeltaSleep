@@ -21,15 +21,13 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     val isTracking: StateFlow<Boolean> = SleepTrackingService.isTracking
-
-    private var activeSessionId: Long = -1L
+    val activeSessionId: StateFlow<Long> = SleepTrackingService.activeSessionId
 
     fun startTracking() {
         viewModelScope.launch {
             val sessionId = db.sessionDao().insert(
                 SleepSession(startTime = System.currentTimeMillis())
             )
-            activeSessionId = sessionId
             val intent = Intent(getApplication(), SleepTrackingService::class.java).apply {
                 action = SleepTrackingService.ACTION_START
                 putExtra(SleepTrackingService.EXTRA_SESSION_ID, sessionId)
@@ -38,9 +36,9 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun stopTracking(): Long {
+    fun stopTracking(sessionId: Long) {
         viewModelScope.launch {
-            db.sessionDao().getById(activeSessionId)?.let { session ->
+            db.sessionDao().getById(sessionId)?.let { session ->
                 db.sessionDao().update(session.copy(endTime = System.currentTimeMillis()))
             }
             getApplication<Application>().startService(
@@ -49,7 +47,6 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
                 }
             )
         }
-        return activeSessionId
     }
 
     fun nukeAllData() {

@@ -43,6 +43,7 @@ class SleepTrackingService : Service() {
                 startForeground(NOTIF_ID, buildNotification())
                 startCapture()
                 _isTracking.value = true
+                _activeSessionId.value = sessionId
             }
             ACTION_STOP -> stopSelf()
         }
@@ -52,9 +53,17 @@ class SleepTrackingService : Service() {
     private fun startCapture() {
         val db = AppDatabase.getInstance(this)
         scope.launch {
+            var emitCounter = 0
             capture.frames().collect { frame ->
                 processor.onFrame(frame)?.let { epoch ->
                     db.epochDao().insert(epoch.copy(sessionId = sessionId))
+                }
+                emitCounter++
+                // Emit live metrics at ~2 Hz (every 50 frames × 10 ms = 500 ms)
+                if (emitCounter >= 50) {
+                    emitCounter = 0
+                    val m = processor.lastFrameMetrics
+                    _liveFrame.value = LiveFrame(rms = m[0], zcr = m[1], bandRatio = m[2])
                 }
             }
         }
@@ -64,6 +73,8 @@ class SleepTrackingService : Service() {
         scope.cancel()
         processor.reset()
         _isTracking.value = false
+        _activeSessionId.value = -1L
+        _liveFrame.value = null
         super.onDestroy()
     }
 
@@ -106,7 +117,15 @@ class SleepTrackingService : Service() {
         private const val CHANNEL_ID = "sleep_tracking"
         private const val NOTIF_ID = 1
 
+        data class LiveFrame(val rms: Float, val zcr: Float, val bandRatio: Float)
+
         private val _isTracking = MutableStateFlow(false)
         val isTracking: StateFlow<Boolean> = _isTracking
+
+        private val _activeSessionId = MutableStateFlow(-1L)
+        val activeSessionId: StateFlow<Long> = _activeSessionId
+
+        private val _liveFrame = MutableStateFlow<LiveFrame?>(null)
+        val liveFrame: StateFlow<LiveFrame?> = _liveFrame
     }
 }

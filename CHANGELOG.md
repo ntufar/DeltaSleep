@@ -5,6 +5,17 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — Versioning:
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-06-08
+
+### Added
+- Active sleep monitoring screen shown immediately when tracking starts
+- Rolling 30-second waveform displaying audio level (RMS), zero-crossing rate, and snore-band power as live overlaid graphs
+- Current sleep-phase badge (Awake / Light / Deep) updated every 30-second epoch
+- Elapsed time clock (HH:MM:SS) counting from session start
+- Animated snore indicator that pulses red when the last epoch detected snoring
+- Screen kept on automatically during active tracking
+- CI now builds a signed AAB and publishes it to Play Store Internal Testing on every `v*` tag
+
 ## [0.1.0] - 2026-06-08
 
 ### Added

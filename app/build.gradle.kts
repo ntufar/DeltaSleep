@@ -18,8 +18,8 @@ android {
         applicationId = "io.github.ntufar.deltasleep"
         minSdk = 26
         targetSdk = 35
-        versionCode = 2
-        versionName = "0.1.1"
+        versionCode = 3
+        versionName = "0.1.2"
     }
 
     signingConfigs {
@@ -62,6 +62,12 @@ android {
 
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.10"
+    }
+
+    packaging {
+        // Store .so files uncompressed so the OS can mmap them directly,
+        // which is required for 16 KB page-size alignment (Android 15+).
+        jniLibs.useLegacyPackaging = false
     }
 }
 

@@ -21,6 +21,9 @@ interface SleepSessionDao {
     @Query("SELECT * FROM sleep_sessions WHERE id = :id")
     suspend fun getById(id: Long): SleepSession?
 
+    @Query("SELECT * FROM sleep_sessions WHERE id = :id")
+    fun observeById(id: Long): Flow<SleepSession?>
+
     @Query("DELETE FROM sleep_sessions")
     suspend fun deleteAll()
 }

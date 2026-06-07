@@ -20,6 +20,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -40,11 +41,18 @@ import java.util.concurrent.TimeUnit
 @Composable
 fun HomeScreen(
     onSessionTap: (Long) -> Unit,
+    onActiveSession: (Long) -> Unit,
     vm: HomeViewModel = viewModel(),
 ) {
     val sessions by vm.sessions.collectAsState()
     val isTracking by vm.isTracking.collectAsState()
+    val activeSessionId by vm.activeSessionId.collectAsState()
     var showNukeDialog by remember { mutableStateOf(false) }
+
+    // Auto-navigate to the active screen whenever tracking starts
+    LaunchedEffect(activeSessionId) {
+        if (activeSessionId >= 0L) onActiveSession(activeSessionId)
+    }
 
     Column(
         modifier = Modifier
@@ -57,17 +65,17 @@ fun HomeScreen(
         Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
             Button(
                 onClick = {
-                    if (isTracking) vm.stopTracking().let { id ->
-                        if (id >= 0) onSessionTap(id)
-                    }
+                    if (isTracking && activeSessionId >= 0L) onActiveSession(activeSessionId)
                     else vm.startTracking()
                 },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isTracking) Color(0xFFE53935) else MaterialTheme.colorScheme.primary,
+                    containerColor = if (isTracking) Color(0xFF00897B) else MaterialTheme.colorScheme.primary,
                 ),
             ) {
-                Text(if (isTracking) "Stop Sleep" else "Start Sleep",
-                    style = MaterialTheme.typography.titleLarge)
+                Text(
+                    if (isTracking) "View Active Session" else "Start Sleep",
+                    style = MaterialTheme.typography.titleLarge,
+                )
             }
         }
 

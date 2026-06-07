@@ -205,8 +205,8 @@ jobs:
       - name: Decode keystore
         run: echo "${{ secrets.KEYSTORE_FILE }}" | base64 --decode > release.keystore
 
-      - name: Build release APK
-        run: ./gradlew :app:assembleRelease --no-daemon
+      - name: Build release APK + AAB
+        run: ./gradlew :app:assembleRelease :app:bundleRelease --no-daemon
         env:
           KEYSTORE_PATH:     release.keystore
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -219,3 +219,13 @@ jobs:
         with:
           files: app/build/outputs/apk/release/app-release*.apk
           body_path: release-notes.md
+
+      - name: Publish to Play Store — Internal Testing
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: io.github.ntufar.deltasleep
+          releaseFiles: app/build/outputs/bundle/release/app-release.aab
+          track: internal
+          status: completed
+          releaseName: ${{ github.ref_name }}
