@@ -1,5 +1,6 @@
 package io.github.ntufar.deltasleep.ui
 
+import android.graphics.Paint
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -8,9 +9,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.dp
 import io.github.ntufar.deltasleep.data.model.SleepEpoch
 import io.github.ntufar.deltasleep.data.model.SleepPhase
+import java.util.Calendar
 
 private val PHASE_ROWS = mapOf(
     SleepPhase.AWAKE to 0,
@@ -19,39 +23,45 @@ private val PHASE_ROWS = mapOf(
 )
 
 /**
- * Draws a standard hypnogram: X=time, Y=sleep phase.
- * Snore epochs are tinted with a semi-transparent magenta overlay.
+ * Hypnogram: X = time, Y = sleep phase (Awake / Light / Deep).
+ * Snore epochs get a semi-transparent magenta column overlay.
+ * Hour labels are drawn along the bottom when startMs / endMs are provided.
  */
 @Composable
-fun HypnogramChart(epochs: List<SleepEpoch>, modifier: Modifier = Modifier) {
+fun HypnogramChart(
+    epochs: List<SleepEpoch>,
+    startMs: Long = 0L,
+    endMs: Long = 0L,
+    modifier: Modifier = Modifier,
+) {
     Canvas(
         modifier = modifier
             .fillMaxWidth()
-            .height(160.dp),
+            .height(180.dp),
     ) {
         if (epochs.isEmpty()) return@Canvas
+
+        val hasTimeAxis = startMs > 0L && endMs > startMs
+        val timeAxisH = if (hasTimeAxis) 22.dp.toPx() else 0f
+        val chartH = size.height - timeAxisH
+
         val rows = PHASE_ROWS.size.toFloat()
-        val rowH = size.height / rows
+        val rowH = chartH / rows
         val epochW = size.width / epochs.size.toFloat()
 
+        // Phase blocks
         epochs.forEachIndexed { i, epoch ->
             val row = PHASE_ROWS[epoch.phase] ?: 0
-            val left = i * epochW
-            val top = row * rowH
-
-            // Phase block
             drawRect(
                 color = epoch.phase.color,
-                topLeft = Offset(left, top),
+                topLeft = Offset(i * epochW, row * rowH),
                 size = Size(epochW, rowH),
             )
-
-            // Snore tint
             if (epoch.hasSnore) {
                 drawRect(
                     color = Color(0x55FF4081),
-                    topLeft = Offset(left, 0f),
-                    size = Size(epochW, size.height),
+                    topLeft = Offset(i * epochW, 0f),
+                    size = Size(epochW, chartH),
                 )
             }
         }
@@ -59,11 +69,52 @@ fun HypnogramChart(epochs: List<SleepEpoch>, modifier: Modifier = Modifier) {
         // Row dividers
         for (row in 1 until rows.toInt()) {
             drawLine(
-                color = Color(0x33FFFFFF),
+                color = Color(0x33000000),
                 start = Offset(0f, row * rowH),
                 end = Offset(size.width, row * rowH),
                 strokeWidth = 1f,
             )
+        }
+
+        // Time axis
+        if (hasTimeAxis) {
+            val durationMs = endMs - startMs
+            val textPaint = Paint().apply {
+                color = Color(0xFF888888).toArgb()
+                textSize = 26f
+                isAntiAlias = true
+                textAlign = Paint.Align.CENTER
+            }
+
+            // Tick at each whole hour within the session
+            val cal = Calendar.getInstance().apply {
+                timeInMillis = startMs
+                add(Calendar.HOUR_OF_DAY, 1)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }
+            while (cal.timeInMillis <= endMs) {
+                val frac = (cal.timeInMillis - startMs).toFloat() / durationMs
+                val x = frac * size.width
+                drawLine(
+                    color = Color(0x44000000),
+                    start = Offset(x, 0f),
+                    end = Offset(x, chartH),
+                    strokeWidth = 1f,
+                )
+                val hourLabel = "%d:%02d".format(
+                    cal.get(Calendar.HOUR_OF_DAY),
+                    cal.get(Calendar.MINUTE),
+                )
+                drawContext.canvas.nativeCanvas.drawText(
+                    hourLabel,
+                    x,
+                    size.height - 4.dp.toPx(),
+                    textPaint,
+                )
+                cal.add(Calendar.HOUR_OF_DAY, 1)
+            }
         }
     }
 }

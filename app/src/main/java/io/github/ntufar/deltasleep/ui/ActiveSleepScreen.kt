@@ -27,6 +27,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -45,6 +46,9 @@ private val RmsColor = Color(0xFF00E676)   // green — audio level
 private val ZcrColor = Color(0xFF40C4FF)   // light-blue — zero-crossing rate
 private val BandColor = Color(0xFFFFAB40)  // amber — snore-band power
 
+private const val GRAPH_SLOTS = 60f  // 60 samples × 500 ms = 30 s window
+private const val SMOOTH_WINDOW = 5  // samples for moving-average smoothing
+
 @Composable
 fun ActiveSleepScreen(
     onStop: (Long) -> Unit,
@@ -57,7 +61,6 @@ fun ActiveSleepScreen(
     val hasSnore by vm.hasRecentSnore.collectAsState()
     val elapsedMs by vm.elapsedMs.collectAsState()
 
-    // Keep screen on while this screen is visible
     val view = LocalView.current
     DisposableEffect(Unit) {
         view.keepScreenOn = true
@@ -74,12 +77,10 @@ fun ActiveSleepScreen(
                 .padding(horizontal = 20.dp, vertical = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            // Phase badge
             PhaseBadge(phase)
 
             Spacer(Modifier.height(24.dp))
 
-            // Elapsed time clock
             Text(
                 text = formatElapsed(elapsedMs),
                 color = Color.White,
@@ -89,34 +90,26 @@ fun ActiveSleepScreen(
 
             Spacer(Modifier.height(32.dp))
 
-            // Sensor graph card
+            // Three separate sensor graphs
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
                     .background(Color(0xFF141A23))
                     .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                SensorLegend()
-                Spacer(Modifier.height(8.dp))
-                SensorGraph(
-                    rms = rmsHistory,
-                    zcr = zcrHistory,
-                    band = bandHistory,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(180.dp),
-                )
+                MiniSignalGraph(label = "Audio level",    data = rmsHistory,  color = RmsColor)
+                MiniSignalGraph(label = "Zero-crossing",  data = zcrHistory,  color = ZcrColor)
+                MiniSignalGraph(label = "Snore band",     data = bandHistory, color = BandColor)
             }
 
             Spacer(Modifier.height(24.dp))
 
-            // Snore indicator
             SnoreIndicator(hasSnore)
 
             Spacer(Modifier.weight(1f))
 
-            // Stop button
             Button(
                 onClick = {
                     vm.stopTracking()
@@ -130,6 +123,66 @@ fun ActiveSleepScreen(
                 Text("Stop Tracking", style = MaterialTheme.typography.titleMedium)
             }
         }
+    }
+}
+
+@Composable
+private fun MiniSignalGraph(
+    label: String,
+    data: List<Float>,
+    color: Color,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier) {
+        Row(verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Canvas(Modifier.size(10.dp, 3.dp)) { drawRect(color) }
+            Text(label, color = color.copy(alpha = 0.8f), style = MaterialTheme.typography.labelSmall)
+        }
+        Spacer(Modifier.height(4.dp))
+        Canvas(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(55.dp),
+        ) {
+            val w = size.width
+            val h = size.height
+            val smoothed = smooth(data)
+
+            // Grid — single mid-line
+            drawLine(
+                color = GridColor,
+                start = Offset(0f, h * 0.5f),
+                end = Offset(w, h * 0.5f),
+                strokeWidth = 1f,
+            )
+
+            if (smoothed.size < 2) return@Canvas
+
+            // Stable y-scale: 95th-percentile max to suppress transient spikes
+            val sorted = smoothed.sorted()
+            val pIdx = (sorted.size * 0.95f).toInt().coerceAtMost(sorted.lastIndex)
+            val maxVal = sorted[pIdx].coerceAtLeast(1e-6f)
+
+            val xStep = w / (GRAPH_SLOTS - 1)
+            val offset = GRAPH_SLOTS - smoothed.size
+
+            val path = Path()
+            smoothed.forEachIndexed { i, v ->
+                val x = (offset + i) * xStep
+                val y = h * (1f - (v / maxVal).coerceIn(0f, 1f))
+                if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
+            }
+            drawPath(path, color = color, style = Stroke(width = 2.dp.toPx()))
+        }
+    }
+}
+
+private fun smooth(data: List<Float>, window: Int = SMOOTH_WINDOW): List<Float> {
+    if (data.size < 2) return data
+    return data.mapIndexed { i, _ ->
+        val from = maxOf(0, i - window + 1)
+        data.subList(from, i + 1).average().toFloat()
     }
 }
 
@@ -173,73 +226,6 @@ private fun SnoreIndicator(active: Boolean) {
             color = textColor,
             style = MaterialTheme.typography.bodyMedium,
         )
-    }
-}
-
-@Composable
-private fun SensorLegend() {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        LegendItem(RmsColor, "Audio level")
-        LegendItem(ZcrColor, "Zero-crossing")
-        LegendItem(BandColor, "Snore band")
-    }
-}
-
-@Composable
-private fun LegendItem(color: Color, label: String) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-    ) {
-        Canvas(Modifier.size(10.dp, 3.dp)) {
-            drawRect(color)
-        }
-        Text(label, color = color.copy(alpha = 0.8f), style = MaterialTheme.typography.labelSmall)
-    }
-}
-
-@Composable
-private fun SensorGraph(
-    rms: List<Float>,
-    zcr: List<Float>,
-    band: List<Float>,
-    modifier: Modifier = Modifier,
-) {
-    Canvas(modifier = modifier) {
-        val w = size.width
-        val h = size.height
-        val slots = 60f  // always render for full 30-second window
-
-        // Horizontal grid lines at 25%, 50%, 75%
-        listOf(0.25f, 0.5f, 0.75f).forEach { frac ->
-            drawLine(
-                color = GridColor,
-                start = androidx.compose.ui.geometry.Offset(0f, h * frac),
-                end = androidx.compose.ui.geometry.Offset(w, h * frac),
-                strokeWidth = 1f,
-            )
-        }
-
-        fun drawSignal(data: List<Float>, color: Color) {
-            if (data.size < 2) return
-            val maxVal = data.max().coerceAtLeast(1e-6f)
-            val xStep = w / (slots - 1)
-            val offset = slots - data.size  // left-pad empty space as signal fills in
-
-            val path = Path()
-            data.forEachIndexed { i, v ->
-                val x = (offset + i) * xStep
-                val y = h * (1f - (v / maxVal))
-                if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
-            }
-            drawPath(path, color = color, style = Stroke(width = 2.dp.toPx()))
-        }
-
-        drawSignal(band, BandColor)
-        drawSignal(zcr, ZcrColor)
-        drawSignal(rms, RmsColor)
     }
 }
 
