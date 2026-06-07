@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="DeltaSleep — free, open-source sleep tracker that never sends your data anywhere. Runs 100% offline." />
+  <title>DeltaSleep — Your sleep data stays in your bed</title>
+  <style>
+    :root {
+      --bg:       #0a0e1a;
+      --surface:  #12192b;
+      --border:   #1e2d4a;
+      --primary:  #42a5f5;
+      --deep:     #1565c0;
+      --awake:    #e53935;
+      --rem:      #ab47bc;
+      --text:     #e0e8ff;
+      --muted:    #7a8fb5;
+      --radius:   12px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    a { color: var(--primary); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ── Layout helpers ── */
+    .container { max-width: 900px; margin: 0 auto; padding: 0 24px; }
+    section { padding: 80px 0; }
+
+    /* ── Nav ── */
+    nav {
+      position: sticky; top: 0; z-index: 10;
+      background: rgba(10, 14, 26, 0.88);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    nav .inner {
+      max-width: 900px; margin: 0 auto; padding: 0 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 56px;
+    }
+    nav .logo { font-weight: 700; font-size: 1.1rem; color: var(--text); letter-spacing: -.5px; }
+    nav .logo span { color: var(--primary); }
+    nav ul { list-style: none; display: flex; gap: 28px; }
+    nav ul a { color: var(--muted); font-size: 0.9rem; }
+    nav ul a:hover { color: var(--text); text-decoration: none; }
+
+    /* ── Hero ── */
+    #hero {
+      padding: 100px 0 80px;
+      text-align: center;
+    }
+    #hero .eyebrow {
+      display: inline-block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--primary);
+      background: rgba(66, 165, 245, 0.12);
+      border: 1px solid rgba(66, 165, 245, 0.25);
+      border-radius: 99px;
+      padding: 4px 14px;
+      margin-bottom: 28px;
+    }
+    #hero h1 {
+      font-size: clamp(2.4rem, 6vw, 3.8rem);
+      font-weight: 800;
+      letter-spacing: -1.5px;
+      line-height: 1.1;
+      margin-bottom: 20px;
+    }
+    #hero h1 em { color: var(--primary); font-style: normal; }
+    #hero p {
+      font-size: 1.2rem;
+      color: var(--muted);
+      max-width: 520px;
+      margin: 0 auto 40px;
+    }
+    .btn-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 12px 24px; border-radius: 8px;
+      font-weight: 600; font-size: 0.95rem;
+      transition: opacity .15s, transform .15s;
+    }
+    .btn:hover { opacity: .85; transform: translateY(-1px); text-decoration: none; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    /* ── Hypnogram demo ── */
+    .hypnogram-demo {
+      margin: 60px auto 0;
+      max-width: 680px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+    }
+    .hypno-label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-bottom: 10px;
+      display: flex; justify-content: space-between;
+    }
+    .hypno-track {
+      display: flex;
+      height: 60px;
+      border-radius: 6px;
+      overflow: hidden;
+      gap: 1px;
+    }
+    .hypno-track div { flex: 1; }
+
+    /* ── Privacy banner ── */
+    #privacy {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .privacy-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
+    }
+    @media (max-width: 640px) { .privacy-inner { grid-template-columns: 1fr; } }
+    .privacy-inner h2 { font-size: 2rem; font-weight: 800; letter-spacing: -.5px; margin-bottom: 16px; }
+    .privacy-inner p { color: var(--muted); margin-bottom: 16px; }
+    .guarantee-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .guarantee-list li {
+      display: flex; align-items: flex-start; gap: 10px;
+      font-size: 0.95rem;
+    }
+    .check { color: var(--primary); font-size: 1.1rem; flex-shrink: 0; }
+    .code-pill {
+      font-family: ui-monospace, "Cascadia Code", monospace;
+      font-size: 0.75rem;
+      background: rgba(66,165,245,.1);
+      border: 1px solid rgba(66,165,245,.2);
+      border-radius: 4px;
+      padding: 2px 6px;
+      color: var(--primary);
+    }
+    .no-internet {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      font-family: ui-monospace, "Cascadia Code", monospace;
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.9;
+    }
+    .no-internet .comment { color: #3d5070; }
+    .no-internet .perm { color: var(--awake); }
+
+    /* ── Features grid ── */
+    #features h2 { text-align: center; font-size: 2rem; font-weight: 800; letter-spacing: -.5px; margin-bottom: 48px; }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+    }
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+    .feature-card .icon { font-size: 1.8rem; margin-bottom: 12px; }
+    .feature-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
+    .feature-card p { color: var(--muted); font-size: 0.9rem; }
+
+    /* ── Phase legend ── */
+    .phase-legend {
+      display: flex; gap: 16px; flex-wrap: wrap;
+      margin-top: 48px; justify-content: center;
+    }
+    .phase-item { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; }
+    .phase-dot { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+
+    /* ── How it works ── */
+    #how { background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    #how h2 { text-align: center; font-size: 2rem; font-weight: 800; letter-spacing: -.5px; margin-bottom: 48px; }
+    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px; }
+    .step { text-align: center; }
+    .step-num {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: rgba(66,165,245,.15); border: 1px solid rgba(66,165,245,.3);
+      color: var(--primary); font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px;
+    }
+    .step h3 { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
+    .step p { color: var(--muted); font-size: 0.9rem; }
+
+    /* ── Stack ── */
+    #stack h2 { text-align: center; font-size: 2rem; font-weight: 800; letter-spacing: -.5px; margin-bottom: 48px; }
+    .stack-table { width: 100%; border-collapse: collapse; }
+    .stack-table td { padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+    .stack-table td:first-child { color: var(--muted); width: 140px; }
+    .stack-table tr:last-child td { border-bottom: none; }
+    .stack-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 32px 0;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+    footer a { color: var(--muted); }
+    footer a:hover { color: var(--text); }
+  </style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav>
+  <div class="inner">
+    <span class="logo">Delta<span>Sleep</span></span>
+    <ul>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#how">How it works</a></li>
+      <li><a href="#stack">Stack</a></li>
+      <li><a href="https://github.com/ntufar/DeltaSleep">GitHub</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section id="hero">
+  <div class="container">
+    <div class="eyebrow">Free &amp; Open Source · GPLv3</div>
+    <h1>Your sleep data<br/><em>stays in your bed</em></h1>
+    <p>On-device sleep phase and snore tracking. No account. No cloud. No network calls — ever. Verified by CI on every commit.</p>
+    <div class="btn-row">
+      <a class="btn btn-primary" href="https://github.com/ntufar/DeltaSleep/releases">
+        ↓ Download APK
+      </a>
+      <a class="btn btn-outline" href="https://github.com/ntufar/DeltaSleep">
+        View on GitHub
+      </a>
+    </div>
+
+    <!-- Decorative hypnogram -->
+    <div class="hypnogram-demo">
+      <div class="hypno-label">
+        <span>23:00</span><span>01:00</span><span>03:00</span><span>05:00</span><span>07:00</span>
+      </div>
+      <div class="hypno-track">
+        <!-- Awake bursts at start -->
+        <div style="background:#e53935;flex:2"></div>
+        <!-- Light -->
+        <div style="background:#42a5f5;flex:3"></div>
+        <!-- Deep -->
+        <div style="background:#1565c0;flex:4"></div>
+        <!-- Light -->
+        <div style="background:#42a5f5;flex:2"></div>
+        <!-- Awake briefly (WASO) -->
+        <div style="background:#e53935;flex:1"></div>
+        <!-- Deep -->
+        <div style="background:#1565c0;flex:3"></div>
+        <!-- Light with snore tint via gradient -->
+        <div style="background:linear-gradient(#42a5f5 60%,#42a5f566 60%);flex:3"></div>
+        <!-- Light -->
+        <div style="background:#42a5f5;flex:2"></div>
+        <!-- Awake — morning -->
+        <div style="background:#e53935;flex:2"></div>
+      </div>
+      <div style="margin-top:10px; display:flex; gap:16px; flex-wrap:wrap;">
+        <span style="display:flex;align-items:center;gap:6px;font-size:.78rem;color:#7a8fb5">
+          <span style="width:10px;height:10px;background:#e53935;border-radius:2px;display:inline-block"></span> Awake
+        </span>
+        <span style="display:flex;align-items:center;gap:6px;font-size:.78rem;color:#7a8fb5">
+          <span style="width:10px;height:10px;background:#42a5f5;border-radius:2px;display:inline-block"></span> Light
+        </span>
+        <span style="display:flex;align-items:center;gap:6px;font-size:.78rem;color:#7a8fb5">
+          <span style="width:10px;height:10px;background:#1565c0;border-radius:2px;display:inline-block"></span> Deep
+        </span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Privacy -->
+<section id="privacy">
+  <div class="container">
+    <div class="privacy-inner">
+      <div>
+        <h2>Privacy isn't a feature.<br/>It's the architecture.</h2>
+        <p>Most sleep apps treat your most vulnerable hours as a data source. DeltaSleep is built around a different premise: your data is yours, full stop.</p>
+        <ul class="guarantee-list">
+          <li><span class="check">✓</span> No <span class="code-pill">INTERNET</span> permission in the manifest</li>
+          <li><span class="check">✓</span> CI fails if <span class="code-pill">http</span>, <span class="code-pill">socket</span>, or <span class="code-pill">fetch</span> appear in source</li>
+          <li><span class="check">✓</span> Raw audio is never written to disk</li>
+          <li><span class="check">✓</span> Reproducible F-Droid build, no binary blobs</li>
+          <li><span class="check">✓</span> "Nuke all data" overwrites the database before deleting</li>
+        </ul>
+      </div>
+      <div class="no-internet">
+        <span class="comment">&lt;!-- AndroidManifest.xml --&gt;</span><br/>
+        <br/>
+        <span class="comment">&lt;!-- No INTERNET permission.</span><br/>
+        <span class="comment">     Enforced by design. --&gt;</span><br/>
+        <br/>
+        <span class="perm">&lt;uses-permission</span><br/>
+        &nbsp;&nbsp;android:name=<br/>
+        &nbsp;&nbsp;"android.permission<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;.RECORD_AUDIO" /&gt;<br/>
+        <span class="perm">&lt;uses-permission</span><br/>
+        &nbsp;&nbsp;android:name=<br/>
+        &nbsp;&nbsp;"android.permission<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;.FOREGROUND_SERVICE" /&gt;<br/>
+        <span class="perm">&lt;uses-permission</span><br/>
+        &nbsp;&nbsp;android:name=<br/>
+        &nbsp;&nbsp;"android.permission<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;.POST_NOTIFICATIONS" /&gt;
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section id="features">
+  <div class="container">
+    <h2>Everything you need.<br/>Nothing you don't.</h2>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="icon">🌙</div>
+        <h3>Sleep Phase Tracking</h3>
+        <p>Awake, Light, and Deep sleep classified every 30 seconds using on-device audio heuristics. No wearable required.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🎙</div>
+        <h3>Snore Detection</h3>
+        <p>Spectral band-power analysis in the 20–300 Hz range. Flags snore events per epoch without recording a single clip.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">📊</div>
+        <h3>Hypnogram</h3>
+        <p>A colour-coded sleep stage chart rendered locally. See your night at a glance the moment you wake up.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">📤</div>
+        <h3>CSV Export</h3>
+        <p>Full epoch data exported to any folder via the system file picker. Open format — your data, your tools.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🔋</div>
+        <h3>Battery Efficient</h3>
+        <p>Target: ≤ 3% drain per 8-hour night. The mic duty-cycles to 80% when no events are detected.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🎵</div>
+        <h3>Won't interrupt music</h3>
+        <p>Uses the mix-with-others audio session. Spotify, Audible, podcasts — they all keep playing.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How it works -->
+<section id="how">
+  <div class="container">
+    <h2>How it works</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3>Tap Sleep</h3>
+        <p>Optional countdown, then the mic calibrates room noise. No cloud call, no account prompt.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>DSP on-device</h3>
+        <p>A Rust library (compiled via NDK) extracts RMS, ZCR, and band power from 10 ms audio frames. Raw PCM is discarded immediately.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>Epoch written</h3>
+        <p>Every 30 s, a sleep phase label and snore flag are written to a local SQLite database. That's it.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <h3>Wake up</h3>
+        <p>Tap Stop. Your hypnogram appears instantly — no sync, no spinner, no server.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Stack -->
+<section id="stack">
+  <div class="container">
+    <h2>Tech stack</h2>
+    <div class="stack-wrap">
+      <table class="stack-table">
+        <tr><td>UI</td><td>Kotlin + Jetpack Compose</td></tr>
+        <tr><td>Database</td><td>Room (SQLite, app-private storage)</td></tr>
+        <tr><td>DSP</td><td>Rust → <code>.so</code> via Android NDK</td></tr>
+        <tr><td>Build</td><td>Gradle 8.6 + cargo-ndk</td></tr>
+        <tr><td>Min SDK</td><td>Android 8.0 (API 26)</td></tr>
+        <tr><td>License</td><td>GPLv3</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="container">
+    <p>
+      <a href="https://github.com/ntufar/DeltaSleep">GitHub</a> ·
+      <a href="https://github.com/ntufar/DeltaSleep/issues">Issues</a> ·
+      <a href="https://github.com/ntufar/DeltaSleep/blob/main/LICENSE">GPLv3</a>
+    </p>
+    <p style="margin-top:8px">Built with Rust + Kotlin. Zero network calls.</p>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,28 @@
+# Android
+*.iml
+.gradle
+/local.properties
+/.idea
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+*.apk
+*.ap_
+*.aab
+app/build/
+
+# Kotlin
+*.class
+
+# Rust / NDK
+/dsp/target/
+app/src/main/jniLibs/
+
+# Gradle wrapper — committed so CI can use ./gradlew without installing Gradle
+!gradle/wrapper/gradle-wrapper.jar
+!gradlew
+gradlew.bat
+release.keystore
+keystore.properties

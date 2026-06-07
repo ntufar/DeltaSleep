@@ -1,0 +1,16 @@
+[package]
+name = "deltasleep-dsp"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "deltasleep_dsp"
+crate-type = ["cdylib"]
+
+[dependencies]
+jni = "0.21"
+
+[profile.release]
+opt-level = 3
+lto = true
+strip = true

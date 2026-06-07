@@ -1,0 +1,187 @@
+name: CI — Android
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ── 1. Enforce zero-network guarantee ─────────────────────────────────────
+  privacy-check:
+    name: Network-code audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fail if network symbols found in Kotlin source
+        run: |
+          if grep -rE --include='*.kt' '\b(http|socket|URL|fetch)\b' app/src/main/java/; then
+            echo "::error::Network-related code detected. Remove it and try again."
+            exit 1
+          fi
+          echo "Privacy check passed — no network symbols found."
+
+      - name: Verify INTERNET permission is absent from manifest
+        run: |
+          if grep -q 'INTERNET' app/src/main/AndroidManifest.xml; then
+            echo "::error::INTERNET permission found in AndroidManifest.xml."
+            exit 1
+          fi
+          echo "Manifest check passed."
+
+  # ── 2. Build debug APK ────────────────────────────────────────────────────
+  build:
+    name: Build debug APK
+    needs: privacy-check
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Java
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      # Android SDK + NDK
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install NDK r26c
+        run: |
+          sdkmanager --install "ndk;28.2.13676358"
+          echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/28.2.13676358" >> "$GITHUB_ENV"
+
+      # Rust
+      - name: Set up Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,x86_64-linux-android
+
+      - name: Cache Rust artifacts
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: dsp
+
+      - name: Install cargo-ndk
+        run: cargo install cargo-ndk --locked
+
+      # Gradle
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      # Build
+      - name: Build debug APK
+        run: ./gradlew :app:assembleDebug --no-daemon
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: deltasleep-debug-${{ github.sha }}
+          path: app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 14
+
+  # ── 3. Release APK on version tag ─────────────────────────────────────────
+  release:
+    name: Release APK
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # push CHANGELOG commit + create GitHub Release
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # needed for git push back to main
+
+      # ── Stamp CHANGELOG.md ───────────────────────────────────────────────
+      - name: Update CHANGELOG for release
+        id: changelog
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          DATE="$(date -u +%Y-%m-%d)"
+
+          python3 - "$VERSION" "$DATE" <<'EOF'
+          import sys, re
+          version, date = sys.argv[1], sys.argv[2]
+
+          with open("CHANGELOG.md") as f:
+              content = f.read()
+
+          # Move [Unreleased] content under a versioned header.
+          stamped = content.replace(
+              "## [Unreleased]",
+              f"## [Unreleased]\n\n## [{version}] - {date}",
+              1,
+          )
+          with open("CHANGELOG.md", "w") as f:
+              f.write(stamped)
+
+          # Extract notes for this version (text between its header and the next).
+          pattern = rf"## \[{re.escape(version)}\] - {re.escape(date)}\n(.*?)(?=\n## \[|\Z)"
+          match = re.search(pattern, stamped, re.DOTALL)
+          notes = match.group(1).strip() if match else ""
+          with open("release-notes.md", "w") as f:
+              f.write(notes)
+          EOF
+
+      - name: Commit CHANGELOG back to main
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add CHANGELOG.md
+          git commit -m "chore: update CHANGELOG for ${{ github.ref_name }}"
+          git push origin HEAD:main
+
+      # ── Build ────────────────────────────────────────────────────────────
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install NDK r26c
+        run: |
+          sdkmanager --install "ndk;28.2.13676358"
+          echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/28.2.13676358" >> "$GITHUB_ENV"
+
+      - name: Set up Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,x86_64-linux-android
+
+      - name: Cache Rust artifacts
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: dsp
+
+      - name: Install cargo-ndk
+        run: cargo install cargo-ndk --locked
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Decode keystore
+        run: echo "${{ secrets.KEYSTORE_FILE }}" | base64 --decode > release.keystore
+
+      - name: Build release APK
+        run: ./gradlew :app:assembleRelease --no-daemon
+        env:
+          KEYSTORE_PATH:     release.keystore
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS:         ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD:      ${{ secrets.KEY_PASSWORD }}
+
+      # ── Publish ──────────────────────────────────────────────────────────
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: app/build/outputs/apk/release/app-release*.apk
+          body_path: release-notes.md
