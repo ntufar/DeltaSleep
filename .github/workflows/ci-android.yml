@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [master]
 
+permissions:
+  contents: read
+
 jobs:
   # ── 1. Enforce zero-network guarantee ─────────────────────────────────────
   privacy-check:
@@ -30,7 +33,38 @@ jobs:
           fi
           echo "Manifest check passed."
 
-  # ── 2. Build debug APK ────────────────────────────────────────────────────
+  # ── 2. Publish landing page (GitHub Pages) ────────────────────────────────
+  deploy-web:
+    name: Deploy website
+    needs: privacy-check
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: pages
+      cancel-in-progress: true
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload web artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: web/
+
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4
+
+  # ── 3. Build debug APK ────────────────────────────────────────────────────
   build:
     name: Build debug APK
     needs: privacy-check
@@ -84,7 +118,7 @@ jobs:
           path: app/build/outputs/apk/debug/app-debug.apk
           retention-days: 14
 
-  # ── 3. Release APK on version tag ─────────────────────────────────────────
+  # ── 4. Release APK on version tag ─────────────────────────────────────────
   release:
     name: Release APK
     needs: build
