@@ -1,5 +1,9 @@
 # DeltaSleep
 
+<p align="center">
+  <img src="docs/icon.svg" width="120" alt="DeltaSleep icon" />
+</p>
+
 > **Your sleep data stays in your bed.**
 
 Free, open-source Android app for sleep phase and snore tracking. Every byte of analysis happens on your device. The app ships without the `INTERNET` permission and a CI job verifies this on every commit.

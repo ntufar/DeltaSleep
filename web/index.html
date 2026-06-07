@@ -5,6 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="DeltaSleep — free, open-source sleep tracker that never sends your data anywhere. Runs 100% offline." />
   <title>DeltaSleep — Your sleep data stays in your bed</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="alternate icon" type="image/png" href="favicon-32.png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <meta property="og:image" content="icon-512.png" />
+  <meta property="og:title" content="DeltaSleep — Your sleep data stays in your bed" />
+  <meta property="og:description" content="Free, open-source sleep phase and snore tracking. 100% offline." />
   <style>
     :root {
       --bg:       #0a0e1a;
@@ -47,7 +53,8 @@
       display: flex; align-items: center; justify-content: space-between;
       height: 56px;
     }
-    nav .logo { font-weight: 700; font-size: 1.1rem; color: var(--text); letter-spacing: -.5px; }
+    nav .logo { font-weight: 700; font-size: 1.1rem; color: var(--text); letter-spacing: -.5px; display: flex; align-items: center; gap: 8px; }
+    nav .logo img { width: 28px; height: 28px; border-radius: 6px; }
     nav .logo span { color: var(--primary); }
     nav ul { list-style: none; display: flex; gap: 28px; }
     nav ul a { color: var(--muted); font-size: 0.9rem; }
@@ -232,7 +239,7 @@
 <!-- Nav -->
 <nav>
   <div class="inner">
-    <span class="logo">Delta<span>Sleep</span></span>
+    <span class="logo"><img src="favicon.svg" alt="" aria-hidden="true" />Delta<span>Sleep</span></span>
     <ul>
       <li><a href="#features">Features</a></li>
       <li><a href="#how">How it works</a></li>
@@ -245,6 +252,7 @@
 <!-- Hero -->
 <section id="hero">
   <div class="container">
+    <img src="icon-512.png" alt="DeltaSleep icon" style="width:96px;height:96px;border-radius:22px;margin-bottom:28px;box-shadow:0 8px 32px rgba(0,0,0,.5)" />
     <div class="eyebrow">Free &amp; Open Source · GPLv3</div>
     <h1>Your sleep data<br/><em>stays in your bed</em></h1>
     <p>On-device sleep phase and snore tracking. No account. No cloud. No network calls — ever. Verified by CI on every commit.</p>
