@@ -19,8 +19,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-private const val HISTORY_SIZE = 60   // 60 samples × 1 s = 60 s of live signal history
-private const val EPOCH_HISTORY = 40  // 40 epochs × 30 s = 20 min of epoch history
+private const val HISTORY_SIZE = 90   // 90 samples × 2 s = 3 min of live signal history
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class LiveSleepViewModel(
@@ -54,8 +53,7 @@ class LiveSleepViewModel(
         .map { it.lastOrNull()?.hasSnore == true }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
 
-    val recentEpochs: StateFlow<List<io.github.ntufar.deltasleep.data.model.SleepEpoch>> = epochs
-        .map { it.takeLast(EPOCH_HISTORY) }
+    val allEpochs: StateFlow<List<io.github.ntufar.deltasleep.data.model.SleepEpoch>> = epochs
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     // --- elapsed time -----------------------------------------------------------
