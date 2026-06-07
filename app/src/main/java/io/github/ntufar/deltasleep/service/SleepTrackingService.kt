@@ -59,8 +59,8 @@ class SleepTrackingService : Service() {
                     db.epochDao().insert(epoch.copy(sessionId = sessionId))
                 }
                 emitCounter++
-                // Emit live metrics at ~2 Hz (every 50 frames × 10 ms = 500 ms)
-                if (emitCounter >= 50) {
+                // Emit live metrics at ~1 Hz (every 100 frames × 10 ms = 1 s)
+                if (emitCounter >= 100) {
                     emitCounter = 0
                     val m = processor.lastFrameMetrics
                     _liveFrame.value = LiveFrame(rms = m[0], zcr = m[1], bandRatio = m[2])
