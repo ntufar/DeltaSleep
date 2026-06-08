@@ -109,7 +109,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.gradle/wrapper/dists
-          key: gradle-wrapper-dist-${{ runner.os }}-8.6
+          key: gradle-wrapper-dist-${{ runner.os }}-8.7
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v3
@@ -212,7 +212,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.gradle/wrapper/dists
-          key: gradle-wrapper-dist-${{ runner.os }}-8.6
+          key: gradle-wrapper-dist-${{ runner.os }}-8.7
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v3
