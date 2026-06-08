@@ -104,7 +104,13 @@ jobs:
       - name: Install cargo-ndk
         run: cargo install cargo-ndk --locked
 
-      # Gradle
+      # Gradle distribution — stable key so wrapper.properties changes don't bust it
+      - name: Cache Gradle distribution
+        uses: actions/cache@v4
+        with:
+          path: ~/.gradle/wrapper/dists
+          key: gradle-wrapper-dist-${{ runner.os }}-8.6
+
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v3
 
@@ -201,6 +207,12 @@ jobs:
 
       - name: Install cargo-ndk
         run: cargo install cargo-ndk --locked
+
+      - name: Cache Gradle distribution
+        uses: actions/cache@v4
+        with:
+          path: ~/.gradle/wrapper/dists
+          key: gradle-wrapper-dist-${{ runner.os }}-8.6
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v3
