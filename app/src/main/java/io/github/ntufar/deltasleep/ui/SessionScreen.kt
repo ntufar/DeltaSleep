@@ -60,6 +60,7 @@ fun SessionScreen(
     val s = summary!!
     val totalHours = TimeUnit.MILLISECONDS.toHours(s.totalSleepMs)
     val totalMinutes = TimeUnit.MILLISECONDS.toMinutes(s.totalSleepMs) % 60
+    val sleepLabel = if (totalHours > 0) "${totalHours}h ${totalMinutes}m" else "${totalMinutes}m"
 
     Column(
         Modifier
@@ -74,7 +75,7 @@ fun SessionScreen(
         Spacer(Modifier.height(16.dp))
 
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            StatCard("Sleep time", "${totalHours}h ${totalMinutes}m", Modifier.weight(1f))
+            StatCard("Sleep time", sleepLabel, Modifier.weight(1f))
             StatCard("Snore", "${s.snorePercent.toInt()}%", Modifier.weight(1f))
             StatCard("Deep", "${s.deepPercent.toInt()}%", Modifier.weight(1f))
         }

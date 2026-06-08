@@ -5,6 +5,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
@@ -37,15 +38,32 @@ class SleepTrackingService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         when (intent?.action) {
             ACTION_START -> {
                 sessionId = intent.getLongExtra(EXTRA_SESSION_ID, -1L)
+                prefs.edit().putLong(KEY_SESSION_ID, sessionId).apply()
                 startForeground(NOTIF_ID, buildNotification())
                 startCapture()
                 _isTracking.value = true
                 _activeSessionId.value = sessionId
             }
-            ACTION_STOP -> stopSelf()
+            ACTION_STOP -> {
+                prefs.edit().remove(KEY_SESSION_ID).apply()
+                stopSelf()
+            }
+            // null intent = system restarted the service via START_STICKY; resume capture
+            null -> {
+                sessionId = prefs.getLong(KEY_SESSION_ID, -1L)
+                if (sessionId != -1L) {
+                    startForeground(NOTIF_ID, buildNotification())
+                    startCapture()
+                    _isTracking.value = true
+                    _activeSessionId.value = sessionId
+                } else {
+                    stopSelf()
+                }
+            }
         }
         return START_STICKY
     }
@@ -116,6 +134,8 @@ class SleepTrackingService : Service() {
         const val EXTRA_SESSION_ID = "session_id"
         private const val CHANNEL_ID = "sleep_tracking"
         private const val NOTIF_ID = 1
+        private const val PREFS_NAME = "sleep_service"
+        private const val KEY_SESSION_ID = "active_session_id"
 
         data class LiveFrame(val rms: Float, val zcr: Float, val bandRatio: Float)
 

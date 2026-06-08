@@ -5,6 +5,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — Versioning:
 
 ## [Unreleased]
 
+## [0.1.5] - 2026-06-08
+
+### Fixed
+- Sleep tracking service now resumes epoch recording after being restarted by Android (battery optimizer / OEM kill); previously a START_STICKY restart with a null intent skipped `startCapture()`, producing spuriously short sleep totals
+- Sleep time stat card no longer shows a leading "0h" prefix for sub-hour sessions, so all three stat cards stay the same height
+
 ## [0.1.4] - 2026-06-08
 
 ## [0.1.3] - 2026-06-07
