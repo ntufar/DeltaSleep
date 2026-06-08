@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="DeltaSleep usage manual — complete guide to sleep tracking, snore detection, charts, CSV export, and privacy." />
+  <title>DeltaSleep — Usage Manual</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="alternate icon" type="image/png" href="favicon-32.png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <style>
+    :root {
+      --bg:       #0a0e1a;
+      --surface:  #12192b;
+      --border:   #1e2d4a;
+      --primary:  #42a5f5;
+      --deep:     #1565c0;
+      --awake:    #e53935;
+      --rem:      #ab47bc;
+      --text:     #e0e8ff;
+      --muted:    #7a8fb5;
+      --radius:   12px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+    }
+
+    a { color: var(--primary); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .container { max-width: 900px; margin: 0 auto; padding: 0 24px; }
+
+    /* ── Nav ── */
+    nav {
+      position: sticky; top: 0; z-index: 10;
+      background: rgba(10, 14, 26, 0.88);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    nav .inner {
+      max-width: 900px; margin: 0 auto; padding: 0 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 56px;
+    }
+    nav .logo { font-weight: 700; font-size: 1.1rem; color: var(--text); letter-spacing: -.5px; display: flex; align-items: center; gap: 8px; }
+    nav .logo img { width: 28px; height: 28px; border-radius: 6px; }
+    nav .logo span { color: var(--primary); }
+    nav ul { list-style: none; display: flex; gap: 28px; }
+    nav ul a { color: var(--muted); font-size: 0.9rem; }
+    nav ul a:hover { color: var(--text); text-decoration: none; }
+
+    /* ── Page header ── */
+    .page-header {
+      padding: 64px 0 48px;
+      border-bottom: 1px solid var(--border);
+    }
+    .page-header .eyebrow {
+      display: inline-block;
+      font-size: 0.75rem; font-weight: 600; letter-spacing: 1.5px;
+      text-transform: uppercase; color: var(--primary);
+      background: rgba(66, 165, 245, 0.12);
+      border: 1px solid rgba(66, 165, 245, 0.25);
+      border-radius: 99px; padding: 4px 14px; margin-bottom: 20px;
+    }
+    .page-header h1 { font-size: clamp(1.8rem, 5vw, 2.8rem); font-weight: 800; letter-spacing: -1px; margin-bottom: 12px; }
+    .page-header p { color: var(--muted); font-size: 1.05rem; max-width: 560px; }
+
+    /* ── Two-column layout ── */
+    .layout {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 48px;
+      padding: 48px 0 96px;
+      align-items: start;
+    }
+    @media (max-width: 720px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+    }
+
+    /* ── Sidebar TOC ── */
+    .sidebar {
+      position: sticky; top: 72px;
+    }
+    .sidebar nav ul { flex-direction: column; gap: 0; }
+    .sidebar nav ul li { border-left: 2px solid var(--border); }
+    .sidebar nav ul li a {
+      display: block; padding: 6px 14px;
+      color: var(--muted); font-size: 0.88rem;
+      transition: color .15s, border-color .15s;
+    }
+    .sidebar nav ul li a:hover { color: var(--text); text-decoration: none; }
+    .sidebar nav ul li.section-header > a { font-weight: 600; color: var(--text); font-size: 0.82rem; text-transform: uppercase; letter-spacing: .8px; margin-top: 16px; }
+    .sidebar nav ul li.section-header:first-child > a { margin-top: 0; }
+
+    /* ── Article ── */
+    article section { padding: 0 0 56px; }
+    article section:last-child { padding-bottom: 0; }
+
+    h2 {
+      font-size: 1.5rem; font-weight: 800; letter-spacing: -.5px;
+      margin-bottom: 16px;
+      padding-top: 8px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    h2 .anchor { color: var(--muted); font-size: 1rem; font-weight: 400; }
+
+    h3 {
+      font-size: 1.1rem; font-weight: 700;
+      margin-top: 28px; margin-bottom: 10px;
+      color: var(--text);
+    }
+
+    p { color: var(--muted); margin-bottom: 14px; }
+    p:last-child { margin-bottom: 0; }
+
+    strong { color: var(--text); font-weight: 600; }
+
+    ul, ol { color: var(--muted); padding-left: 20px; margin-bottom: 14px; }
+    li { margin-bottom: 6px; }
+    li strong { color: var(--text); }
+
+    /* ── Callout boxes ── */
+    .callout {
+      border-radius: var(--radius); padding: 16px 20px;
+      margin: 20px 0; font-size: 0.92rem;
+    }
+    .callout-info { background: rgba(66,165,245,.08); border: 1px solid rgba(66,165,245,.2); }
+    .callout-tip  { background: rgba(0,230,118,.08);  border: 1px solid rgba(0,230,118,.2); }
+    .callout-warn { background: rgba(229,57,53,.08);  border: 1px solid rgba(229,57,53,.25); }
+    .callout-label { font-weight: 700; font-size: 0.78rem; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+    .callout-info  .callout-label { color: var(--primary); }
+    .callout-tip   .callout-label { color: #00e676; }
+    .callout-warn  .callout-label { color: var(--awake); }
+
+    /* ── Screen mock ── */
+    .screen-mock {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin: 20px 0;
+      font-size: 0.88rem;
+    }
+    .screen-mock .screen-title { font-weight: 700; color: var(--text); margin-bottom: 12px; font-size: 0.95rem; }
+    .screen-mock .row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
+    .screen-mock .row:last-child { border-bottom: none; }
+    .screen-mock .label { color: var(--muted); }
+    .screen-mock .value { color: var(--text); font-weight: 600; }
+
+    /* ── Color legend ── */
+    .phase-legend { display: flex; gap: 18px; flex-wrap: wrap; margin: 12px 0; }
+    .phase-item { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: var(--muted); }
+    .phase-dot { width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0; }
+
+    /* ── Step list ── */
+    .steps { list-style: none; padding: 0; counter-reset: step; }
+    .steps li { counter-increment: step; padding: 10px 0 10px 48px; position: relative; border-bottom: 1px solid var(--border); color: var(--muted); }
+    .steps li:last-child { border-bottom: none; }
+    .steps li::before {
+      content: counter(step);
+      position: absolute; left: 0; top: 10px;
+      width: 28px; height: 28px; border-radius: 50%;
+      background: rgba(66,165,245,.15); border: 1px solid rgba(66,165,245,.3);
+      color: var(--primary); font-weight: 700; font-size: 0.85rem;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* ── Permission badge ── */
+    .perm-badge {
+      display: inline-block;
+      font-family: ui-monospace, "Cascadia Code", monospace;
+      font-size: 0.78rem;
+      background: rgba(229,57,53,.1); border: 1px solid rgba(229,57,53,.3);
+      color: #ef9a9a; border-radius: 4px; padding: 2px 7px;
+    }
+
+    .code-pill {
+      font-family: ui-monospace, "Cascadia Code", monospace;
+      font-size: 0.78rem;
+      background: rgba(66,165,245,.1); border: 1px solid rgba(66,165,245,.2);
+      color: var(--primary); border-radius: 4px; padding: 2px 6px;
+    }
+
+    /* ── Stat cards ── */
+    .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 16px 0; }
+    @media (max-width: 500px) { .stat-row { grid-template-columns: 1fr; } }
+    .stat-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+      padding: 16px; text-align: center;
+    }
+    .stat-card .sv { font-size: 1.4rem; font-weight: 800; color: var(--text); }
+    .stat-card .sl { font-size: 0.8rem; color: var(--muted); margin-top: 4px; }
+
+    /* ── FAQ ── */
+    .faq-item { border-bottom: 1px solid var(--border); padding: 16px 0; }
+    .faq-item:last-child { border-bottom: none; }
+    .faq-q { font-weight: 700; color: var(--text); margin-bottom: 8px; }
+    .faq-a { color: var(--muted); font-size: 0.92rem; }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border); padding: 32px 0;
+      text-align: center; color: var(--muted); font-size: 0.85rem;
+    }
+    footer a { color: var(--muted); }
+    footer a:hover { color: var(--text); }
+  </style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav>
+  <div class="inner">
+    <a href="index.html" class="logo"><img src="favicon.svg" alt="" aria-hidden="true" />Delta<span>Sleep</span></a>
+    <ul>
+      <li><a href="index.html#features">Features</a></li>
+      <li><a href="manual.html" style="color:var(--text)">Manual</a></li>
+      <li><a href="privacy.html">Privacy</a></li>
+      <li><a href="https://github.com/ntufar/DeltaSleep">GitHub</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- Page header -->
+<div class="page-header">
+  <div class="container">
+    <div class="eyebrow">Usage Manual · v0.1</div>
+    <h1>DeltaSleep User Guide</h1>
+    <p>Everything you need to know to track, review, and export your sleep — all processed on your phone, never sent anywhere.</p>
+  </div>
+</div>
+
+<div class="container">
+  <div class="layout">
+
+    <!-- Sidebar TOC -->
+    <aside class="sidebar">
+      <nav>
+        <ul>
+          <li class="section-header"><a href="#getting-started">Getting started</a></li>
+          <li><a href="#install">Install &amp; first launch</a></li>
+          <li><a href="#permissions">Permissions</a></li>
+          <li class="section-header"><a href="#tracking">Tracking</a></li>
+          <li><a href="#start-session">Starting a session</a></li>
+          <li><a href="#active-screen">Active screen</a></li>
+          <li><a href="#stop-session">Stopping a session</a></li>
+          <li class="section-header"><a href="#results">Your results</a></li>
+          <li><a href="#session-screen">Session screen</a></li>
+          <li><a href="#hypnogram">Reading the hypnogram</a></li>
+          <li><a href="#stats">Sleep stats</a></li>
+          <li><a href="#feel-rating">Feel rating</a></li>
+          <li class="section-header"><a href="#data">Data &amp; export</a></li>
+          <li><a href="#export-csv">Export CSV</a></li>
+          <li><a href="#delete-data">Delete data</a></li>
+          <li class="section-header"><a href="#tips">Tips &amp; troubleshooting</a></li>
+          <li><a href="#placement">Phone placement</a></li>
+          <li><a href="#battery">Battery</a></li>
+          <li><a href="#music">Music &amp; media</a></li>
+          <li><a href="#faq">FAQ</a></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- Article -->
+    <article>
+
+      <!-- ── Getting Started ── -->
+      <section id="getting-started">
+        <h2>Getting started</h2>
+
+        <h3 id="install">Install &amp; first launch</h3>
+        <p>DeltaSleep is distributed as a standard Android APK. No Play Store account or Google Services are required.</p>
+        <ol class="steps">
+          <li>Download the latest <strong>deltasleep-v*.apk</strong> from the <a href="https://github.com/ntufar/DeltaSleep/releases">GitHub Releases page</a>.</li>
+          <li>On your phone, go to <strong>Settings → Apps → Special app access → Install unknown apps</strong> and allow your browser or file manager to install APKs.</li>
+          <li>Open the downloaded file and tap <strong>Install</strong>.</li>
+          <li>Launch DeltaSleep. You will be prompted for microphone and notification permissions on the first run.</li>
+        </ol>
+
+        <div class="callout callout-tip">
+          <div class="callout-label">F-Droid</div>
+          DeltaSleep is planned for the F-Droid repository. Once listed, installation and automatic updates work without sideloading.
+        </div>
+
+        <h3 id="permissions">Permissions</h3>
+        <p>DeltaSleep requests exactly three permissions — no more, ever. Here is why each one is needed:</p>
+
+        <div class="screen-mock">
+          <div class="row">
+            <span class="label"><span class="perm-badge">RECORD_AUDIO</span></span>
+            <span class="value" style="color:var(--muted);font-weight:400;max-width:55%;text-align:right">Analyzes room sounds to detect sleep phases and snoring. Raw audio is <strong>never</strong> saved to disk.</span>
+          </div>
+          <div class="row">
+            <span class="label"><span class="perm-badge">FOREGROUND_SERVICE</span></span>
+            <span class="value" style="color:var(--muted);font-weight:400;max-width:55%;text-align:right">Keeps the tracking service alive while the screen is off. Required by Android for long-running background tasks.</span>
+          </div>
+          <div class="row">
+            <span class="label"><span class="perm-badge">POST_NOTIFICATIONS</span></span>
+            <span class="value" style="color:var(--muted);font-weight:400;max-width:55%;text-align:right">Shows a persistent notification while tracking so you can see it is running and stop it from the notification shade.</span>
+          </div>
+        </div>
+
+        <div class="callout callout-warn">
+          <div class="callout-label">No Internet</div>
+          The <code class="code-pill">INTERNET</code> permission is intentionally absent from the app. The manifest is verified on every CI run — the build will fail if it is ever added. Your audio analysis stays on your device.
+        </div>
+      </section>
+
+      <!-- ── Tracking ── -->
+      <section id="tracking">
+        <h2>Tracking</h2>
+
+        <h3 id="start-session">Starting a session</h3>
+        <p>Open DeltaSleep and tap <strong>Start Sleep</strong> on the home screen.</p>
+        <ol class="steps">
+          <li>The app requests microphone permission if not yet granted.</li>
+          <li>A foreground service starts and a persistent notification appears in your notification shade — this is normal and expected.</li>
+          <li>The DSP library calibrates to the ambient noise level of your room for the first few seconds.</li>
+          <li>The screen navigates automatically to the Active Sleep screen and tracking begins.</li>
+        </ol>
+
+        <div class="callout callout-tip">
+          <div class="callout-label">Tip — before you tap</div>
+          Place your phone face-down on the mattress or a nearby nightstand before tapping Start Sleep. Position matters for accuracy — see <a href="#placement">Phone placement</a> below.
+        </div>
+
+        <h3 id="active-screen">Active sleep screen</h3>
+        <p>While tracking is running the app displays a real-time view of the audio signals being processed. The screen is kept on so you can glance at it before you fall asleep.</p>
+
+        <div class="screen-mock">
+          <div class="screen-title">What you see on the active screen</div>
+          <div class="row"><span class="label">Phase badge</span><span class="value">AWAKE / LIGHT / DEEP — updates every 30 s</span></div>
+          <div class="row"><span class="label">Elapsed timer</span><span class="value">HH:MM:SS — time since session start</span></div>
+          <div class="row"><span class="label">Live signal chart</span><span class="value">Last 3 minutes of audio level, sound texture, and snore-band energy</span></div>
+          <div class="row"><span class="label">Phase history</span><span class="value">Scrollable colour blocks, one per 30 s epoch</span></div>
+          <div class="row"><span class="label">Snore events</span><span class="value">Circle per epoch — filled = snore detected</span></div>
+          <div class="row"><span class="label">Audio intensity</span><span class="value">Bar chart of RMS energy per epoch</span></div>
+          <div class="row"><span class="label">Snore indicator</span><span class="value">Animated pill at the bottom — turns red when snoring is active</span></div>
+        </div>
+
+        <h3>Understanding the live charts</h3>
+
+        <p>The <strong>Live signal</strong> chart shows three separate signals for the last three minutes. Each is a smoothed line updated roughly every two seconds:</p>
+        <ul>
+          <li><strong style="color:#00e676">Audio level</strong> — overall microphone RMS energy. Spikes when you move or speak.</li>
+          <li><strong style="color:#40c4ff">Sound texture</strong> — zero-crossing rate. High values indicate high-frequency content (e.g. breathing, rustling).</li>
+          <li><strong style="color:#ffab40">Snore band</strong> — spectral band power in the 20–300 Hz range. Elevated when snore-like sounds are present.</li>
+        </ul>
+
+        <p>The <strong>Phase history</strong> chart scrolls automatically to the right edge as new epochs arrive. Each column is one 30-second epoch. A faint pink overlay on a column means a snore event was recorded for that epoch.</p>
+
+        <div class="phase-legend">
+          <div class="phase-item"><div class="phase-dot" style="background:#e53935"></div> Awake</div>
+          <div class="phase-item"><div class="phase-dot" style="background:#42a5f5"></div> Light sleep</div>
+          <div class="phase-item"><div class="phase-dot" style="background:#1565c0"></div> Deep sleep</div>
+          <div class="phase-item"><div class="phase-dot" style="background:rgba(255,64,129,.5)"></div> Snore overlay</div>
+        </div>
+
+        <h3 id="stop-session">Stopping a session</h3>
+        <p>Tap the red <strong>Stop Tracking</strong> button at the bottom of the active screen. You can also stop from the persistent notification by tapping <strong>Stop</strong>.</p>
+        <p>The app immediately finalises the last epoch, closes the foreground service, and navigates to the Session screen where you can review your night.</p>
+
+        <div class="callout callout-info">
+          <div class="callout-label">Crash recovery</div>
+          If the app or phone crashes mid-session, the foreground service writes a new epoch to the database every 30 seconds. You will lose at most the current unfinished epoch (up to 30 s). The session will be shown as unclosed on the home screen until you tap it to review.
+        </div>
+      </section>
+
+      <!-- ── Results ── -->
+      <section id="results">
+        <h2>Your results</h2>
+
+        <h3 id="session-screen">Session screen</h3>
+        <p>After stopping, DeltaSleep shows three headline numbers at the top:</p>
+
+        <div class="stat-row">
+          <div class="stat-card"><div class="sv">7h 22m</div><div class="sl">Sleep time</div></div>
+          <div class="stat-card"><div class="sv">8%</div><div class="sl">Snore</div></div>
+          <div class="stat-card"><div class="sv">34%</div><div class="sl">Deep sleep</div></div>
+        </div>
+
+        <ul>
+          <li><strong>Sleep time</strong> — total session duration from start to stop.</li>
+          <li><strong>Snore %</strong> — percentage of epochs in which snoring was detected.</li>
+          <li><strong>Deep %</strong> — percentage of epochs classified as deep sleep.</li>
+        </ul>
+
+        <h3 id="hypnogram">Reading the hypnogram</h3>
+        <p>The hypnogram is a horizontal bar chart where the x-axis is clock time and colour represents the detected sleep stage. Time labels are shown below the chart every five minutes.</p>
+
+        <div class="phase-legend" style="margin-bottom:16px">
+          <div class="phase-item"><div class="phase-dot" style="background:#e53935"></div> Awake (red)</div>
+          <div class="phase-item"><div class="phase-dot" style="background:#42a5f5"></div> Light sleep (blue)</div>
+          <div class="phase-item"><div class="phase-dot" style="background:#1565c0"></div> Deep sleep (dark blue)</div>
+          <div class="phase-item"><div class="phase-dot" style="background:rgba(255,64,129,.7)"></div> Snore (pink overlay)</div>
+        </div>
+
+        <p>The chart scrolls horizontally for long sessions. Pinch-to-zoom is not yet supported — pan by swiping left and right.</p>
+
+        <div class="callout callout-info">
+          <div class="callout-label">How phases are detected</div>
+          Version 0.1 uses movement and audio heuristics — not a wearable or EEG. The algorithm analyses RMS energy, zero-crossing rate, and spectral band power to infer whether you are awake, in light sleep, or in deep sleep. REM detection is planned for v0.2.
+        </div>
+
+        <h3 id="stats">Sleep stats</h3>
+        <p>The three stat cards are computed entirely on-device from the epoch data stored in the local SQLite database. No server calculation, no sync required.</p>
+
+        <h3 id="feel-rating">Feel rating</h3>
+        <p>Below the hypnogram, tap a number from <strong>1</strong> (terrible) to <strong>5</strong> (great) to record how rested you felt. This is stored with the session and included in CSV exports so you can correlate subjective quality with objective sleep data over time.</p>
+      </section>
+
+      <!-- ── Data & Export ── -->
+      <section id="data">
+        <h2>Data &amp; export</h2>
+
+        <h3 id="export-csv">Export CSV</h3>
+        <p>Tap <strong>Export CSV</strong> on the session screen. Android's system file picker opens, letting you choose any folder — Downloads, a USB drive, a cloud folder you have mounted locally — wherever you want the file.</p>
+
+        <p>The exported file is named <code class="code-pill">deltasleep_&lt;session_id&gt;.csv</code> and contains one row per 30-second epoch:</p>
+
+        <div class="screen-mock">
+          <div class="screen-title">CSV columns</div>
+          <div class="row"><span class="label">timestamp</span><span class="value">Unix ms — epoch start time</span></div>
+          <div class="row"><span class="label">phase</span><span class="value">AWAKE · LIGHT · DEEP</span></div>
+          <div class="row"><span class="label">has_snore</span><span class="value">true · false</span></div>
+          <div class="row"><span class="label">rms_energy</span><span class="value">Normalised 0.0–1.0 audio level</span></div>
+          <div class="row"><span class="label">zcr</span><span class="value">Zero-crossing rate (sound texture)</span></div>
+          <div class="row"><span class="label">band_power</span><span class="value">Spectral energy in 20–300 Hz band</span></div>
+        </div>
+
+        <p>The format is plain UTF-8 CSV with a header row. It opens in Excel, Google Sheets, R, Python pandas, or any other tool you prefer. DeltaSleep never owns your data — once exported, the file is yours.</p>
+
+        <div class="callout callout-tip">
+          <div class="callout-label">Analysis ideas</div>
+          Plot <code class="code-pill">band_power</code> vs time to see snore patterns. Compare <code class="code-pill">deep %</code> across nights against your feel rating. Use the open format to build your own dashboard — that is exactly what it is designed for.
+        </div>
+
+        <h3 id="delete-data">Delete all data</h3>
+        <p>Scroll to the bottom of the home screen and tap <strong>Delete all data</strong>. A confirmation dialog appears. Tapping <strong>Delete</strong> will:</p>
+        <ol class="steps">
+          <li>Overwrite every byte of the SQLite database file with zeros.</li>
+          <li>Delete the now-blank database file.</li>
+          <li>Clear all session and epoch records from the app's UI.</li>
+        </ol>
+        <div class="callout callout-warn">
+          <div class="callout-label">Irreversible</div>
+          This cannot be undone. Export any sessions you want to keep before deleting.
+        </div>
+
+        <p>Individual sessions cannot currently be deleted without deleting all data. Per-session deletion is planned for v0.2.</p>
+
+        <h3>Data retention</h3>
+        <p>DeltaSleep currently keeps all sessions indefinitely until you manually delete them. Configurable auto-retention (30 / 90 / 365 days) is planned for a future release.</p>
+      </section>
+
+      <!-- ── Tips & Troubleshooting ── -->
+      <section id="tips">
+        <h2>Tips &amp; troubleshooting</h2>
+
+        <h3 id="placement">Phone placement</h3>
+        <p>The microphone is typically located at the bottom edge of the phone. For best results:</p>
+        <ul>
+          <li><strong>On the mattress:</strong> Place the phone face-down near your pillow. The mic picks up mattress vibrations and breathing sounds clearly.</li>
+          <li><strong>Nightstand:</strong> Works well if within 50–80 cm (20–30 inches). Accuracy decreases beyond 1 m.</li>
+          <li><strong>Avoid covering the mic:</strong> Do not put the phone under a pillow — muffled audio will reduce phase detection accuracy.</li>
+          <li><strong>Case matters:</strong> Thick silicone cases covering the bottom mic port reduce sensitivity. Remove the case or flip it so the mic is uncovered.</li>
+        </ul>
+
+        <h3 id="battery">Battery usage</h3>
+        <p>DeltaSleep targets ≤ 3% battery drain per 8-hour night. The mic duty-cycles — it sleeps for ~20% of each analysis window when no events are detected, reducing CPU and radio wake-ups.</p>
+        <ul>
+          <li>Keep the phone plugged in overnight if possible — the charging cable also keeps the phone from moving, which reduces false-positive movement events.</li>
+          <li>Enable <strong>Do Not Disturb</strong> before sleeping. Incoming calls and notifications do not interrupt tracking, but screen-on events from notifications consume battery.</li>
+          <li>If your phone's battery optimisation kills the foreground service, go to <strong>Settings → Apps → DeltaSleep → Battery</strong> and set it to <strong>Unrestricted</strong>.</li>
+        </ul>
+
+        <div class="callout callout-info">
+          <div class="callout-label">Battery optimisation</div>
+          Aggressive battery optimisation (common on Xiaomi, Huawei, OnePlus, and Samsung with "Adaptive Battery") can terminate foreground services. If tracking stops unexpectedly, check your manufacturer's background-app management settings and whitelist DeltaSleep.
+        </div>
+
+        <h3 id="music">Music, podcasts &amp; white noise</h3>
+        <p>DeltaSleep uses Android's <code class="code-pill">AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK</code> strategy combined with the <em>mix-with-others</em> audio session, so it does not request exclusive microphone ownership. Spotify, Audible, YouTube Music, white-noise apps, and sleep-sound apps all continue playing normally while tracking is active.</p>
+        <p>The DSP pipeline includes a voice-activity detector (VAD) tuned to distinguish human speech and snoring from music and spoken-word content. If you play audio with heavy bass (e.g. binaural beats in the 20–300 Hz range), snore detection accuracy may decrease — consider raising the snore sensitivity threshold when listening to such content.</p>
+
+        <h3 id="faq">Frequently asked questions</h3>
+
+        <div class="faq-item">
+          <div class="faq-q">Why does the first epoch always show Awake?</div>
+          <div class="faq-a">The classifier needs a calibration window to establish the ambient noise baseline. The first epoch (first 30 seconds) is intentionally marked Awake because there is not yet enough data to distinguish silence from low-activity sleep. This is expected behaviour.</div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q">The app shows I was snoring but my partner says I wasn't.</div>
+          <div class="faq-a">Snore detection uses band-power analysis in the 20–300 Hz range. Some environmental sounds — fans, HVAC systems, traffic — fall in the same band. If you are getting false positives, note the time of events on your hypnogram and compare them with any background noise patterns in your room. A dedicated settings screen with adjustable snore sensitivity is coming in v0.2.</div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q">Tracking stopped in the middle of the night. What happened?</div>
+          <div class="faq-a">The most common cause is Android battery optimisation killing the foreground service. Go to <strong>Settings → Apps → DeltaSleep → Battery</strong> and select <strong>Unrestricted</strong> (or equivalent for your phone). Samsung devices call it "Allow background activity"; Xiaomi devices call it "No restrictions".</div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q">Does DeltaSleep work without granting the notification permission?</div>
+          <div class="faq-a">Yes — tracking still works. However, Android 13+ requires a visible foreground-service notification to keep background processes alive. Without notification permission, the service may be terminated by the OS more aggressively. Granting notifications is strongly recommended for reliable overnight tracking.</div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q">Can I use DeltaSleep alongside a smartwatch or fitness tracker?</div>
+          <div class="faq-a">Yes. DeltaSleep is completely independent of wearables and does not communicate with any Bluetooth or third-party device. Both can run simultaneously — they will simply produce separate, independent records.</div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q">Is my audio ever saved to a file?</div>
+          <div class="faq-a">No. Raw PCM audio is processed in memory in 10 ms frames and discarded immediately. Only the computed feature values (RMS, ZCR, band power) for each 30-second epoch are written to the local database. Audio files are never created by default. An optional "save snore clips" setting (max 10 s per clip, auto-purged) is planned for a future release and will be opt-in only.</div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q">Where is the database stored?</div>
+          <div class="faq-a">The SQLite database lives in the app's private data directory (<code class="code-pill">/data/data/io.github.ntufar.deltasleep/databases/</code>). It is not accessible to other apps or visible in the system file picker. Uninstalling the app removes it.</div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q">How do I report a bug?</div>
+          <div class="faq-a">Open an issue on <a href="https://github.com/ntufar/DeltaSleep/issues">GitHub</a>. Include your Android version, phone model, and a description of what happened. No logs or audio are collected automatically, so the more detail you provide the better.</div>
+        </div>
+      </section>
+
+    </article>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer>
+  <div class="container">
+    <p>
+      <a href="index.html">Home</a> ·
+      <a href="https://github.com/ntufar/DeltaSleep">GitHub</a> ·
+      <a href="https://github.com/ntufar/DeltaSleep/issues">Issues</a> ·
+      <a href="https://github.com/ntufar/DeltaSleep/blob/main/LICENSE">GPLv3</a> ·
+      <a href="privacy.html">Privacy Policy</a>
+    </p>
+    <p style="margin-top:8px">Built with Rust + Kotlin. Zero network calls.</p>
+  </div>
+</footer>
+
+</body>
+</html>

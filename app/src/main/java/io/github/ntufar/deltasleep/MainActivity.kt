@@ -13,6 +13,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import io.github.ntufar.deltasleep.ui.ActiveSleepScreen
+import io.github.ntufar.deltasleep.ui.HelpScreen
 import io.github.ntufar.deltasleep.ui.HomeScreen
 import io.github.ntufar.deltasleep.ui.SessionScreen
 import io.github.ntufar.deltasleep.ui.theme.DeltaSleepTheme
@@ -55,6 +56,7 @@ private fun DeltaSleepNavGraph() {
                         launchSingleTop = true
                     }
                 },
+                onHelp = { nav.navigate("help") },
             )
         }
         composable(
@@ -74,6 +76,9 @@ private fun DeltaSleepNavGraph() {
             arguments = listOf(navArgument("sessionId") { type = NavType.LongType }),
         ) {
             SessionScreen(onBack = { nav.popBackStack() })
+        }
+        composable("help") {
+            HelpScreen(onBack = { nav.popBackStack() })
         }
     }
 }

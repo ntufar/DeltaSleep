@@ -5,6 +5,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — Versioning:
 
 ## [Unreleased]
 
+## [0.1.9] - 2026-06-08
+
+### Added
+- In-app user guide (Help screen) accessible via the "? Help" button on the home screen; covers phone placement, permissions, active-screen charts, hypnogram, CSV export, data deletion, battery tips, and an FAQ
+- Web usage manual at `web/manual.html` with sidebar table of contents, step lists, CSV column reference, and troubleshooting section; linked from the main site nav
+
 ## [0.1.8] - 2026-06-08
 
 ### Fixed

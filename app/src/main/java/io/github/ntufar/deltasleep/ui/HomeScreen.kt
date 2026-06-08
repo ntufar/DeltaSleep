@@ -19,6 +19,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -42,6 +43,7 @@ import java.util.concurrent.TimeUnit
 fun HomeScreen(
     onSessionTap: (Long) -> Unit,
     onActiveSession: (Long) -> Unit,
+    onHelp: () -> Unit = {},
     vm: HomeViewModel = viewModel(),
 ) {
     val sessions by vm.sessions.collectAsState()
@@ -59,7 +61,16 @@ fun HomeScreen(
             .fillMaxSize()
             .padding(24.dp),
     ) {
-        Text("DeltaSleep", style = MaterialTheme.typography.headlineLarge)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text("DeltaSleep", style = MaterialTheme.typography.headlineLarge)
+            TextButton(onClick = onHelp) {
+                Text("? Help", style = MaterialTheme.typography.labelLarge, textAlign = TextAlign.End)
+            }
+        }
         Spacer(Modifier.height(32.dp))
 
         Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
