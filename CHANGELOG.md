@@ -5,6 +5,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — Versioning:
 
 ## [Unreleased]
 
+## [0.1.6] - 2026-06-08
+
+### Fixed
+- Gradle wrapper network timeout raised to 120 s with 3 retries so CI can download the distribution on cold cache
+
 ## [0.1.5] - 2026-06-08
 
 ### Fixed
