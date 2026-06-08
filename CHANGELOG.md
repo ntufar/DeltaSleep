@@ -5,12 +5,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — Versioning:
 
 ## [Unreleased]
 
-## [0.1.8] - 2026-06-08
-
 ### Fixed
 - Upgrade Android Gradle Plugin to 8.5.2 so native libraries are ZIP-aligned to 16 KB (`zipalign -P 16`), satisfying the Google Play 16 KB page-size requirement for Android 15+ devices
-
-## [0.1.7] - 2026-06-08
 
 ## [0.1.7] - 2026-06-08
 
