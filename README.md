@@ -4,6 +4,12 @@
   <img src="docs/icon.svg" width="120" alt="DeltaSleep icon" />
 </p>
 
+[![CI — Android](https://github.com/ntufar/DeltaSleep/actions/workflows/ci-android.yml/badge.svg)](https://github.com/ntufar/DeltaSleep/actions/workflows/ci-android.yml)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+[![Min SDK](https://img.shields.io/badge/Min%20SDK-API%2026%20(Android%208.0)-green.svg)](https://developer.android.com/about/versions/oreo)
+[![No Internet](https://img.shields.io/badge/INTERNET%20permission-absent-brightgreen.svg)](#privacy-guarantees)
+[![Rust DSP](https://img.shields.io/badge/DSP-Rust%20%E2%86%92%20NDK-orange.svg)](dsp/)
+
 > **Your sleep data stays in your bed.**
 
 Free, open-source Android app for sleep phase and snore tracking. Every byte of analysis happens on your device. The app ships without the `INTERNET` permission and a CI job verifies this on every commit.
