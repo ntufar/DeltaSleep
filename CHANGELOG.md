@@ -7,6 +7,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — Versioning:
 
 ## [0.1.7] - 2026-06-08
 
+## [0.1.7] - 2026-06-08
+
 ### Fixed
 - CI caches the Gradle distribution under a stable key so wrapper.properties changes no longer bust the cache; increased wrapper retry backoff to 15 s to survive brief CDN blips
 
