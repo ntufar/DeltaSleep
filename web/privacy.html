@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="DeltaSleep Privacy Policy — your sleep data never leaves your device." />
+  <title>Privacy Policy — DeltaSleep</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="alternate icon" type="image/png" href="favicon-32.png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <style>
+    :root {
+      --bg:       #0a0e1a;
+      --surface:  #12192b;
+      --border:   #1e2d4a;
+      --primary:  #42a5f5;
+      --deep:     #1565c0;
+      --awake:    #e53935;
+      --text:     #e0e8ff;
+      --muted:    #7a8fb5;
+      --radius:   12px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    a { color: var(--primary); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .container { max-width: 720px; margin: 0 auto; padding: 0 24px; }
+
+    /* ── Nav ── */
+    nav {
+      position: sticky; top: 0; z-index: 10;
+      background: rgba(10, 14, 26, 0.88);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    nav .inner {
+      max-width: 900px; margin: 0 auto; padding: 0 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 56px;
+    }
+    nav .logo { font-weight: 700; font-size: 1.1rem; color: var(--text); letter-spacing: -.5px; display: flex; align-items: center; gap: 8px; }
+    nav .logo img { width: 28px; height: 28px; border-radius: 6px; }
+    nav .logo span { color: var(--primary); }
+    nav ul { list-style: none; display: flex; gap: 28px; }
+    nav ul a { color: var(--muted); font-size: 0.9rem; }
+    nav ul a:hover { color: var(--text); text-decoration: none; }
+
+    /* ── Page header ── */
+    .page-header {
+      padding: 64px 0 40px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 56px;
+    }
+    .page-header .eyebrow {
+      display: inline-block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--primary);
+      background: rgba(66, 165, 245, 0.12);
+      border: 1px solid rgba(66, 165, 245, 0.25);
+      border-radius: 99px;
+      padding: 4px 14px;
+      margin-bottom: 20px;
+    }
+    .page-header h1 {
+      font-size: 2.4rem;
+      font-weight: 800;
+      letter-spacing: -1px;
+      line-height: 1.15;
+      margin-bottom: 12px;
+    }
+    .page-header .meta { color: var(--muted); font-size: 0.9rem; }
+
+    /* ── Policy body ── */
+    .policy { padding-bottom: 80px; }
+
+    .policy section { margin-bottom: 48px; }
+    .policy h2 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .policy p { color: var(--muted); margin-bottom: 12px; font-size: 0.97rem; }
+    .policy p:last-child { margin-bottom: 0; }
+    .policy ul {
+      list-style: none;
+      display: flex; flex-direction: column; gap: 10px;
+      margin-bottom: 12px;
+    }
+    .policy ul li {
+      display: flex; align-items: flex-start; gap: 10px;
+      color: var(--muted); font-size: 0.95rem;
+    }
+    .check { color: var(--primary); flex-shrink: 0; }
+    .pill {
+      font-family: ui-monospace, "Cascadia Code", monospace;
+      font-size: 0.8rem;
+      background: rgba(66,165,245,.1);
+      border: 1px solid rgba(66,165,245,.2);
+      border-radius: 4px;
+      padding: 1px 6px;
+      color: var(--primary);
+    }
+    .callout {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--primary);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-bottom: 12px;
+    }
+    .callout strong { color: var(--text); }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 32px 0;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+    footer a { color: var(--muted); }
+    footer a:hover { color: var(--text); }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="inner">
+    <a href="index.html" class="logo">
+      <img src="favicon.svg" alt="" aria-hidden="true" />Delta<span>Sleep</span>
+    </a>
+    <ul>
+      <li><a href="index.html#features">Features</a></li>
+      <li><a href="index.html#how">How it works</a></li>
+      <li><a href="index.html#stack">Stack</a></li>
+      <li><a href="https://github.com/ntufar/DeltaSleep">GitHub</a></li>
+    </ul>
+  </div>
+</nav>
+
+<div class="container">
+
+  <div class="page-header">
+    <div class="eyebrow">Legal</div>
+    <h1>Privacy Policy</h1>
+    <p class="meta">Effective date: 2026-06-08 &nbsp;·&nbsp; App: DeltaSleep for Android &nbsp;·&nbsp; Developer: Nicolai Tufar</p>
+  </div>
+
+  <div class="policy">
+
+    <section>
+      <div class="callout">
+        <strong>Short version:</strong> DeltaSleep collects nothing. It has no internet permission, contacts no servers, and stores your data exclusively on your device. This policy exists to satisfy app store requirements — not because there is anything complex to disclose.
+      </div>
+    </section>
+
+    <section>
+      <h2>1. Information we collect</h2>
+      <p>DeltaSleep does <strong>not</strong> collect, transmit, or share any personal information. The app operates entirely offline.</p>
+      <ul>
+        <li><span class="check">✓</span> No account registration. No email address. No user profile.</li>
+        <li><span class="check">✓</span> No analytics, crash reporters, or third-party SDKs.</li>
+        <li><span class="check">✓</span> No advertising identifiers (GAID or otherwise).</li>
+        <li><span class="check">✓</span> No device fingerprinting.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>2. Microphone access</h2>
+      <p>The app uses the <span class="pill">RECORD_AUDIO</span> permission exclusively to detect movement and snoring while you sleep. Audio processing is performed in real time, on your device, by a native Rust library.</p>
+      <ul>
+        <li><span class="check">✓</span> Raw audio (PCM) is <strong>never written to disk</strong> by default.</li>
+        <li><span class="check">✓</span> Only derived metrics are stored: sleep phase labels, snore flags, and per-epoch aggregates (RMS, band power).</li>
+        <li><span class="check">✓</span> Optional snore clips (up to 10 seconds) can be saved locally if you enable the feature, and are automatically purged according to your retention setting.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>3. Data stored on your device</h2>
+      <p>DeltaSleep writes data to a SQLite database in the app's private storage directory — a location that no other app can access without root. The database contains:</p>
+      <ul>
+        <li><span class="check">✓</span> Per-night session records (start time, stop time)</li>
+        <li><span class="check">✓</span> 30-second epoch records (timestamp, sleep phase, snore flag, aggregate audio metrics)</li>
+        <li><span class="check">✓</span> Optional short snore audio clips (if the opt-in feature is enabled)</li>
+        <li><span class="check">✓</span> App preferences (sensitivity settings, retention period)</li>
+      </ul>
+      <p>Data retention is user-configurable (30, 90, or 365 days, or never). The default is 365 days. Old records are deleted automatically.</p>
+    </section>
+
+    <section>
+      <h2>4. No internet access</h2>
+      <p>The <span class="pill">INTERNET</span> permission is absent from the Android manifest. The OS enforces this: the app cannot open a network socket even if it tried.</p>
+      <p>This guarantee is verified automatically: the CI pipeline fails if <span class="pill">http</span>, <span class="pill">socket</span>, <span class="pill">URL</span>, or <span class="pill">fetch</span> appear in the Kotlin source. You can audit the check in <a href="https://github.com/ntufar/DeltaSleep/blob/master/.github/workflows/ci.yml">ci.yml</a>.</p>
+    </section>
+
+    <section>
+      <h2>5. Data export</h2>
+      <p>You can export your sleep data as JSON or CSV at any time. The export is written to a folder you choose via the system file picker. DeltaSleep does not transmit this file anywhere — you control where it goes.</p>
+    </section>
+
+    <section>
+      <h2>6. Data deletion</h2>
+      <p>You can delete all data at any time from the app's settings screen using the "Nuke all data" action. This overwrites the database before deleting it, so the content cannot be recovered from disk.</p>
+      <p>Uninstalling the app removes the private storage directory, including the database and any snore clips.</p>
+    </section>
+
+    <section>
+      <h2>7. Permissions summary</h2>
+      <ul>
+        <li><span class="check">✓</span> <span class="pill">RECORD_AUDIO</span> — required to detect sleep phases and snoring</li>
+        <li><span class="check">✓</span> <span class="pill">FOREGROUND_SERVICE</span> — keeps the tracking service running while your screen is off</li>
+        <li><span class="check">✓</span> <span class="pill">POST_NOTIFICATIONS</span> — shows the persistent "DeltaSleep is running" notification required by Android for foreground services</li>
+      </ul>
+      <p>No other permissions are requested or used.</p>
+    </section>
+
+    <section>
+      <h2>8. Children's privacy</h2>
+      <p>DeltaSleep is not directed at children under 13 and does not knowingly collect information from anyone.</p>
+    </section>
+
+    <section>
+      <h2>9. Changes to this policy</h2>
+      <p>If this policy changes, the updated version will be posted at this URL with a new effective date. Because no data is collected, changes are expected to be minimal.</p>
+    </section>
+
+    <section>
+      <h2>10. Contact</h2>
+      <p>Questions about this policy? Open an issue on <a href="https://github.com/ntufar/DeltaSleep/issues">GitHub</a> or email <a href="mailto:ntufar@gmail.com">ntufar@gmail.com</a>.</p>
+    </section>
+
+  </div>
+</div>
+
+<footer>
+  <div class="container">
+    <p>
+      <a href="index.html">Home</a> ·
+      <a href="https://github.com/ntufar/DeltaSleep">GitHub</a> ·
+      <a href="https://github.com/ntufar/DeltaSleep/issues">Issues</a> ·
+      <a href="https://github.com/ntufar/DeltaSleep/blob/main/LICENSE">GPLv3</a>
+    </p>
+    <p style="margin-top:8px">Built with Rust + Kotlin. Zero network calls.</p>
+  </div>
+</footer>
+
+</body>
+</html>
