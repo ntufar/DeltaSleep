@@ -18,9 +18,12 @@ import io.github.ntufar.deltasleep.data.db.AppDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 class SleepTrackingService : Service() {
@@ -71,17 +74,29 @@ class SleepTrackingService : Service() {
     private fun startCapture() {
         val db = AppDatabase.getInstance(this)
         scope.launch {
-            var emitCounter = 0
-            capture.frames().collect { frame ->
-                processor.onFrame(frame)?.let { epoch ->
-                    db.epochDao().insert(epoch.copy(sessionId = sessionId))
-                }
-                emitCounter++
-                // Emit live metrics at ~0.5 Hz (every 200 frames × 10 ms = 2 s)
-                if (emitCounter >= 200) {
-                    emitCounter = 0
-                    val m = processor.lastFrameMetrics
-                    _liveFrame.value = LiveFrame(rms = m[0], zcr = m[1], bandRatio = m[2])
+            var backoffMs = 5_000L
+            while (isActive) {
+                try {
+                    var emitCounter = 0
+                    capture.frames().collect { frame ->
+                        processor.onFrame(frame)?.let { epoch ->
+                            db.epochDao().insert(epoch.copy(sessionId = sessionId))
+                        }
+                        emitCounter++
+                        // Emit live metrics at ~0.5 Hz (every 200 frames × 10 ms = 2 s)
+                        if (emitCounter >= 200) {
+                            emitCounter = 0
+                            val m = processor.lastFrameMetrics
+                            _liveFrame.value = LiveFrame(rms = m[0], zcr = m[1], bandRatio = m[2])
+                        }
+                    }
+                    break  // flow completed normally — shouldn't happen during tracking
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (_: Exception) {
+                    processor.reset()
+                    delay(backoffMs)
+                    backoffMs = minOf(backoffMs * 2, 60_000L)
                 }
             }
         }

@@ -33,7 +33,10 @@ class EpochProcessor(private val dsp: DspBridge) {
         dsp.resetEpoch()
         frameCount = 0
 
-        val phase = SleepPhase.entries[result[4].toInt().coerceIn(0, SleepPhase.entries.lastIndex)]
+        // mean_rms == 0 means the mic returned all-zero samples (access revoked); don't
+        // let the DSP classifier call that DEEP sleep.
+        val phase = if (result[0] == 0f) SleepPhase.AWAKE
+                    else SleepPhase.entries[result[4].toInt().coerceIn(0, SleepPhase.entries.lastIndex)]
         val hasSnore = result[5] != 0f
 
         return SleepEpoch(

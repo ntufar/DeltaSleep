@@ -40,8 +40,7 @@ class SessionViewModel(
     private suspend fun load() {
         val session = db.sessionDao().getById(sessionId) ?: return
         val epochs = db.epochDao().getForSession(sessionId)
-        val sleepEpochs = epochs.filter { it.phase != SleepPhase.AWAKE }
-        val totalSleepMs = sleepEpochs.size * 30_000L
+        val totalSleepMs = (session.endTime ?: System.currentTimeMillis()) - session.startTime
         val snoreCount = epochs.count { it.hasSnore }
         val deepCount = epochs.count { it.phase == SleepPhase.DEEP }
         _summary.update {
