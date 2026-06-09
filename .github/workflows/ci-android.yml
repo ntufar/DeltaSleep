@@ -250,3 +250,4 @@ jobs:
           status: completed
           releaseName: ${{ github.ref_name }}
           whatsNewDirectory: play-store-notes
+          foreground_service_types: microphone
