@@ -260,4 +260,3 @@ jobs:
           status: completed
           releaseName: ${{ github.ref_name }}
           whatsNewDirectory: play-store-notes
-          changesNotSentForReview: true
