@@ -5,7 +5,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — Versioning:
 
 ## [Unreleased]
 
-## [0.1.11] - 2026-06-10
+## [0.1.11] - 2026-06-09
 
 ### Fixed
 - Declare `foregroundServiceType="microphone"` on the sleep tracking service; previously `dataSync` allowed Android to mute `AudioRecord` when the screen turned off, producing all-zero samples classified as DEEP sleep
