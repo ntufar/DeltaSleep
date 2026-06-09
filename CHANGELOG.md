@@ -5,6 +5,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — Versioning:
 
 ## [Unreleased]
 
+## [0.1.10] - 2026-06-10
+
+### Investigated
+- Identified microphone-silence bug: Android revokes mic access mid-session returning all-zero samples; `AudioCapture` does not detect this, causing the DSP to classify silence as DEEP sleep and inflate the deep-sleep percentage
+- Identified capture-loop hang bug: when `AudioRecord.read()` returns an error code the flow stops emitting without completing, leaving the coroutine blocked and producing no epochs for the rest of the session (observed as ~55 min of missing data in session 10)
+- Identified sleep-time under-report: `SessionViewModel` derives total sleep time from epoch count rather than session timestamps, so the missing epochs make the session appear shorter than it was
+
 ## [0.1.9] - 2026-06-08
 
 ## [0.1.9] - 2026-06-08
