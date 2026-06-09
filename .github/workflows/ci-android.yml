@@ -153,17 +153,27 @@ jobs:
           with open("CHANGELOG.md") as f:
               content = f.read()
 
-          # Move [Unreleased] content under a versioned header.
-          stamped = content.replace(
-              "## [Unreleased]",
-              f"## [Unreleased]\n\n## [{version}] - {date}",
-              1,
-          )
+          # If the version header already exists (pre-stamped locally), just
+          # normalise the date; otherwise insert it below [Unreleased].
+          version_pattern = rf"## \[{re.escape(version)}\]"
+          if re.search(version_pattern, content):
+              stamped = re.sub(
+                  rf"## \[{re.escape(version)}\] - \S+",
+                  f"## [{version}] - {date}",
+                  content,
+                  count=1,
+              )
+          else:
+              stamped = content.replace(
+                  "## [Unreleased]",
+                  f"## [Unreleased]\n\n## [{version}] - {date}",
+                  1,
+              )
           with open("CHANGELOG.md", "w") as f:
               f.write(stamped)
 
           # Extract notes for this version (text between its header and the next).
-          pattern = rf"## \[{re.escape(version)}\] - {re.escape(date)}\n(.*?)(?=\n## \[|\Z)"
+          pattern = rf"## \[{re.escape(version)}\] - [^\n]+\n(.*?)(?=\n## \[|\Z)"
           match = re.search(pattern, stamped, re.DOTALL)
           notes = match.group(1).strip() if match else ""
           with open("release-notes.md", "w") as f:
