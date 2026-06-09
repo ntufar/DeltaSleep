@@ -5,6 +5,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — Versioning:
 
 ## [Unreleased]
 
+## [0.1.11] - 2026-06-10
+
+### Fixed
+- Declare `foregroundServiceType="microphone"` on the sleep tracking service; previously `dataSync` allowed Android to mute `AudioRecord` when the screen turned off, producing all-zero samples classified as DEEP sleep
+- Throw `IOException` from `AudioCapture` when `AudioRecord.read()` returns an error code or 200 consecutive all-zero frames (2 s), so the capture loop restarts instead of hanging silently
+- Retry `AudioCapture` flow in `SleepTrackingService` with exponential backoff (5 s → 60 s) on mic loss, keeping recording alive for the full session
+- Override DSP phase classification to AWAKE when epoch `mean_rms == 0` so silent frames are never counted as DEEP sleep
+- Derive "Sleep time" stat from session timestamps rather than epoch count so mid-session mic loss no longer makes the session appear shorter
+
 ## [0.1.10] - 2026-06-10
 
 ### Investigated
