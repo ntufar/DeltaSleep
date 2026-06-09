@@ -45,7 +45,7 @@ Spectral analysis in the 20–300 Hz band. Each snore event records start time, 
 - `INTERNET` permission must be **absent** from the Android manifest — the app should not compile with it
 - `DISABLE_NETWORK=true` compile-time flag removes all network libs
 - CI must fail if `http`, `socket`, `URL`, or `fetch` appear in source
-- Only allowed permissions: `RECORD_AUDIO`, `FOREGROUND_SERVICE`, `POST_NOTIFICATIONS`
+- Only allowed permissions: `RECORD_AUDIO`, `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_MICROPHONE`, `POST_NOTIFICATIONS`
 - Raw audio is **never** saved by default; opt-in snore clips are max 10 s and auto-purged
 - "Nuke all data" must overwrite the DB before deleting it
 
@@ -59,7 +59,7 @@ Spectral analysis in the 20–300 Hz band. Each snore event records start time, 
 
 ## Background Operation
 
-- Android: foreground service with persistent notification, type `FOREGROUND_SERVICE_DATA_SYNC`
+- Android: foreground service with persistent notification, type `FOREGROUND_SERVICE_MICROPHONE`
 - iOS: background audio mode
 - Must survive phone calls and crashes without losing more than the last 30 s of data
 - Auto start/stop (charge + flat phone detection) is opt-in and disabled by default
