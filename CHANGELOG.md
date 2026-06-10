@@ -5,6 +5,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — Versioning:
 
 ## [Unreleased]
 
+## [0.1.14] - 2026-06-10
+
+### Fixed
+- CI release job no longer edits or commits CHANGELOG.md; release notes are extracted from the pre-stamped local file, eliminating intermittent failures on detached-HEAD tag checkouts
+
 ## [0.1.13] - 2026-06-10
 
 ### Fixed
