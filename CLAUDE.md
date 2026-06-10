@@ -111,6 +111,30 @@ The CI pipeline must fail if any of these strings appear in Kotlin/Java source:
 grep -rE '\b(http|socket|URL|fetch)\b' app/src/main/java/
 ```
 
+## Release Process
+
+All release preparation happens **locally before pushing the tag**. CI only builds and publishes — it never edits files or pushes commits back to master.
+
+Steps for a new release (replace `X.Y.Z` with the new version):
+
+1. **Update `app/build.gradle.kts`** — bump `versionCode` (increment by 1) and `versionName` to `X.Y.Z`.
+2. **Update `CHANGELOG.md`** — add a `## [X.Y.Z] - YYYY-MM-DD` section below `## [Unreleased]` with all changes listed under `### Fixed`, `### Added`, etc.
+3. **Commit both files:**
+   ```bash
+   git add app/build.gradle.kts CHANGELOG.md
+   git commit -m "chore: bump to vX.Y.Z"
+   ```
+4. **Tag and push:**
+   ```bash
+   git tag vX.Y.Z
+   git push origin master
+   git push origin vX.Y.Z
+   ```
+
+The `vX.Y.Z` tag triggers the CI release job, which extracts the release notes from CHANGELOG.md and publishes the GitHub Release and Play Store build.
+
+**Do not** leave the CHANGELOG entry empty or under `[Unreleased]` when pushing a release tag — the CI extracts notes directly from the `[X.Y.Z]` section.
+
 ## Key Docs
 
 - `docs/PRD.md` — full product requirements

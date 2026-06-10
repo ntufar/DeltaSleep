@@ -139,56 +139,21 @@ jobs:
         with:
           fetch-depth: 0  # needed for git push back to master
 
-      # ── Stamp CHANGELOG.md ───────────────────────────────────────────────
-      - name: Update CHANGELOG for release
-        id: changelog
+      # ── Extract release notes from pre-stamped CHANGELOG ────────────────
+      - name: Extract release notes
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
-          DATE="$(date -u +%Y-%m-%d)"
-
-          python3 - "$VERSION" "$DATE" <<'EOF'
+          python3 - "$VERSION" <<'EOF'
           import sys, re
-          version, date = sys.argv[1], sys.argv[2]
-
+          version = sys.argv[1]
           with open("CHANGELOG.md") as f:
               content = f.read()
-
-          # If the version header already exists (pre-stamped locally), just
-          # normalise the date; otherwise insert it below [Unreleased].
-          version_pattern = rf"## \[{re.escape(version)}\]"
-          if re.search(version_pattern, content):
-              stamped = re.sub(
-                  rf"## \[{re.escape(version)}\] - \S+",
-                  f"## [{version}] - {date}",
-                  content,
-                  count=1,
-              )
-          else:
-              stamped = content.replace(
-                  "## [Unreleased]",
-                  f"## [Unreleased]\n\n## [{version}] - {date}",
-                  1,
-              )
-          with open("CHANGELOG.md", "w") as f:
-              f.write(stamped)
-
-          # Extract notes for this version (text between its header and the next).
           pattern = rf"## \[{re.escape(version)}\] - [^\n]+\n(.*?)(?=\n## \[|\Z)"
-          match = re.search(pattern, stamped, re.DOTALL)
+          match = re.search(pattern, content, re.DOTALL)
           notes = match.group(1).strip() if match else ""
           with open("release-notes.md", "w") as f:
               f.write(notes)
           EOF
-
-      - name: Commit CHANGELOG back to main
-        run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add CHANGELOG.md
-          git commit -m "chore: update CHANGELOG for ${{ github.ref_name }}"
-          git fetch origin master
-          git rebase origin/master
-          git push origin HEAD:master
 
       # ── Build ────────────────────────────────────────────────────────────
       - name: Set up JDK 17
