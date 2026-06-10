@@ -5,6 +5,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — Versioning:
 
 ## [Unreleased]
 
+## [0.1.13] - 2026-06-10
+
+### Fixed
+- Result screen readability: stat cards now have a fixed equal height so "Sleep time" no longer renders taller than the others ([#1](https://github.com/ntufar/DeltaSleep/issues/1))
+- Sleep stages hypnogram height increased from 180 dp to 240 dp so phase rows are no longer squeezed ([#1](https://github.com/ntufar/DeltaSleep/issues/1))
+- "How did you feel?" rating digits are now shown inside clearly visible 48 dp circular buttons with filled/outlined states ([#1](https://github.com/ntufar/DeltaSleep/issues/1))
+- Export CSV filename now includes the session start timestamp (e.g. `deltasleep_20260610_220000.csv`) instead of the internal session ID ([#1](https://github.com/ntufar/DeltaSleep/issues/1))
+
 ## [0.1.12] - 2026-06-09
 
 ## [0.1.11] - 2026-06-09

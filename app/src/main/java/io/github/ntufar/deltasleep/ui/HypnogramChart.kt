@@ -37,7 +37,7 @@ fun HypnogramChart(
     Canvas(
         modifier = modifier
             .fillMaxWidth()
-            .height(180.dp),
+            .height(240.dp),
     ) {
         if (epochs.isEmpty()) return@Canvas
 

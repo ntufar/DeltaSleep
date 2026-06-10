@@ -4,6 +4,8 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,6 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -37,6 +40,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.ntufar.deltasleep.data.model.SleepPhase
 import io.github.ntufar.deltasleep.viewmodel.SessionViewModel
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 // Magenta used for snore overlay in the hypnogram
@@ -74,10 +80,14 @@ fun SessionScreen(
         Text("Last Night", style = MaterialTheme.typography.headlineMedium)
         Spacer(Modifier.height(16.dp))
 
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            StatCard("Sleep time", sleepLabel, Modifier.weight(1f))
-            StatCard("Snore", "${s.snorePercent.toInt()}%", Modifier.weight(1f))
-            StatCard("Deep", "${s.deepPercent.toInt()}%", Modifier.weight(1f))
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.Top,
+        ) {
+            StatCard("Sleep time", sleepLabel, Modifier.weight(1f).height(88.dp))
+            StatCard("Snore", "${s.snorePercent.toInt()}%", Modifier.weight(1f).height(88.dp))
+            StatCard("Deep", "${s.deepPercent.toInt()}%", Modifier.weight(1f).height(88.dp))
         }
 
         Spacer(Modifier.height(24.dp))
@@ -105,17 +115,31 @@ fun SessionScreen(
         var rating by remember { mutableIntStateOf(0) }
         Text("How did you feel?", style = MaterialTheme.typography.titleMedium)
         Spacer(Modifier.height(8.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             (1..5).forEach { n ->
-                TextButton(
-                    onClick = { rating = n; vm.saveFeelRating(n) },
+                val selected = rating == n
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(
+                            if (selected) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.surfaceVariant,
+                        )
+                        .border(
+                            width = 1.dp,
+                            color = if (selected) MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.outline,
+                            shape = CircleShape,
+                        )
+                        .clickable { rating = n; vm.saveFeelRating(n) },
                 ) {
                     Text(
                         text = n.toString(),
-                        style = if (rating == n) MaterialTheme.typography.titleLarge
-                                else MaterialTheme.typography.bodyLarge,
-                        color = if (rating == n) MaterialTheme.colorScheme.primary
-                                else MaterialTheme.colorScheme.onSurface,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = if (selected) MaterialTheme.colorScheme.onPrimary
+                                else MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
@@ -123,8 +147,10 @@ fun SessionScreen(
 
         Spacer(Modifier.height(32.dp))
 
+        val tsFormat = remember { SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US) }
+        val exportTs = tsFormat.format(Date(s.session.startTime))
         Button(
-            onClick = { csvLauncher.launch("deltasleep_${s.session.id}.csv") },
+            onClick = { csvLauncher.launch("deltasleep_${exportTs}.csv") },
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text("Export CSV")
