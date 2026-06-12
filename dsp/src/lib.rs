@@ -17,6 +17,7 @@ struct Accumulator {
     zcr_sum: f64,
     band_ratio_sum: f64,
     count: usize,
+    snore_frame_count: usize,
     bp: BandPassState,
 }
 
@@ -27,6 +28,9 @@ impl Accumulator {
         self.zcr_sum += f.zcr as f64;
         self.band_ratio_sum += f.band_power_ratio as f64;
         self.count += 1;
+        if snore::detect_frame(f.rms, f.band_power_ratio) {
+            self.snore_frame_count += 1;
+        }
     }
 
     fn mean_rms(&self) -> f32 {
@@ -97,10 +101,12 @@ pub extern "system" fn Java_io_github_ntufar_deltasleep_audio_DspBridge_computeE
     let variance = guard.rms_variance();
     let mean_zcr = if guard.count == 0 { 0.0 } else { (guard.zcr_sum / guard.count as f64) as f32 };
     let mean_band = guard.mean_band_ratio();
+    let snore_frames = guard.snore_frame_count;
+    let total_frames = guard.count;
     drop(guard);
 
     let phase = classifier::classify(mean_rms, variance) as jfloat;
-    let snore = if snore::detect(mean_rms, mean_band) { 1.0 } else { 0.0 };
+    let snore = if snore::detect_epoch(snore_frames, total_frames) { 1.0 } else { 0.0 };
 
     let out = [mean_rms, variance, mean_zcr, mean_band, phase, snore];
     let arr = env.new_float_array(6).unwrap();

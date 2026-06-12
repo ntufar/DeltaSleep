@@ -5,6 +5,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — Versioning:
 
 ## [Unreleased]
 
+## [0.1.15] - 2026-06-13
+
+### Fixed
+- Snore detection now counts qualifying frames (rms > 0.010 and band_ratio > 0.25) and flags an epoch as snoring when ≥5 % of frames qualify (~1.5 s in a 30 s epoch); previously the epoch-averaged band ratio was diluted to near zero by silent frames, so snoring was never detected ([#2](https://github.com/ntufar/DeltaSleep/issues/2))
+- Hypnogram Y-axis now shows "Awake / Light / Deep" labels so each row is identifiable without relying on color alone ([#2](https://github.com/ntufar/DeltaSleep/issues/2))
+
 ## [0.1.14] - 2026-06-10
 
 ### Fixed
