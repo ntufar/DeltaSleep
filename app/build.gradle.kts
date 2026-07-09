@@ -18,8 +18,8 @@ android {
         applicationId = "io.github.ntufar.deltasleep"
         minSdk = 26
         targetSdk = 35
-        versionCode = 16
-        versionName = "0.1.15"
+        versionCode = 17
+        versionName = "0.2.0"
     }
 
     signingConfigs {
@@ -136,4 +136,6 @@ dependencies {
 
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
+
+    testImplementation("junit:junit:4.13.2")
 }

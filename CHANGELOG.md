@@ -5,6 +5,22 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — Versioning:
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-07-09
+
+### Added
+- Sleep apnea risk screening (v0.2 spec, opt-in, off by default): acoustic detection of apnea-like breathing pauses (≥ 10 s decrement bounded by breathing, gasp-confirmed) and hypopnea-like reductions, computed fully on-device from audio features — raw PCM is still discarded immediately
+- Rust DSP primitives: respiratory envelope (100–2000 Hz), spectral flatness/centroid, adaptive noise floor (60 s percentile tracker), breathing periodicity tracker (autocorrelation, 2–8 s periods), apnea event state machine, gasp detector, and event-level snore episodes; all thresholds centralized in `dsp/src/apnea_config.rs`
+- Nightly Respiratory Event Index (REI-a = apnea-like events per hour of sleep), signal-quality grading (GOOD/FAIR/LOW; low-margin nights excluded from trending), and per-night acoustic banding
+- STOP-BANG questionnaire (8 items, boolean-only, skippable, editable; Snoring/Observed-apnea pre-filled from measurements after ≥ 5 nights)
+- Headline risk band (LOW/ELEVATED/HIGH) from median REI-a over ≥ 5 good-quality nights combined with STOP-BANG via a documented matrix — a single bad night can never produce a HIGH banner
+- Apnea report screen: risk band with plain-language explanation, 30-night REI-a trend chart, longest event, snore %, signal quality, "what to do next" guidance, and a fixed not-a-medical-device disclaimer
+- Apnea events (red/orange markers) overlaid on the session hypnogram
+- Setup screen with placement hints, bed-partner caveat, 10 s breathing-to-noise margin test, and explicit opt-in switch
+- Physician report export: self-contained printable HTML generated on-device (methodology, 30-night table, STOP-BANG score, trend chart, disclaimer)
+- CSV export extended with `acoustic_events` and `night_summary` sections
+- New Room tables `acoustic_event`, `night_summary`, `questionnaire_result` (schema v2 migration); all covered by "Delete all data", which now also VACUUMs the database
+- Synthetic-night DSP test suite: recall/precision ≥ 0.9 asserted at ≥ 10 dB breathing-to-noise margin, plus golden-file regression
+
 ## [0.1.15] - 2026-06-13
 
 ### Fixed
