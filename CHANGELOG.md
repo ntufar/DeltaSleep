@@ -5,6 +5,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — Versioning:
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-07-09
+
+### Added
+- Previous Sessions on the home screen now render as a month calendar; days with a recorded sleep session are marked and tappable, jumping straight to that session's detail screen (or a picker if more than one session falls on the same day) ([#3](https://github.com/ntufar/DeltaSleep/issues/3))
+
 ## [0.2.1] - 2026-07-09
 
 ### Added
