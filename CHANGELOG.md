@@ -5,7 +5,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — Versioning:
 
 ## [Unreleased]
 
-## [0.2.0] - 2026-07-09
+## [0.2.1] - 2026-07-09
 
 ### Added
 - Sleep apnea risk screening (v0.2 spec, opt-in, off by default): acoustic detection of apnea-like breathing pauses (≥ 10 s decrement bounded by breathing, gasp-confirmed) and hypopnea-like reductions, computed fully on-device from audio features — raw PCM is still discarded immediately
