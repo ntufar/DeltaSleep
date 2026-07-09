@@ -5,4 +5,73 @@
     <string name="notif_tracking_title">DeltaSleep is running</string>
     <string name="notif_tracking_text">Recording sleep data — tap to open</string>
     <string name="action_stop">Stop</string>
+
+    <!-- Apnea screening — shared disclaimer (R1.1.2) -->
+    <string name="apnea_disclaimer">This is not a medical device and does not diagnose any condition. Only a sleep study interpreted by a clinician can diagnose sleep apnea. If your results suggest elevated risk, discuss them with a doctor.</string>
+
+    <!-- Apnea setup screen -->
+    <string name="apnea_setup_title">Apnea Risk Screening</string>
+    <string name="apnea_setup_what_is_measured">What is measured</string>
+    <string name="apnea_setup_what_desc">The app listens for breathing sounds and pauses (silences ≥ 10 s) during sleep. When breathing resumes with a gasp-like sound after a pause, the event is counted as an apnea-like event. No audio is ever stored — only aggregated counts and timing are saved.</string>
+    <string name="apnea_setup_bed_partner_title">Bed-partner caveat</string>
+    <string name="apnea_setup_bed_partner_desc">Results are unreliable if another person or pet sleeps within approximately 1 m closer to the phone than you are. Their breathing or movement sounds may be confused with yours.</string>
+    <string name="apnea_setup_placement_title">Phone placement</string>
+    <string name="apnea_setup_placement_desc">Place the phone on a nightstand or mattress edge, microphone unobstructed, 0.5–1.5 m from your head. Do not put it under a pillow.</string>
+    <string name="apnea_setup_level_test_title">Test breathing sound level</string>
+    <string name="apnea_setup_level_test_desc">Tap to run a 10-second test. Breathe normally. A margin ≥ 10 dB is good; below 6 dB may reduce accuracy.</string>
+    <string name="apnea_setup_level_test_start">Test sound level (10 s)</string>
+    <string name="apnea_setup_level_test_running">Testing… breathe normally</string>
+    <string name="apnea_setup_level_margin_good">Good signal</string>
+    <string name="apnea_setup_level_margin_fair">Fair signal</string>
+    <string name="apnea_setup_level_margin_poor">Poor signal — try repositioning phone</string>
+    <string name="apnea_setup_tracking_active">Cannot test while sleep tracking is active.</string>
+    <string name="apnea_setup_enable_label">Enable apnea screening</string>
+    <string name="apnea_setup_enable_desc">Analyses breathing sounds for risk indication. Off by default.</string>
+    <string name="apnea_setup_save">Save settings</string>
+
+    <!-- Apnea questionnaire screen -->
+    <string name="apnea_questionnaire_title">STOP-BANG Questionnaire</string>
+    <string name="apnea_questionnaire_subtitle">Answer yes or no to each question. You can skip or edit later.</string>
+    <string name="apnea_q_snoring">Do you snore loudly (louder than talking, or loud enough to be heard through closed doors)?</string>
+    <string name="apnea_q_tiredness">Do you often feel tired, fatigued, or sleepy during the daytime?</string>
+    <string name="apnea_q_observed">Has anyone observed you stop breathing during your sleep?</string>
+    <string name="apnea_q_pressure">Do you have (or are you being treated for) high blood pressure?</string>
+    <string name="apnea_q_bmi">Is your BMI more than 35?</string>
+    <string name="apnea_q_age">Are you older than 50?</string>
+    <string name="apnea_q_neck">Is your neck circumference more than 40 cm (about 16 inches)?</string>
+    <string name="apnea_q_gender">Is your gender male?</string>
+    <string name="apnea_questionnaire_prefill_caption">Suggested from your measurements — you can change these.</string>
+    <string name="apnea_questionnaire_save">Save questionnaire</string>
+    <string name="apnea_questionnaire_skip">Skip</string>
+    <string name="apnea_questionnaire_score_label">Score: %1$d / 8 — %2$s risk</string>
+    <string name="apnea_questionnaire_citation">STOP-BANG: Chung et al., Anesthesiology 2008; validated OSA screening questionnaire.</string>
+
+    <!-- Apnea report screen -->
+    <string name="apnea_report_title">Apnea Risk Report</string>
+    <string name="apnea_report_not_enough_data">%1$d of 5 nights collected</string>
+    <string name="apnea_report_not_enough_desc">At least 5 nights of good-quality data are needed to compute a risk indication. Keep tracking!</string>
+    <string name="apnea_report_median_rei">Median REI-a: %1$.1f events/h</string>
+    <string name="apnea_report_low_explanation">A median REI-a of %1$.1f events/h is in the range associated with normal/minimal sleep-disordered breathing.</string>
+    <string name="apnea_report_elevated_explanation">A median REI-a of %1$.1f events/h is in the range associated with mild OSA. Combined with your questionnaire answers, this suggests an elevated risk.</string>
+    <string name="apnea_report_high_explanation">A median REI-a of %1$.1f events/h is in the range associated with moderate-to-severe OSA. Combined with your questionnaire answers, this suggests a high risk.</string>
+    <string name="apnea_report_what_next_title">What to do next</string>
+    <string name="apnea_report_what_next_body">Consider discussing these results with your doctor. They may recommend a home sleep apnea test (HSAT) or full polysomnography. Bring the exported physician report to your appointment.</string>
+    <string name="apnea_report_trend_title">REI-a trend (last 30 nights)</string>
+    <string name="apnea_report_latest_night">Latest night</string>
+    <string name="apnea_report_longest_event">Longest event: %1$.0f s</string>
+    <string name="apnea_report_snore_pct">Snore: %1$.0f%% of sleep</string>
+    <string name="apnea_report_signal_quality">Signal quality: %1$s</string>
+    <string name="apnea_report_export_html">Physician report (HTML)</string>
+    <string name="apnea_report_questionnaire">STOP-BANG Questionnaire</string>
+    <string name="apnea_report_setup">Screening setup</string>
+    <string name="apnea_report_screening_off">Apnea screening is off.</string>
+    <string name="apnea_report_screening_off_button">Go to setup</string>
+    <string name="apnea_report_low">LOW</string>
+    <string name="apnea_report_elevated">ELEVATED</string>
+    <string name="apnea_report_high">HIGH</string>
+    <string name="apnea_report_excluded">excluded</string>
+
+    <!-- Home screen apnea card -->
+    <string name="apnea_home_card_title">Apnea Screening</string>
+    <string name="apnea_home_card_desc">Risk indication from breathing sounds</string>
 </resources>

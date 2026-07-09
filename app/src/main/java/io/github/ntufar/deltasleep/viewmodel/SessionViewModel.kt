@@ -6,6 +6,9 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import io.github.ntufar.deltasleep.DeltaSleepApp
+import io.github.ntufar.deltasleep.apnea.ApneaPrefs
+import io.github.ntufar.deltasleep.data.model.AcousticEvent
+import io.github.ntufar.deltasleep.data.model.NightSummary
 import io.github.ntufar.deltasleep.data.model.SleepEpoch
 import io.github.ntufar.deltasleep.data.model.SleepPhase
 import io.github.ntufar.deltasleep.data.model.SleepSession
@@ -21,6 +24,9 @@ data class SessionSummary(
     val totalSleepMs: Long,
     val snorePercent: Float,
     val deepPercent: Float,
+    val acousticEvents: List<AcousticEvent> = emptyList(),
+    val nightSummary: NightSummary? = null,
+    val screeningEnabled: Boolean = false,
 )
 
 class SessionViewModel(
@@ -29,6 +35,7 @@ class SessionViewModel(
 ) : AndroidViewModel(app) {
     private val sessionId: Long = checkNotNull(savedState["sessionId"])
     private val db = (app as DeltaSleepApp).database
+    private val apneaPrefs = ApneaPrefs(app)
 
     private val _summary = MutableStateFlow<SessionSummary?>(null)
     val summary: StateFlow<SessionSummary?> = _summary
@@ -43,6 +50,17 @@ class SessionViewModel(
         val totalSleepMs = (session.endTime ?: System.currentTimeMillis()) - session.startTime
         val snoreCount = epochs.count { it.hasSnore }
         val deepCount = epochs.count { it.phase == SleepPhase.DEEP }
+        val screeningEnabled = apneaPrefs.screeningEnabled
+        val acousticEvents = if (screeningEnabled) {
+            db.acousticEventDao().getForSession(sessionId)
+        } else {
+            emptyList()
+        }
+        val nightSummary = if (screeningEnabled) {
+            db.nightSummaryDao().getBySession(sessionId)
+        } else {
+            null
+        }
         _summary.update {
             SessionSummary(
                 session = session,
@@ -50,6 +68,9 @@ class SessionViewModel(
                 totalSleepMs = totalSleepMs,
                 snorePercent = if (epochs.isEmpty()) 0f else snoreCount * 100f / epochs.size,
                 deepPercent = if (epochs.isEmpty()) 0f else deepCount * 100f / epochs.size,
+                acousticEvents = acousticEvents,
+                nightSummary = nightSummary,
+                screeningEnabled = screeningEnabled,
             )
         }
     }

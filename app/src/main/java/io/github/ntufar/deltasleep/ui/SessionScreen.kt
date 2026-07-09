@@ -38,6 +38,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import io.github.ntufar.deltasleep.data.model.AcousticEventType
+import io.github.ntufar.deltasleep.data.model.SignalQuality
 import io.github.ntufar.deltasleep.data.model.SleepPhase
 import io.github.ntufar.deltasleep.viewmodel.SessionViewModel
 import java.text.SimpleDateFormat
@@ -99,6 +101,7 @@ fun SessionScreen(
             epochs = s.epochs,
             startMs = s.session.startTime,
             endMs = s.session.endTime ?: System.currentTimeMillis(),
+            events = s.acousticEvents,
         )
 
         // Legend
@@ -108,6 +111,38 @@ fun SessionScreen(
                 LegendChip(color = phase.color, label = phase.label)
             }
             LegendChip(color = SnoreLegendColor, label = "Snore")
+            // Apnea markers legend — shown only when screening is on or events exist
+            val hasApneaEvents = s.acousticEvents.any {
+                it.type == AcousticEventType.APNEA_LIKE || it.type == AcousticEventType.HYPOPNEA_LIKE
+            }
+            if (s.screeningEnabled || hasApneaEvents) {
+                LegendChip(color = Color(0xFFE53935), label = "Apnea-like")
+                LegendChip(color = Color(0xFFFF9800), label = "Hypopnea-like")
+            }
+        }
+
+        // Apnea stats for this session (shown if screening enabled and summary available)
+        if (s.screeningEnabled && s.nightSummary != null) {
+            val ns = s.nightSummary
+            Spacer(Modifier.height(16.dp))
+            Text("Apnea screening", style = MaterialTheme.typography.titleMedium)
+            Spacer(Modifier.height(8.dp))
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.Top,
+            ) {
+                StatCard(
+                    "REI-a",
+                    "%.1f/h".format(ns.reiA),
+                    Modifier.weight(1f).height(88.dp),
+                )
+                StatCard(
+                    "Signal",
+                    ns.signalQuality.name,
+                    Modifier.weight(1f).height(88.dp),
+                )
+            }
         }
 
         Spacer(Modifier.height(24.dp))

@@ -44,6 +44,8 @@ fun HomeScreen(
     onSessionTap: (Long) -> Unit,
     onActiveSession: (Long) -> Unit,
     onHelp: () -> Unit = {},
+    onApnea: () -> Unit = {},
+    onApneaSetup: () -> Unit = {},
     vm: HomeViewModel = viewModel(),
 ) {
     val sessions by vm.sessions.collectAsState()
@@ -90,7 +92,36 @@ fun HomeScreen(
             }
         }
 
-        Spacer(Modifier.height(32.dp))
+        Spacer(Modifier.height(16.dp))
+
+        // Apnea screening card (between start button and previous sessions)
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable {
+                    if (vm.shouldShowApneaSetup()) onApneaSetup() else onApnea()
+                },
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column {
+                    Text("Apnea Screening", style = MaterialTheme.typography.titleSmall)
+                    Text(
+                        "Risk indication from breathing sounds",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFF7A8FB5),
+                    )
+                }
+                Text("›", style = MaterialTheme.typography.titleLarge, color = Color(0xFF42A5F5))
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
 
         Text("Previous Sessions", style = MaterialTheme.typography.titleMedium)
         Spacer(Modifier.height(8.dp))

@@ -12,6 +12,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.dp
+import io.github.ntufar.deltasleep.data.model.AcousticEvent
+import io.github.ntufar.deltasleep.data.model.AcousticEventType
 import io.github.ntufar.deltasleep.data.model.SleepEpoch
 import io.github.ntufar.deltasleep.data.model.SleepPhase
 import java.util.Calendar
@@ -27,12 +29,21 @@ private val PHASE_ROW_MAP = PHASE_ROWS.toMap()
  * Hypnogram: X = time, Y = sleep phase (Awake / Light / Deep).
  * Snore epochs get a semi-transparent magenta column overlay.
  * Hour labels are drawn along the bottom when startMs / endMs are provided.
+ *
+ * When [events] is non-empty and [startMs]/[endMs] are provided, acoustic events are
+ * overlaid as thick markers along the top edge of the chart:
+ * - APNEA_LIKE → red segment spanning event start→end
+ * - HYPOPNEA_LIKE → orange segment spanning event start→end
+ * GASP and SNORE_EPISODE are not drawn (snore already has the magenta overlay).
+ *
+ * Default rendering (events = emptyList()) is identical to before this change.
  */
 @Composable
 fun HypnogramChart(
     epochs: List<SleepEpoch>,
     startMs: Long = 0L,
     endMs: Long = 0L,
+    events: List<AcousticEvent> = emptyList(),
     modifier: Modifier = Modifier,
 ) {
     Canvas(
@@ -94,6 +105,30 @@ fun HypnogramChart(
                 y,
                 labelPaint,
             )
+        }
+
+        // Acoustic event markers — drawn when startMs/endMs are valid, regardless of hasTimeAxis
+        if (hasTimeAxis && events.isNotEmpty()) {
+            val sessionDurationMs = endMs - startMs
+            if (sessionDurationMs > 0) {
+                val markerH = 6.dp.toPx()
+                for (event in events) {
+                    val color = when (event.type) {
+                        AcousticEventType.APNEA_LIKE -> Color(0xFFE53935)
+                        AcousticEventType.HYPOPNEA_LIKE -> Color(0xFFFF9800)
+                        else -> continue
+                    }
+                    val startFrac = ((event.startUtc - startMs).toFloat() / sessionDurationMs).coerceIn(0f, 1f)
+                    val endFrac = ((event.startUtc + event.durationMs - startMs).toFloat() / sessionDurationMs).coerceIn(0f, 1f)
+                    val x0 = labelW + startFrac * chartW
+                    val x1 = labelW + endFrac * chartW
+                    drawRect(
+                        color = color,
+                        topLeft = Offset(x0, 0f),
+                        size = Size((x1 - x0).coerceAtLeast(3.dp.toPx()), markerH),
+                    )
+                }
+            }
         }
 
         // Time axis

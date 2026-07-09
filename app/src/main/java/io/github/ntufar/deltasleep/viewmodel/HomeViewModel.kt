@@ -6,15 +6,22 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.ntufar.deltasleep.DeltaSleepApp
+import io.github.ntufar.deltasleep.apnea.ApneaPrefs
 import io.github.ntufar.deltasleep.data.model.SleepSession
 import io.github.ntufar.deltasleep.service.SleepTrackingService
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class HomeViewModel(app: Application) : AndroidViewModel(app) {
     private val db = (app as DeltaSleepApp).database
+    private val apneaPrefs = ApneaPrefs(app)
+
+    /** Whether to navigate to setup (explainer not shown or screening disabled) vs. the report hub. */
+    fun shouldShowApneaSetup(): Boolean = !apneaPrefs.explainerShown || !apneaPrefs.screeningEnabled
 
     val sessions: StateFlow<List<SleepSession>> = db.sessionDao()
         .observeAll()
@@ -49,10 +56,30 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    /**
+     * Delete ALL user data from every table and then VACUUM the database file.
+     *
+     * Deletion order respects foreign-key constraints (children before parents).
+     * After deletion we issue a VACUUM checkpoint so SQLite truncates freed pages
+     * from the file — best-effort overwrite-before-delete per FR-3.4.
+     * (SQLite WAL mode may defer the actual page reclaim; for a true cryptographic
+     * wipe the caller should also delete and re-create the DB file, or use SQLCipher.)
+     */
     fun nukeAllData() {
         viewModelScope.launch {
-            db.epochDao().deleteAll()
-            db.sessionDao().deleteAll()
+            withContext(Dispatchers.IO) {
+                // Delete child tables before parents to satisfy FK constraints
+                db.acousticEventDao().deleteAll()
+                db.nightSummaryDao().deleteAll()
+                db.questionnaireResultDao().deleteAll()
+                db.epochDao().deleteAll()
+                db.sessionDao().deleteAll()
+
+                // VACUUM: instructs SQLite to rebuild the database file, releasing freed
+                // pages back to the OS. This is the closest SQLite comes to overwriting
+                // deleted content without a full file-level secure-erase pass.
+                db.openHelper.writableDatabase.execSQL("VACUUM")
+            }
         }
     }
 }

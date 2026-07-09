@@ -13,6 +13,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import io.github.ntufar.deltasleep.ui.ActiveSleepScreen
+import io.github.ntufar.deltasleep.ui.ApneaQuestionnaireScreen
+import io.github.ntufar.deltasleep.ui.ApneaReportScreen
+import io.github.ntufar.deltasleep.ui.ApneaSetupScreen
 import io.github.ntufar.deltasleep.ui.HelpScreen
 import io.github.ntufar.deltasleep.ui.HomeScreen
 import io.github.ntufar.deltasleep.ui.SessionScreen
@@ -57,6 +60,24 @@ private fun DeltaSleepNavGraph() {
                     }
                 },
                 onHelp = { nav.navigate("help") },
+                onApnea = { nav.navigate("apnea") },
+                onApneaSetup = { nav.navigate("apnea_setup") },
+            )
+        }
+        composable("apnea") {
+            ApneaReportScreen(
+                onBack = { nav.popBackStack() },
+                onQuestionnaire = { nav.navigate("apnea_questionnaire") },
+                onSetup = { nav.navigate("apnea_setup") },
+            )
+        }
+        composable("apnea_setup") {
+            ApneaSetupScreen(onBack = { nav.popBackStack() })
+        }
+        composable("apnea_questionnaire") {
+            ApneaQuestionnaireScreen(
+                onBack = { nav.popBackStack() },
+                onSaved = { nav.popBackStack() },
             )
         }
         composable(

@@ -1,124 +1,135 @@
-mod classifier;
-mod features;
-mod snore;
+//! DeltaSleep DSP core.
+//!
+//! All signal processing lives in pure-Rust modules ([`engine`], [`apnea`],
+//! [`features`], [`snore`], [`classifier`]) so it is testable on the host;
+//! this file is only a thin JNI shim over a global [`engine::SessionEngine`].
 
-use features::{BandPassState, FrameFeatures};
+pub mod apnea;
+pub mod apnea_config;
+pub mod classifier;
+pub mod engine;
+pub mod features;
+pub mod snore;
+
+use engine::SessionEngine;
 use jni::objects::{JFloatArray, JObject, JShortArray};
-use jni::sys::jfloat;
 use jni::JNIEnv;
 use std::sync::{Mutex, OnceLock};
 
-// ── Epoch accumulator ──────────────────────────────────────────────────────────
+/// Samples per 10 ms frame at 16 kHz.
+const FRAME_SAMPLES: usize = 160;
 
-#[derive(Default)]
-struct Accumulator {
-    rms_sum: f64,
-    rms_sq_sum: f64,  // for variance: E[x²] - E[x]²
-    zcr_sum: f64,
-    band_ratio_sum: f64,
-    count: usize,
-    snore_frame_count: usize,
-    bp: BandPassState,
-}
+static ENGINE: OnceLock<Mutex<SessionEngine>> = OnceLock::new();
 
-impl Accumulator {
-    fn add(&mut self, f: FrameFeatures) {
-        self.rms_sum += f.rms as f64;
-        self.rms_sq_sum += (f.rms * f.rms) as f64;
-        self.zcr_sum += f.zcr as f64;
-        self.band_ratio_sum += f.band_power_ratio as f64;
-        self.count += 1;
-        if snore::detect_frame(f.rms, f.band_power_ratio) {
-            self.snore_frame_count += 1;
-        }
-    }
-
-    fn mean_rms(&self) -> f32 {
-        if self.count == 0 { return 0.0; }
-        (self.rms_sum / self.count as f64) as f32
-    }
-
-    fn rms_variance(&self) -> f32 {
-        if self.count == 0 { return 0.0; }
-        let n = self.count as f64;
-        let mean = self.rms_sum / n;
-        let mean_sq = self.rms_sq_sum / n;
-        (mean_sq - mean * mean).max(0.0) as f32
-    }
-
-    fn mean_band_ratio(&self) -> f32 {
-        if self.count == 0 { return 0.0; }
-        (self.band_ratio_sum / self.count as f64) as f32
-    }
-
-    fn reset(&mut self) {
-        *self = Self::default();
-    }
-}
-
-static ACC: OnceLock<Mutex<Accumulator>> = OnceLock::new();
-
-fn acc() -> &'static Mutex<Accumulator> {
-    ACC.get_or_init(|| Mutex::new(Accumulator::default()))
+fn engine() -> &'static Mutex<SessionEngine> {
+    ENGINE.get_or_init(|| Mutex::new(SessionEngine::new()))
 }
 
 // ── JNI exports ───────────────────────────────────────────────────────────────
 
 /// Process one 10 ms frame of 16 kHz mono PCM.
-/// Returns float[3]: [rms, zcr, band_power_ratio].
+/// Returns float[6]: [rms, zcr, band_power_ratio, noise_floor_db,
+/// breathing_margin_db, breathing_present(0/1)].
 #[no_mangle]
 pub extern "system" fn Java_io_github_ntufar_deltasleep_audio_DspBridge_processFrame<'local>(
     env: JNIEnv<'local>,
     _obj: JObject<'local>,
     samples: JShortArray<'local>,
 ) -> JFloatArray<'local> {
-    let len = env.get_array_length(&samples).unwrap_or(0) as usize;
-    let mut buf = vec![0i16; len];
-    env.get_short_array_region(&samples, 0, &mut buf).unwrap_or(());
+    // Fixed stack buffer — no per-frame heap allocation (NFR-3). Frames are
+    // always 160 samples; anything longer is truncated defensively.
+    let mut buf = [0i16; FRAME_SAMPLES];
+    let len = (env.get_array_length(&samples).unwrap_or(0) as usize).min(FRAME_SAMPLES);
+    env.get_short_array_region(&samples, 0, &mut buf[..len]).unwrap_or(());
 
-    let frame = {
-        let mut guard = acc().lock().unwrap();
-        let f = features::compute(&buf, &mut guard.bp);
-        guard.add(f);
-        f
-    };
+    let frame = engine().lock().unwrap().process_frame(&buf[..len]);
 
-    let out = [frame.rms, frame.zcr, frame.band_power_ratio];
-    let arr = env.new_float_array(3).unwrap();
+    let out = [
+        frame.rms,
+        frame.zcr,
+        frame.band_power_ratio,
+        frame.noise_floor_db,
+        frame.breathing_margin_db,
+        if frame.breathing_present { 1.0 } else { 0.0 },
+    ];
+    let arr = env.new_float_array(out.len() as i32).unwrap();
     env.set_float_array_region(&arr, 0, &out).unwrap();
     arr
 }
 
 /// Summarise the accumulated epoch.
-/// Returns float[6]: [mean_rms, rms_variance, mean_zcr, mean_band_ratio, phase_ordinal, snore_flag].
+/// Returns float[8]: [mean_rms, rms_variance, mean_zcr, mean_band_ratio,
+/// phase_ordinal, snore_flag, mean_breathing_margin_db,
+/// breathing_present_fraction].
 #[no_mangle]
 pub extern "system" fn Java_io_github_ntufar_deltasleep_audio_DspBridge_computeEpoch<'local>(
     env: JNIEnv<'local>,
     _obj: JObject<'local>,
 ) -> JFloatArray<'local> {
-    let guard = acc().lock().unwrap();
-    let mean_rms = guard.mean_rms();
-    let variance = guard.rms_variance();
-    let mean_zcr = if guard.count == 0 { 0.0 } else { (guard.zcr_sum / guard.count as f64) as f32 };
-    let mean_band = guard.mean_band_ratio();
-    let snore_frames = guard.snore_frame_count;
-    let total_frames = guard.count;
-    drop(guard);
+    let epoch = engine().lock().unwrap().compute_epoch();
 
-    let phase = classifier::classify(mean_rms, variance) as jfloat;
-    let snore = if snore::detect_epoch(snore_frames, total_frames) { 1.0 } else { 0.0 };
-
-    let out = [mean_rms, variance, mean_zcr, mean_band, phase, snore];
-    let arr = env.new_float_array(6).unwrap();
+    let out = [
+        epoch.mean_rms,
+        epoch.rms_variance,
+        epoch.mean_zcr,
+        epoch.mean_band_ratio,
+        epoch.phase_ordinal as f32,
+        if epoch.snore_flag { 1.0 } else { 0.0 },
+        epoch.mean_breathing_margin_db,
+        epoch.breathing_present_fraction,
+    ];
+    let arr = env.new_float_array(out.len() as i32).unwrap();
     env.set_float_array_region(&arr, 0, &out).unwrap();
     arr
 }
 
-/// Discard accumulated epoch data and reset IIR filter state.
+/// Discard accumulated epoch data ONLY. Noise floor, periodicity, state
+/// machine, event ring, and frame counter all persist across epochs.
 #[no_mangle]
 pub extern "system" fn Java_io_github_ntufar_deltasleep_audio_DspBridge_resetEpoch<'local>(
     _env: JNIEnv<'local>,
     _obj: JObject<'local>,
 ) {
-    acc().lock().unwrap().reset();
+    engine().lock().unwrap().reset_epoch();
+}
+
+/// Full DSP session reset: clears all trackers, the event ring buffer, the
+/// epoch accumulator, and the frame counter (event offsets restart at 0).
+#[no_mangle]
+pub extern "system" fn Java_io_github_ntufar_deltasleep_audio_DspBridge_startSession<'local>(
+    _env: JNIEnv<'local>,
+    _obj: JObject<'local>,
+) {
+    engine().lock().unwrap().start_session();
+}
+
+/// Drain completed acoustic events. Returns a flattened float array with
+/// stride 8 per event:
+/// [type, start_offset_ms, duration_ms, confidence, peak_db_over_floor,
+///  envelope_reduction_pct(0–1), terminated_by_gasp(0/1), mean_db_over_floor]
+/// where type is 0=APNEA_LIKE, 1=HYPOPNEA_LIKE, 2=GASP, 3=SNORE_EPISODE.
+/// Empty array when no events are pending.
+#[no_mangle]
+pub extern "system" fn Java_io_github_ntufar_deltasleep_audio_DspBridge_pollEvents<'local>(
+    env: JNIEnv<'local>,
+    _obj: JObject<'local>,
+) -> JFloatArray<'local> {
+    let events = engine().lock().unwrap().poll_events();
+
+    let mut out = Vec::with_capacity(events.len() * 8);
+    for ev in &events {
+        out.push(ev.event_type as i32 as f32);
+        out.push(ev.start_offset_ms as f32);
+        out.push(ev.duration_ms as f32);
+        out.push(ev.confidence);
+        out.push(ev.peak_db_over_floor);
+        out.push(ev.envelope_reduction_pct);
+        out.push(if ev.terminated_by_gasp { 1.0 } else { 0.0 });
+        out.push(ev.mean_db_over_floor);
+    }
+    let arr = env.new_float_array(out.len() as i32).unwrap();
+    if !out.is_empty() {
+        env.set_float_array_region(&arr, 0, &out).unwrap();
+    }
+    arr
 }
