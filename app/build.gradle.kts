@@ -12,14 +12,14 @@ val keystoreProps = rootProject.file("keystore.properties").takeIf { it.exists()
 
 android {
     namespace = "io.github.ntufar.deltasleep"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "io.github.ntufar.deltasleep"
         minSdk = 26
-        targetSdk = 35
-        versionCode = 19
-        versionName = "0.2.2"
+        targetSdk = 36
+        versionCode = 20
+        versionName = "0.2.3"
     }
 
     signingConfigs {

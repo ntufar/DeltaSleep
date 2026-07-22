@@ -5,6 +5,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — Versioning:
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-07-22
+
+### Changed
+- Target API level bumped to Android 16 (API 36) to comply with Google Play's target API requirements; `compileSdk` raised to 36 and Android Gradle Plugin/Gradle wrapper updated to 8.13.0/8.13 to support it ([#4](https://github.com/ntufar/DeltaSleep/issues/4))
+
 ## [0.2.2] - 2026-07-09
 
 ### Added
