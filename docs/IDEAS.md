@@ -38,7 +38,7 @@ occurs in ~90 min cycles, weighted toward the back half of the night.
   median-filter phases over 5 epochs (2.5 min), suppress REM in the first
   60 min of sleep, and merge REM runs < 4 epochs into neighbors — removes
   physiologically impossible flicker.
-- Schema: `sleep_epochs.phase` gains value `3=REM` (Room migration v3; keep
+- Schema: `sleep_epochs.phase` gains value `3=REM` (Room migration v5 — v3 went to A-7, v4 to A-4; keep
   the enum ordinal stable). Hypnogram gets a fourth row, purple per PRD.
 - **Honesty rule:** label REM "estimated" in UI until validated (see A-2),
   same policy as the apnea "experimental" tag in `validation.md`.
@@ -98,7 +98,7 @@ rates, and needs **no permission**.
 **Testing:** unit tests with recorded sensor traces (arrays in test fixtures);
 verify null-column path on devices without the sensor.
 
-### A-4. VAD / "external audio" class — close the PRD gap — **M**
+### A-4. VAD / "external audio" class — close the PRD gap — **M** — DONE
 
 The PRD pipeline step 2 (filter podcasts/audiobooks playing mix-with-others)
 is not truly implemented; speech will currently pollute snore/apnea stats.
@@ -119,6 +119,21 @@ is not truly implemented; speech will currently pollute snore/apnea stats.
   precedent).
 - UI: session detail shows "external audio filtered: NN min" so users trust
   the numbers.
+
+**Done as:** DSP VAD = 300–3000 Hz IIR band in `features.rs` (speech ratio)
+plus a 5 s syllabic-modulation tracker (`SyllabicTracker`: mean |Δ| of the
+20 Hz speech envelope); a frame is speech-like only when BOTH hold
+(thresholds measured on synthetic nights: speech idx 0.49–0.60 vs breathing
+0.10–0.13, snore 0.18). Epoch fraction exported as `computeEpoch` index 9
+(DB v3→v4 adds `externalAudioFraction` + `playbackActive`). Kotlin polls
+`AudioManager.isMusicActive` per flush — it only *lowers* the verdict bar
+(0.5 → 0.3), never decides alone, so white-noise sleep aids stay included.
+`NightSummarizer` excludes dominant-external epochs and their events from
+all denominators; session screen shows filtered minutes. Deliberate
+deviations: no `external audio` phase label existed (doc was wrong) — a
+separate verdict column avoids colliding with REM's planned ordinal 3; no
+`AudioPlaybackCallback` (per-epoch `isMusicActive` polling is sufficient);
+`centroid variance` replaced by the cheaper envelope-Δ index.
 
 ### A-5. Personal baseline calibration — **M**
 
@@ -162,7 +177,7 @@ non-diagnostic wellness signal ("your average overnight breathing rate rose
 from 14 to 17/min this week").
 
 **Done:** `computeEpoch` index 8 exports the mean breath period (own v2→v3
-migration — A-1 will take v3→v4 when it lands); `BreathingChart` + median on
+migration; A-4 later took v3→v4, so A-1 now takes v4→v5); `BreathingChart` + median on
 the session screen; `BreathingRate.medianBpm()` is the per-night hook D-1
 plots. **Completed by D-1:** the 30-day respiratory-rate trend now lives on
 the trends screen.
@@ -338,7 +353,7 @@ weekday, bedtime/wake consistency scatter.
 
 **Done as:** `TrendsRepository` (sessions + epoch GROUP BY aggregates +
 breath periods — no `startTime` index: ≤365 rows scan sub-ms, and the schema
-bump stays reserved for A-1's v4); chart kit in `ui/TrendsCharts.kt`
+bump stays reserved for A-1's v5); chart kit in `ui/TrendsCharts.kt`
 (`WeekBars`, `TrendLine`, `WeekdayHeatmap`, `BedtimeScatter`); bottom
 `NavigationBar`; per-night stats in `NightStat`, pure date math in
 `trends/TrendMath.kt` (9 unit tests). Also completes A-7's remaining

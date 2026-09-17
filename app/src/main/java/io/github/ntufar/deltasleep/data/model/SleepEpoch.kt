@@ -41,4 +41,18 @@ data class SleepEpoch(
      * Added in DB migration 2→3 (A-7). Displayed as breaths/min (60 / period).
      */
     val breathPeriodS: Float? = null,
+    /**
+     * Fraction of frames flagged speech-like by the DSP VAD (0–1):
+     * speech-band energy AND syllabic-rate modulation must both hold.
+     * Populated from DSP computeEpoch() index 9. Added in DB migration 3→4.
+     * Combined with [playbackActive] by `ExternalAudio.isExternal`.
+     */
+    val externalAudioFraction: Float = 0f,
+    /**
+     * Whether another app was rendering audio when this epoch flushed
+     * (`AudioManager.isMusicActive`). Added in DB migration 3→4 (A-4).
+     * Lowers the external-audio verdict bar; never a verdict by itself
+     * (a white-noise app must not nuke the whole night).
+     */
+    val playbackActive: Boolean = false,
 )

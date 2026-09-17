@@ -68,6 +68,11 @@ pub struct NightConfig {
     pub snore_intervals: Vec<(f32, f32)>,
     /// Amplitude of the snore component (linear).
     pub snore_amp: f32,
+    /// Speech intervals as (start_s, end_s): band-limited (300–3000 Hz)
+    /// noise with bursty syllabic-rate gating — a synthetic podcast (A-4).
+    pub speech_intervals: Vec<(f32, f32)>,
+    /// Peak amplitude of the speech component (linear).
+    pub speech_amp: f32,
     /// Total night length in seconds.
     pub total_s: f32,
     /// PRNG seed.
@@ -85,6 +90,8 @@ impl NightConfig {
             apnea_gaps: Vec::new(),
             snore_intervals: Vec::new(),
             snore_amp: 0.15,
+            speech_intervals: Vec::new(),
+            speech_amp: 0.12,
             total_s: 300.0,
             seed,
         }
@@ -112,6 +119,9 @@ pub struct NightGenerator {
     breath_lp_fast: f32, // one-pole LP @ 1200 Hz
     // Snore band-limiter: heavy one-pole LP @ 150 Hz (in the snore band).
     snore_lp: f32,
+    // Speech band-limiter: band ≈ 300–3000 Hz (one-pole HP + one-pole LP).
+    speech_lp_slow: f32, // one-pole LP @ 300 Hz (subtracted → HP)
+    speech_lp_fast: f32, // one-pole LP @ 3000 Hz
 }
 
 impl NightGenerator {
@@ -123,6 +133,8 @@ impl NightGenerator {
             breath_lp_slow: 0.0,
             breath_lp_fast: 0.0,
             snore_lp: 0.0,
+            speech_lp_slow: 0.0,
+            speech_lp_fast: 0.0,
         }
     }
 
@@ -144,16 +156,23 @@ impl NightGenerator {
         self.cfg.snore_intervals.iter().any(|&(s, e)| t >= s && t < e)
     }
 
+    fn in_speech(&self, t: f32) -> bool {
+        self.cfg.speech_intervals.iter().any(|&(s, e)| t >= s && t < e)
+    }
+
     /// Generate one 10 ms frame (160 samples) for the given frame index.
     pub fn next_frame(&mut self, frame_idx: u64) -> [i16; FRAME_LEN] {
         const DT: f32 = 1.0 / SAMPLE_RATE;
         let alpha_slow = one_pole_alpha(250.0);
         let alpha_fast = one_pole_alpha(1200.0);
         let alpha_snore = one_pole_alpha(150.0);
+        let alpha_speech_hp = one_pole_alpha(300.0);
+        let alpha_speech_lp = one_pole_alpha(3000.0);
         // Variance loss of a one-pole LP on white noise ≈ α/(2−α);
         // compensate so component amplitudes are roughly what's configured.
         let breath_gain = ((2.0 - alpha_fast) / alpha_fast).sqrt();
         let snore_gain = ((2.0 - alpha_snore) / alpha_snore).sqrt();
+        let speech_gain = ((2.0 - alpha_speech_lp) / alpha_speech_lp).sqrt();
 
         let mut out = [0i16; FRAME_LEN];
         for (k, slot) in out.iter_mut().enumerate() {
@@ -178,6 +197,21 @@ impl NightGenerator {
                 let w = self.rng.next_gaussian();
                 self.snore_lp += alpha_snore * (w - self.snore_lp);
                 s += self.cfg.snore_amp * breath_env * self.snore_lp * snore_gain;
+            }
+
+            // Speech component (A-4): 300–3000 Hz noise with bursty
+            // syllabic-rate gating (3.3 Hz × 5.1 Hz product) — synthetic
+            // podcast speech. Independent of the breathing envelope.
+            if self.in_speech(t) {
+                const PI: f32 = std::f32::consts::PI;
+                let g1 = 0.5 + 0.5 * (2.0 * PI * 3.3 * t).sin();
+                let g2 = 0.5 + 0.5 * (2.0 * PI * 5.1 * t + 1.0).sin();
+                let gate = g1 * g2;
+                let w = self.rng.next_gaussian();
+                self.speech_lp_slow += alpha_speech_hp * (w - self.speech_lp_slow);
+                let hp = w - self.speech_lp_slow;
+                self.speech_lp_fast += alpha_speech_lp * (hp - self.speech_lp_fast);
+                s += self.cfg.speech_amp * gate * self.speech_lp_fast * speech_gain;
             }
 
             // Terminal gasp: loud broadband (white) burst.

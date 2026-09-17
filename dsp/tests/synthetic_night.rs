@@ -269,6 +269,59 @@ fn slow_breathing_period_is_not_pulled_down() {
     );
 }
 
+// ── External-audio VAD (A-4) ───────────────────────────────────────────────────
+
+/// Speech intervals must flag their epochs; clean, snore, and edge epochs
+/// must stay below the verdict threshold.
+#[test]
+fn speech_intervals_flag_external_audio_epochs() {
+    let mut cfg = NightConfig::baseline(11);
+    cfg.total_s = 300.0;
+    cfg.speech_intervals = vec![(60.0, 120.0), (180.0, 240.0)];
+    cfg.snore_intervals = vec![(250.0, 280.0)];
+    let run = run_night(&cfg);
+    assert_eq!(run.epochs.len(), 10);
+
+    // Fully-covered speech epochs (2,3 and 6,7) read dominant.
+    for &i in &[2, 3, 6, 7] {
+        assert!(
+            run.epochs[i].external_audio_fraction > 0.5,
+            "speech epoch {i} fraction {} should be dominant",
+            run.epochs[i].external_audio_fraction
+        );
+    }
+    // Fully-clean epochs stay near zero (warm-up + steady breathing/noise).
+    for &i in &[0, 1, 5] {
+        assert!(
+            run.epochs[i].external_audio_fraction < 0.3,
+            "clean epoch {i} fraction {} should be near zero",
+            run.epochs[i].external_audio_fraction
+        );
+    }
+    // Edge epochs (speech just ended/ring draining) and snore epochs stay
+    // below the verdict threshold.
+    for &i in &[4, 8, 9] {
+        assert!(
+            run.epochs[i].external_audio_fraction < 0.5,
+            "edge/snore epoch {i} fraction {} must not read dominant",
+            run.epochs[i].external_audio_fraction
+        );
+    }
+}
+
+#[test]
+fn clean_night_has_no_external_audio() {
+    let cfg = NightConfig::baseline(4242);
+    let run = run_night(&cfg);
+    for (i, epoch) in run.epochs.iter().enumerate() {
+        assert!(
+            epoch.external_audio_fraction < 0.3,
+            "clean epoch {i} fraction {} should be near zero",
+            epoch.external_audio_fraction
+        );
+    }
+}
+
 // ── Low-margin night: LOW_SIGNAL_QUALITY visibility (FR-2.4) ──────────────────
 
 #[test]

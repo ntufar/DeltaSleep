@@ -7,6 +7,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import io.github.ntufar.deltasleep.DeltaSleepApp
 import io.github.ntufar.deltasleep.apnea.ApneaPrefs
+import io.github.ntufar.deltasleep.audio.ExternalAudio
 import io.github.ntufar.deltasleep.data.model.AcousticEvent
 import io.github.ntufar.deltasleep.data.model.NightSummary
 import io.github.ntufar.deltasleep.data.model.SleepEpoch
@@ -27,6 +28,8 @@ data class SessionSummary(
     val acousticEvents: List<AcousticEvent> = emptyList(),
     val nightSummary: NightSummary? = null,
     val screeningEnabled: Boolean = false,
+    /** Whole minutes of dominant-external-audio time (A-4), 30 s per epoch. */
+    val externalAudioMin: Int = 0,
 )
 
 class SessionViewModel(
@@ -71,6 +74,7 @@ class SessionViewModel(
                 acousticEvents = acousticEvents,
                 nightSummary = nightSummary,
                 screeningEnabled = screeningEnabled,
+                externalAudioMin = epochs.count { ExternalAudio.isExternal(it) } / 2,
             )
         }
     }

@@ -21,7 +21,7 @@ import io.github.ntufar.deltasleep.data.model.SleepSession
         NightSummary::class,
         QuestionnaireResult::class,
     ],
-    version = 3,
+    version = 4,
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
@@ -117,12 +117,30 @@ abstract class AppDatabase : RoomDatabase() {
          *
          * Nullable with no default: epochs recorded before v3 (or without
          * detected breathing) read back as NULL, which the UI renders as a
-         * gap rather than a fake 0. A-1 (REM) will take v3 → v4 when it
-         * lands — it originally planned to share this schema bump.
+         * gap rather than a fake 0.
          */
         val MIGRATION_2_3 = object : Migration(2, 3) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE sleep_epochs ADD COLUMN breathPeriodS REAL")
+            }
+        }
+
+        /**
+         * Migration 3 → 4: adds A-4 external-audio evidence columns to
+         * sleep_epochs. Both default so pre-v4 epochs read back clean
+         * (fraction 0, no playback) rather than suspect.
+         *
+         * Note: A-1 (REM) originally reserved v4 for its schema bump; A-4
+         * took it first, so A-1 now takes v4 → v5 when it lands.
+         */
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "ALTER TABLE sleep_epochs ADD COLUMN externalAudioFraction REAL NOT NULL DEFAULT 0"
+                )
+                db.execSQL(
+                    "ALTER TABLE sleep_epochs ADD COLUMN playbackActive INTEGER NOT NULL DEFAULT 0"
+                )
             }
         }
 
@@ -133,7 +151,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "deltasleep.db",
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                     .fallbackToDestructiveMigration()
                     .build()
                     .also { instance = it }

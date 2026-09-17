@@ -423,16 +423,19 @@
         <h3 id="export-csv">Export CSV</h3>
         <p>Tap <strong>Export CSV</strong> on the session screen. Android's system file picker opens, letting you choose any folder — Downloads, a USB drive, a cloud folder you have mounted locally — wherever you want the file.</p>
 
-        <p>The exported file is named <code class="code-pill">deltasleep_&lt;session_id&gt;.csv</code> and contains one row per 30-second epoch:</p>
+        <p>The exported file is named <code class="code-pill">deltasleep_YYYYMMDD_HHMMSS.csv</code> and contains one row per 30-second epoch:</p>
 
         <div class="screen-mock">
           <div class="screen-title">CSV columns</div>
-          <div class="row"><span class="label">timestamp</span><span class="value">Unix ms — epoch start time</span></div>
+          <div class="row"><span class="label">epoch_timestamp_ms</span><span class="value">Unix ms — epoch start time</span></div>
           <div class="row"><span class="label">phase</span><span class="value">AWAKE · LIGHT · DEEP</span></div>
           <div class="row"><span class="label">has_snore</span><span class="value">true · false</span></div>
           <div class="row"><span class="label">rms_energy</span><span class="value">Normalised 0.0–1.0 audio level</span></div>
-          <div class="row"><span class="label">zcr</span><span class="value">Zero-crossing rate (sound texture)</span></div>
-          <div class="row"><span class="label">band_power</span><span class="value">Spectral energy in 20–300 Hz band</span></div>
+          <div class="row"><span class="label">breathing_margin_db</span><span class="value">Breathing level above room noise (dB)</span></div>
+          <div class="row"><span class="label">breathing_present_fraction</span><span class="value">0.0–1.0 share of epoch with breathing</span></div>
+          <div class="row"><span class="label">breath_period_s</span><span class="value">Mean breath period in seconds (empty if none)</span></div>
+          <div class="row"><span class="label">external_audio_fraction</span><span class="value">0.0–1.0 share of speech-like frames (podcast/TV)</span></div>
+          <div class="row"><span class="label">playback_active</span><span class="value">true · false — another app was playing audio</span></div>
         </div>
 
         <p>The format is plain UTF-8 CSV with a header row. It opens in Excel, Google Sheets, R, Python pandas, or any other tool you prefer. DeltaSleep never owns your data — once exported, the file is yours.</p>

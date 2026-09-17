@@ -1,5 +1,6 @@
 package io.github.ntufar.deltasleep.apnea
 
+import io.github.ntufar.deltasleep.audio.ExternalAudio
 import io.github.ntufar.deltasleep.data.model.AcousticBand
 import io.github.ntufar.deltasleep.data.model.AcousticEvent
 import io.github.ntufar.deltasleep.data.model.AcousticEventType
@@ -30,12 +31,15 @@ object NightSummarizer {
      *
      * This is the unit-testable core:
      * - Discards events whose midpoint falls within an AWAKE epoch (FR-2.3)
-     * - Computes total sleep time, REI-a, acoustic band, signal quality
+     *   or a dominant-external-audio epoch (A-4: podcast/TV time is suspect,
+     *   like LOW_SIGNAL_QUALITY time, and leaves the REI-a denominator)
+     * - Computes total sleep time, REI-a, acoustic band, signal quality —
+     *   all over sleep epochs minus external-audio epochs
      *
      * @param sessionId    Session identifier; written verbatim into the result.
      * @param epochs       All 30-second epochs for the session, in chronological order.
      * @param events       All acoustic events for the session (pre-DB, may include awake-phase ones).
-     * @return Pair of (NightSummary, list of event IDs to delete as awake-phase discards).
+     * @return Pair of (NightSummary, list of event IDs to delete as awake/external-phase discards).
      *         The caller is responsible for deleting those IDs from the DB.
      */
     fun compute(
@@ -52,20 +56,33 @@ object NightSummarizer {
                 start until end
             }
 
-        // Identify events to discard (FR-2.3): midpoint falls in an AWAKE window
+        // Same windows for dominant-external-audio epochs (A-4)
+        val externalWindows: List<LongRange> = epochs
+            .filter { ExternalAudio.isExternal(it) }
+            .map { epoch ->
+                val start = epoch.timestamp - EPOCH_DURATION_S * 1000L
+                val end = epoch.timestamp
+                start until end
+            }
+
+        // Identify events to discard (FR-2.3 + A-4): midpoint falls in an
+        // AWAKE or external-audio window
         val eventIdsToDiscard = mutableListOf<Long>()
         val keptEvents = mutableListOf<AcousticEvent>()
         for (event in events) {
             val midpoint = event.startUtc + event.durationMs / 2
-            if (awakeWindows.any { midpoint in it }) {
+            if (awakeWindows.any { midpoint in it } || externalWindows.any { midpoint in it }) {
                 if (event.id != 0L) eventIdsToDiscard.add(event.id)
             } else {
                 keptEvents.add(event)
             }
         }
 
-        // Non-AWAKE epochs (sleep epochs)
-        val sleepEpochs = epochs.filter { it.phase != SleepPhase.AWAKE }
+        // Sleep epochs minus external-audio time: non-AWAKE epochs that are
+        // not dominant-external (A-4 exclusion from all denominators)
+        val sleepEpochs = epochs.filter {
+            it.phase != SleepPhase.AWAKE && !ExternalAudio.isExternal(it)
+        }
         val sleepEpochCount = sleepEpochs.size
 
         // Total sleep time

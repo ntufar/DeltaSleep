@@ -7,6 +7,7 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.media.AudioManager
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import io.github.ntufar.deltasleep.MainActivity
@@ -17,6 +18,8 @@ import io.github.ntufar.deltasleep.audio.AudioCapture
 import io.github.ntufar.deltasleep.audio.DspBridge
 import io.github.ntufar.deltasleep.audio.EpochProcessor
 import io.github.ntufar.deltasleep.data.db.AppDatabase
+import io.github.ntufar.deltasleep.settings.RetentionPolicy
+import io.github.ntufar.deltasleep.settings.SettingsStore
 import io.github.ntufar.deltasleep.data.model.AcousticEvent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -57,6 +60,7 @@ class SleepTrackingService : Service() {
                 prefs.edit().putLong(KEY_SESSION_ID, sessionId).apply()
                 // Full DSP session reset; record wall time for event offset conversion
                 dsp.startSession()
+                applyAudioSettings()
                 dspStartWallMs = System.currentTimeMillis()
                 startForeground(NOTIF_ID, buildNotification())
                 startCapture()
@@ -66,6 +70,8 @@ class SleepTrackingService : Service() {
             ACTION_STOP -> {
                 prefs.edit().remove(KEY_SESSION_ID).apply()
                 val apneaPrefs = ApneaPrefs(this)
+                val store = SettingsStore(this)
+                val retention = store.retention
                 if (apneaPrefs.screeningEnabled && sessionId != -1L) {
                     val db = AppDatabase.getInstance(this)
                     val capturedSessionId = sessionId
@@ -75,10 +81,18 @@ class SleepTrackingService : Service() {
                         // after summarize begins reading.
                         jobToCancel?.cancelAndJoin()
                         NightSummaryWriter.summarize(db, capturedSessionId)
+                        // C-2: retention purge on session stop.
+                        RetentionPolicy.purgeExpired(db, System.currentTimeMillis(), retention)
                         stopSelf()
                     }
                 } else {
-                    stopSelf()
+                    val db = AppDatabase.getInstance(this)
+                    val jobToCancel = captureJob
+                    scope.launch(Dispatchers.IO) {
+                        jobToCancel?.cancelAndJoin()
+                        RetentionPolicy.purgeExpired(db, System.currentTimeMillis(), retention)
+                        stopSelf()
+                    }
                 }
             }
             // null intent = system restarted the service via START_STICKY; resume capture
@@ -87,6 +101,7 @@ class SleepTrackingService : Service() {
                 if (sessionId != -1L) {
                     // Full DSP reset on sticky-restart; previous session state is lost
                     dsp.startSession()
+                    applyAudioSettings()
                     dspStartWallMs = System.currentTimeMillis()
                     startForeground(NOTIF_ID, buildNotification())
                     startCapture()
@@ -100,9 +115,29 @@ class SleepTrackingService : Service() {
         return START_STICKY
     }
 
+    /**
+     * D-3: apply the audio settings to the live pipeline. The snore toggle
+     * gates persistence in [EpochProcessor]; mic sensitivity becomes a dB
+     * offset on the DSP snore threshold. The setter only exists in native
+     * libs built after D-3, so an older bundled .so falls back to Normal
+     * sensitivity instead of crashing the service start.
+     */
+    private fun applyAudioSettings() {
+        val store = SettingsStore(this)
+        processor.snoreDetectionEnabled = store.snoreEnabled
+        try {
+            dsp.setSnoreThresholdOffsetDb(store.micSensitivity.toThresholdOffsetDb())
+        } catch (_: UnsatisfiedLinkError) {
+            // Pre-D-3 native lib: sensitivity stays at Normal until rebuilt.
+        }
+    }
+
     private fun startCapture() {
         val db = AppDatabase.getInstance(this)
         val apneaPrefs = ApneaPrefs(this)
+        // A-4: OS playback signal — no permission needed, and our own app
+        // never renders audio so this only fires for other apps.
+        val audioManager = getSystemService(AudioManager::class.java)
         captureJob = scope.launch {
             var backoffMs = 5_000L
             while (isActive) {
@@ -110,8 +145,17 @@ class SleepTrackingService : Service() {
                     var emitCounter = 0
                     capture.frames().collect { frame ->
                         processor.onFrame(frame)?.let { result ->
-                            // Insert epoch with the correct sessionId
-                            db.epochDao().insert(result.epoch.copy(sessionId = sessionId))
+                            // Insert epoch with the correct sessionId, tagging
+                            // whether another app was rendering audio (A-4:
+                            // lowers the external-audio verdict bar, never a
+                            // verdict by itself).
+                            val playbackActive = audioManager?.isMusicActive == true
+                            db.epochDao().insert(
+                                result.epoch.copy(
+                                    sessionId = sessionId,
+                                    playbackActive = playbackActive,
+                                )
+                            )
 
                             // Insert acoustic events only when screening is enabled (FR-8.1)
                             if (apneaPrefs.screeningEnabled && result.events.isNotEmpty()) {

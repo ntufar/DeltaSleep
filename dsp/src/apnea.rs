@@ -484,6 +484,69 @@ impl PeriodicityTracker {
     }
 }
 
+// ── Syllabic modulation tracker (A-4 heuristic VAD) ────────────────────────────
+
+/// Speech evidence from the 300–3000 Hz envelope: mean absolute
+/// successive difference at 20 Hz, normalised by the envelope mean, over a
+/// trailing 5 s ring. Syllabic on/off gating (2–8 Hz) drives this high;
+/// slow breathing modulation and steady noise keep it low.
+///
+/// Like `PeriodicityTracker`, `recompute` is amortised — the engine calls it
+/// once per second, and frames read the cached value in between.
+pub struct SyllabicTracker {
+    ring: [f32; cfg::SYLLABIC_RING_SAMPLES],
+    head: usize,
+    filled: usize,
+    cached_index: f32,
+}
+
+impl Default for SyllabicTracker {
+    fn default() -> Self {
+        Self { ring: [0.0; cfg::SYLLABIC_RING_SAMPLES], head: 0, filled: 0, cached_index: 0.0 }
+    }
+}
+
+impl SyllabicTracker {
+    /// Push one downsampled speech-band RMS sample (called every 50 ms).
+    pub fn push(&mut self, speech_rms: f32) {
+        self.ring[self.head] = speech_rms;
+        self.head = (self.head + 1) % cfg::SYLLABIC_RING_SAMPLES;
+        self.filled = (self.filled + 1).min(cfg::SYLLABIC_RING_SAMPLES);
+    }
+
+    /// Recompute the modulation index over the filled ring.
+    pub fn recompute(&mut self) {
+        if self.filled < 2 {
+            self.cached_index = 0.0;
+            return;
+        }
+        let cap = cfg::SYLLABIC_RING_SAMPLES;
+        let start = (self.head + cap - self.filled) % cap;
+        let mut mean = 0.0f32;
+        let mut prev = self.ring[start];
+        let mut diff_sum = 0.0f32;
+        for i in 0..self.filled {
+            let v = self.ring[(start + i) % cap];
+            mean += v;
+            if i > 0 {
+                diff_sum += (v - prev).abs();
+            }
+            prev = v;
+        }
+        mean /= self.filled as f32;
+        self.cached_index = if mean > 1e-9 {
+            diff_sum / (self.filled - 1) as f32 / mean
+        } else {
+            0.0
+        };
+    }
+
+    /// Latest modulation index (0 until the first recompute).
+    pub fn index(&self) -> f32 {
+        self.cached_index
+    }
+}
+
 // ── Trailing breathing median (reference level for decrements) ─────────────────
 
 /// Median of the smoothed respiratory envelope over the trailing 30 s.

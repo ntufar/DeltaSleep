@@ -10,10 +10,11 @@ package io.github.ntufar.deltasleep.audio
  *
  * 1. [processFrame] — 6-float return: [rms, zcr, band_power_ratio, noise_floor_db,
  *    breathing_margin_db, breathing_present(0/1)]
- * 2. [computeEpoch] — 9-float return: [mean_rms, rms_variance, mean_zcr,
+ * 2. [computeEpoch] — 10-float return: [mean_rms, rms_variance, mean_zcr,
  *    mean_band_ratio, phase_ordinal, snore_flag, mean_breathing_margin_db,
- *    breathing_present_fraction, breath_period_s] (index 8 is 0.0 when
- *    breathing was never present; A-7)
+ *    breathing_present_fraction, breath_period_s, external_audio_fraction]
+ *    (index 8 is 0.0 when breathing was never present, A-7; index 9 is the
+ *    A-4 VAD speech fraction, 0.0 when no speech-like frame was seen)
  * 3. [resetEpoch] — clears epoch accumulator only
  * 4. [startSession] — full DSP session reset (call on tracking start/resume)
  * 5. [pollEvents] — flattened stride-8 array of acoustic events emitted since
@@ -50,8 +51,18 @@ class DspBridge {
      * [6] mean_breathing_margin_db — mean breathing-to-noise margin across epoch frames
      * [7] breathing_present_fraction — fraction of frames with breathing detected (0–1)
      * [8] breath_period_s       — mean breath period (s), 0.0 if never present
+     * [9] external_audio_fraction — fraction of speech-like frames (0–1)
      */
     external fun computeEpoch(): FloatArray
+
+    /**
+     * Set the D-3 mic-sensitivity offset (dB) applied to the snore RMS
+     * threshold. Negative = more sensitive ([MicSensitivity][io.github.ntufar.deltasleep.settings.MicSensitivity]
+     * HIGH maps to −6 dB). Engine-side clamped to ±12 dB and preserved
+     * across [startSession]. Present only in native libs built after D-3 —
+     * callers must catch [UnsatisfiedLinkError].
+     */
+    external fun setSnoreThresholdOffsetDb(offsetDb: Float)
 
     /** Discard accumulated epoch data and start fresh (epoch accumulator only). */
     external fun resetEpoch()

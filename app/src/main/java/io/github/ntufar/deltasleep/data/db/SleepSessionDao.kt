@@ -39,4 +39,19 @@ interface SleepSessionDao {
 
     @Query("DELETE FROM sleep_sessions")
     suspend fun deleteAll()
+
+    /**
+     * C-2 retention purge: delete sessions that ended before [cutoffMs].
+     * Epochs, acoustic events, and night summaries follow via
+     * ON DELETE CASCADE. In-progress sessions (endTime NULL) are never
+     * purged — only finished nights expire.
+     *
+     * @return number of sessions removed.
+     */
+    @Query("DELETE FROM sleep_sessions WHERE endTime IS NOT NULL AND endTime < :cutoffMs")
+    suspend fun deleteEndedBefore(cutoffMs: Long): Int
+
+    /** Preview for the settings screen: finished sessions older than [cutoffMs]. */
+    @Query("SELECT COUNT(*) FROM sleep_sessions WHERE endTime IS NOT NULL AND endTime < :cutoffMs")
+    suspend fun countEndedBefore(cutoffMs: Long): Int
 }

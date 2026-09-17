@@ -98,6 +98,31 @@ pub const PERIODICITY_UPDATE_FRAMES: u64 = 100;
 /// (200 × 50 ms = 10 s ≈ multiple breath cycles).
 pub const PERIODICITY_MIN_SAMPLES: usize = 200;
 
+// ── Speech / external-audio heuristic VAD (A-4) ──────────────────────────────
+//
+// Speech (podcasts, audiobooks, TV) concentrates energy in 300–3000 Hz AND
+// modulates it at the 2–8 Hz syllabic rate. Snore lives in 20–300 Hz (low
+// speech ratio); breathing overlaps the speech band but modulates slowly
+// (~0.25 Hz); steady room noise modulates hardly at all. The conjunction
+// of (speech_ratio, syllabic modulation) is the discriminator — neither
+// feature stands alone (white-noise sleep aids have a high speech ratio;
+// loud steady HVAC has none of either).
+
+/// Minimum fraction of frame power in 300–3000 Hz to count as speech-like.
+/// Measured on synthetic nights: calm breathing ≈ 0.43, speech ≈ 0.40,
+/// snore ≈ 0.38, white room noise ≈ 0.34. This gate only excludes low-band
+/// and steady-white content — breathing passes it too, so the syllabic
+/// index below carries the decision.
+pub const SPEECH_RATIO_MIN: f32 = 0.35;
+
+/// Minimum syllabic modulation index (mean |Δ| of the 20 Hz speech envelope
+/// over 5 s, normalised by its mean) to count as speech-like. Measured:
+/// calm breathing 0.10–0.13, snore 0.18, syllabic gating 0.49–0.60.
+pub const SYLLABIC_INDEX_MIN: f32 = 0.30;
+
+/// Downsampled speech-envelope ring: 100 samples = 5 s at 20 Hz.
+pub const SYLLABIC_RING_SAMPLES: usize = 100;
+
 // ── Trailing breathing level (reference for decrements, FR-1.4) ────────────────
 
 /// Length of the trailing per-frame respiratory-envelope ring used for the

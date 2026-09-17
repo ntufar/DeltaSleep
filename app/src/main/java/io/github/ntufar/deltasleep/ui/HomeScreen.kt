@@ -57,12 +57,12 @@ fun HomeScreen(
     onHelp: () -> Unit = {},
     onApnea: () -> Unit = {},
     onApneaSetup: () -> Unit = {},
+    onSettings: () -> Unit = {},
     vm: HomeViewModel = viewModel(),
 ) {
     val sessions by vm.sessions.collectAsState()
     val isTracking by vm.isTracking.collectAsState()
     val activeSessionId by vm.activeSessionId.collectAsState()
-    var showNukeDialog by remember { mutableStateOf(false) }
 
     // Auto-navigate to the active screen whenever tracking starts
     LaunchedEffect(activeSessionId) {
@@ -81,8 +81,13 @@ fun HomeScreen(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text("DeltaSleep", style = MaterialTheme.typography.headlineLarge)
-            TextButton(onClick = onHelp) {
-                Text("? Help", style = MaterialTheme.typography.labelLarge, textAlign = TextAlign.End)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                TextButton(onClick = onSettings) {
+                    Text("⚙", style = MaterialTheme.typography.labelLarge, textAlign = TextAlign.End)
+                }
+                TextButton(onClick = onHelp) {
+                    Text("? Help", style = MaterialTheme.typography.labelLarge, textAlign = TextAlign.End)
+                }
             }
         }
         Spacer(Modifier.height(32.dp))
@@ -139,32 +144,6 @@ fun HomeScreen(
         Spacer(Modifier.height(8.dp))
 
         PreviousSessionsCalendar(sessions = sessions, onSessionTap = onSessionTap)
-
-        if (sessions.isNotEmpty()) {
-            Spacer(Modifier.height(16.dp))
-            TextButton(
-                onClick = { showNukeDialog = true },
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text("Delete all data", color = Color(0xFFE53935))
-            }
-        }
-    }
-
-    if (showNukeDialog) {
-        AlertDialog(
-            onDismissRequest = { showNukeDialog = false },
-            title = { Text("Delete all sleep data?") },
-            text = { Text("This cannot be undone.") },
-            confirmButton = {
-                TextButton(onClick = { vm.nukeAllData(); showNukeDialog = false }) {
-                    Text("Delete", color = Color(0xFFE53935))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showNukeDialog = false }) { Text("Cancel") }
-            },
-        )
     }
 }
 

@@ -24,4 +24,8 @@ interface QuestionnaireResultDao {
 
     @Query("DELETE FROM questionnaire_result")
     suspend fun deleteAll()
+
+    /** C-2 retention purge: delete entries recorded before [cutoffMs]. */
+    @Query("DELETE FROM questionnaire_result WHERE dateUtc < :cutoffMs")
+    suspend fun deleteOlderThan(cutoffMs: Long): Int
 }

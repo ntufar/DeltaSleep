@@ -13,9 +13,10 @@ import java.io.PrintWriter
  * only writes to it.
  *
  * CSV layout:
- *   1. Epoch rows (existing format + two new columns at the end):
+ *   1. Epoch rows (new columns appended at the end, never inserted):
  *      session_id, start_time_ms, end_time_ms, epoch_timestamp_ms,
- *      phase, has_snore, rms_energy, breathing_margin_db, breathing_present_fraction
+ *      phase, has_snore, rms_energy, breathing_margin_db, breathing_present_fraction,
+ *      breath_period_s, external_audio_fraction, playback_active
  *
  *   2. (blank line)
  *      # acoustic_events
@@ -42,14 +43,17 @@ object CsvExporter {
                     writer.println(
                         "session_id,start_time_ms,end_time_ms,epoch_timestamp_ms," +
                         "phase,has_snore,rms_energy," +
-                        "breathing_margin_db,breathing_present_fraction"
+                        "breathing_margin_db,breathing_present_fraction," +
+                        "breath_period_s,external_audio_fraction,playback_active"
                     )
                     for (epoch in epochs) {
                         writer.println(
                             "${session.id},${session.startTime},${session.endTime ?: ""}," +
                             "${epoch.timestamp},${epoch.phase.name},${epoch.hasSnore}," +
                             "${epoch.rmsEnergy}," +
-                            "${epoch.breathingMarginDb},${epoch.breathingPresentFraction}"
+                            "${epoch.breathingMarginDb},${epoch.breathingPresentFraction}," +
+                            "${epoch.breathPeriodS ?: ""}," +
+                            "${epoch.externalAudioFraction},${epoch.playbackActive}"
                         )
                     }
 

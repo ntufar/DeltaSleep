@@ -190,6 +190,8 @@ class NightSummarizerTest {
         baseTimeMs: Long,
         hasSnore: Boolean = false,
         breathingMarginDb: Float = 10f,
+        externalAudioFraction: Float = 0f,
+        playbackActive: Boolean = false,
     ): List<SleepEpoch> = List(count) { i ->
         SleepEpoch(
             id = ++epochIdCounter,
@@ -199,7 +201,52 @@ class NightSummarizerTest {
             hasSnore = hasSnore,
             rmsEnergy = 0.5f,
             breathingMarginDb = breathingMarginDb,
+            externalAudioFraction = externalAudioFraction,
+            playbackActive = playbackActive,
         )
+    }
+
+    // ─── External-audio exclusion (A-4) ─────────────────────────────────────────
+
+    @Test fun externalEpochs_leaveSleepAndReiDenominators() {
+        // 4 LIGHT epochs, first 2 dominant-external (0.8); one APNEA event in
+        // an external window, one in clean sleep.
+        val external = makeEpochs(2, SleepPhase.LIGHT, 0L, externalAudioFraction = 0.8f)
+        val clean = makeEpochs(2, SleepPhase.LIGHT, 60_000L)
+        val epochs = external + clean
+        val events = listOf(
+            makeEvent(AcousticEventType.APNEA_LIKE, midpointMs = 30_000L), // external window
+            makeEvent(AcousticEventType.APNEA_LIKE, midpointMs = 90_000L), // clean window
+        )
+        val (summary, discarded) = NightSummarizer.compute(1L, epochs, events)
+        // Only the 2 clean epochs count: 1 min sleep, 1 apnea → REI-a 60.
+        assertEquals(1, summary.totalSleepTimeMin)
+        assertEquals(1, summary.apneaLikeCount)
+        assertEquals(60f, summary.reiA, 0.01f)
+        assertEquals(listOf(events[0].id), discarded)
+    }
+
+    @Test fun playbackConfirmation_lowersVerdictBar() {
+        // 0.4 fraction: external with playback, clean without — 2 epochs
+        // each so sleep time resolves to whole minutes.
+        val withPlayback = makeEpochs(
+            2, SleepPhase.LIGHT, 0L, externalAudioFraction = 0.4f, playbackActive = true,
+        )
+        val withoutPlayback = makeEpochs(
+            2, SleepPhase.LIGHT, 60_000L, externalAudioFraction = 0.4f, playbackActive = false,
+        )
+        val (summary, _) = NightSummarizer.compute(1L, withPlayback + withoutPlayback, emptyList())
+        assertEquals(1, summary.totalSleepTimeMin)
+    }
+
+    @Test fun snorePct_excludesExternalEpochs() {
+        // External snoring epoch + clean non-snoring epoch → snore 0%.
+        val external = makeEpochs(
+            1, SleepPhase.LIGHT, 0L, hasSnore = true, externalAudioFraction = 0.9f,
+        )
+        val clean = makeEpochs(1, SleepPhase.LIGHT, 30_000L)
+        val (summary, _) = NightSummarizer.compute(1L, external + clean, emptyList())
+        assertEquals(0f, summary.snorePctOfSleep, 0.001f)
     }
 
     private fun makeEpochsWithMargin(

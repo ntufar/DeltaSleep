@@ -12,14 +12,18 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import io.github.ntufar.deltasleep.settings.SettingsStore
 import io.github.ntufar.deltasleep.ui.ActiveSleepScreen
 import io.github.ntufar.deltasleep.ui.ApneaQuestionnaireScreen
 import io.github.ntufar.deltasleep.ui.ApneaReportScreen
@@ -27,6 +31,7 @@ import io.github.ntufar.deltasleep.ui.ApneaSetupScreen
 import io.github.ntufar.deltasleep.ui.HelpScreen
 import io.github.ntufar.deltasleep.ui.HomeScreen
 import io.github.ntufar.deltasleep.ui.SessionScreen
+import io.github.ntufar.deltasleep.ui.SettingsScreen
 import io.github.ntufar.deltasleep.ui.TrendsScreen
 import io.github.ntufar.deltasleep.ui.theme.DeltaSleepTheme
 
@@ -48,7 +53,10 @@ class MainActivity : ComponentActivity() {
         permissionLauncher.launch(perms.toTypedArray())
 
         setContent {
-            DeltaSleepTheme {
+            val context = LocalContext.current
+            val store = remember { SettingsStore(context) }
+            val settings by store.settings.collectAsState()
+            DeltaSleepTheme(theme = settings.theme) {
                 DeltaSleepNavGraph()
             }
         }
@@ -105,6 +113,13 @@ private fun DeltaSleepNavGraph() {
                 },
                 onHelp = { nav.navigate("help") },
                 onApnea = { nav.navigate("apnea") },
+                onApneaSetup = { nav.navigate("apnea_setup") },
+                onSettings = { nav.navigate("settings") },
+            )
+        }
+        composable("settings") {
+            SettingsScreen(
+                onBack = { nav.popBackStack() },
                 onApneaSetup = { nav.navigate("apnea_setup") },
             )
         }

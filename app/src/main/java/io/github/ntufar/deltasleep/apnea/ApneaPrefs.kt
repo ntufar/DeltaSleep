@@ -1,44 +1,43 @@
 package io.github.ntufar.deltasleep.apnea
 
 import android.content.Context
+import io.github.ntufar.deltasleep.settings.SettingsStore
 
 /**
- * Thin SharedPreferences wrapper for apnea-screening feature flags.
+ * Thin facade over [SettingsStore] for the apnea-screening feature flags.
  *
- * All keys default to conservative/off values so the feature is opt-in (R1.1.3).
- * File name: "apnea_prefs" — isolated from the main service prefs.
+ * D-3 moved these flags into the consolidated settings store; this class
+ * keeps its pre-D-3 API so existing callers are untouched. The legacy
+ * "apnea_prefs" file is migrated by [SettingsStore] on first access.
  */
 class ApneaPrefs(context: Context) {
-    private val prefs = context.getSharedPreferences(FILE_NAME, Context.MODE_PRIVATE)
+    private val store = SettingsStore(context)
 
     /**
      * Whether acoustic sleep-apnea screening is enabled.
      * Default: FALSE (opt-in per R1.1.3).
      */
     var screeningEnabled: Boolean
-        get() = prefs.getBoolean(KEY_SCREENING_ENABLED, false)
-        set(value) = prefs.edit().putBoolean(KEY_SCREENING_ENABLED, value).apply()
+        get() = store.apneaScreeningEnabled
+        set(value) { store.apneaScreeningEnabled = value }
 
     /**
      * Whether the first-run explainer screen (methodology + disclaimer) has been shown.
      * The UI must show it before allowing screeningEnabled to be set to true.
      */
     var explainerShown: Boolean
-        get() = prefs.getBoolean(KEY_EXPLAINER_SHOWN, false)
-        set(value) = prefs.edit().putBoolean(KEY_EXPLAINER_SHOWN, value).apply()
+        get() = store.apneaExplainerShown
+        set(value) { store.apneaExplainerShown = value }
 
     /**
      * Whether the bed-partner caveat has been surfaced to the user (FR-8.3).
      * Must be shown once before or during the first screened night.
      */
     var bedPartnerCaveatShown: Boolean
-        get() = prefs.getBoolean(KEY_BED_PARTNER_CAVEAT_SHOWN, false)
-        set(value) = prefs.edit().putBoolean(KEY_BED_PARTNER_CAVEAT_SHOWN, value).apply()
+        get() = store.apneaBedPartnerCaveatShown
+        set(value) { store.apneaBedPartnerCaveatShown = value }
 
     companion object {
         const val FILE_NAME = "apnea_prefs"
-        private const val KEY_SCREENING_ENABLED = "screening_enabled"
-        private const val KEY_EXPLAINER_SHOWN = "explainer_shown"
-        private const val KEY_BED_PARTNER_CAVEAT_SHOWN = "bed_partner_caveat_shown"
     }
 }

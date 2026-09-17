@@ -1,8 +1,8 @@
-# SQLite Schema v3 (Room)
+# SQLite Schema v4 (Room)
 
 Database file: app-private storage (`deltasleep.db`).
 Implementation: [Room](../app/src/main/java/io/github/ntufar/deltasleep/data/db/AppDatabase.kt)
-(current version `3`; entities in
+(current version `4`; entities in
 `data/model/`, DAOs in `data/db/`).
 
 Enum columns are stored as `INTEGER` ordinals via `Converters`
@@ -37,6 +37,8 @@ Index on `sessionId`.
 | breathingMarginDb       | REAL    | Breathing level minus noise floor (dB), NOT NULL, DEFAULT 0 — added in v2 |
 | breathingPresentFraction| REAL    | Fraction of frames with breathing present (0–1), NOT NULL, DEFAULT 0 — added in v2 |
 | breathPeriodS           | REAL    | Mean autocorrelation breath period (s) over breathing-present frames; NULL when never present — added in v3 (A-7) |
+| externalAudioFraction | REAL    | Fraction of speech-like frames (0–1), NOT NULL, DEFAULT 0 — added in v4 (A-4) |
+| playbackActive        | INTEGER | 0 or 1 (`AudioManager.isMusicActive` at flush), NOT NULL, DEFAULT 0 — added in v4 (A-4) |
 
 ## acoustic_event
 
@@ -107,6 +109,9 @@ erasable (`deleteById`).
 - **2 → 3**: `ALTER TABLE sleep_epochs ADD COLUMN breathPeriodS REAL`
   (nullable, no default — pre-v3 epochs read back as NULL).
   See `MIGRATION_2_3` in `AppDatabase.kt`.
+- **3 → 4**: `ALTER TABLE sleep_epochs ADD COLUMN` for
+  `externalAudioFraction` (DEFAULT 0) and `playbackActive` (DEFAULT 0).
+  See `MIGRATION_3_4` in `AppDatabase.kt`.
 
 ## Rot-check
 

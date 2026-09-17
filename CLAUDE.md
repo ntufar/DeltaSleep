@@ -51,7 +51,7 @@ Spectral analysis in the 20–300 Hz band. Each snore event records start time, 
 
 ## Data & Storage
 
-- SQLite via Room (DB v3: `sleep_sessions`, `sleep_epochs` + `breathPeriodS`, `acoustic_event`, `night_summary`, `questionnaire_result`). Schema lives in `docs/schema.md`
+- SQLite via Room (DB v4: `sleep_sessions`, `sleep_epochs` + `breathPeriodS`/`externalAudioFraction`/`playbackActive`, `acoustic_event`, `night_summary`, `questionnaire_result`). Schema lives in `docs/schema.md`
 - Export format to be documented in `docs/export_schema_v1.json` (planned; CSV export exists, JSON import/export is open backlog C-1)
 - Export targets: JSON + CSV, written to user-chosen folder via system file picker
 - Data retention: user-configurable (30/90/365 days or never), default 365 days

@@ -122,6 +122,17 @@ fun SessionScreen(
             }
         }
 
+        // External-audio note (A-4): show filtered time so users trust the numbers.
+        if (s.externalAudioMin > 0) {
+            Spacer(Modifier.height(12.dp))
+            Text(
+                "External audio filtered: ${s.externalAudioMin} min — " +
+                    "podcast, music, or TV time is excluded from snore and apnea stats.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+
         // Apnea stats for this session (shown if screening enabled and summary available)
         if (s.screeningEnabled && s.nightSummary != null) {
             val ns = s.nightSummary

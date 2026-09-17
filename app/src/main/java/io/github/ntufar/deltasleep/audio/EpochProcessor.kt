@@ -45,6 +45,14 @@ data class EpochResult(
  * Thread-safety: call from a single coroutine (the audio capture loop in SleepTrackingService).
  */
 class EpochProcessor(private val dsp: DspBridge) {
+    /**
+     * D-3 snore detection toggle. When false, epochs are stored with
+     * hasSnore=false and SNORE_EPISODE events are dropped — the DSP still
+     * runs (phase classification needs the same frames) but no snore
+     * evidence is persisted. Set by the service from settings at start.
+     */
+    var snoreDetectionEnabled: Boolean = true
+
     private var frameCount = 0
     private val framesPerEpoch = (EPOCH_DURATION_MS / FRAME_DURATION_MS).toInt()
 
@@ -68,7 +76,8 @@ class EpochProcessor(private val dsp: DspBridge) {
 
     private fun flush(): EpochResult {
         // [mean_rms, rms_variance, mean_zcr, mean_band_ratio, phase_ordinal, snore_flag,
-        //  mean_breathing_margin_db, breathing_present_fraction, breath_period_s]
+        //  mean_breathing_margin_db, breathing_present_fraction, breath_period_s,
+        //  external_audio_fraction]
         val result = dsp.computeEpoch()
         // Drain pending events before resetting so we capture all events in this epoch window
         val rawEvents = dsp.pollEvents()
@@ -79,13 +88,16 @@ class EpochProcessor(private val dsp: DspBridge) {
         // let the DSP classifier call that DEEP sleep.
         val phase = if (result[0] == 0f) SleepPhase.AWAKE
                     else SleepPhase.entries[result[4].toInt().coerceIn(0, SleepPhase.entries.lastIndex)]
-        val hasSnore = result[5] != 0f
+        val hasSnore = snoreDetectionEnabled && result[5] != 0f
         val breathingMarginDb = if (result.size > 6) result[6] else 0f
         val breathingPresentFraction = if (result.size > 7) result[7] else 0f
         // Index 8 is new in the A-7 native lib; older .so builds return 8
         // elements. Non-positive means breathing was never present → NULL
         // so the UI renders a gap instead of a fake 0 s period.
         val breathPeriodS = if (result.size > 8 && result[8] > 0f) result[8] else null
+        // Index 9 is new in the A-4 native lib; older .so builds return fewer
+        // elements. Clamped to 0–1 defensively.
+        val externalAudioFraction = if (result.size > 9) result[9].coerceIn(0f, 1f) else 0f
 
         val epoch = SleepEpoch(
             sessionId = 0,  // caller must set this before inserting
@@ -96,9 +108,11 @@ class EpochProcessor(private val dsp: DspBridge) {
             breathingMarginDb = breathingMarginDb,
             breathingPresentFraction = breathingPresentFraction,
             breathPeriodS = breathPeriodS,
+            externalAudioFraction = externalAudioFraction,
         )
 
         val events = parseEvents(rawEvents)
+            .filter { snoreDetectionEnabled || it.type != AcousticEventType.SNORE_EPISODE }
         return EpochResult(epoch = epoch, events = events)
     }
 
