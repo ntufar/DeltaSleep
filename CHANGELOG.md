@@ -5,10 +5,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — Versioning:
 
 ## [Unreleased]
 
+## [0.2.4] - 2026-09-17
+
 ### Added
 - Nightly breathing-rate chart (A-7): DSP exports mean autocorrelation breath period per epoch (`computeEpoch` index 8, persisted as nullable `sleep_epochs.breathPeriodS` via DB migration 2→3); session screen shows a breaths/min line chart with median rate, hidden on pre-v3 nights
 - Octave tie-break in the breathing periodicity tracker: report the smallest lag within 0.05 of the max autocorrelation (`PERIODICITY_TIE_EPSILON`) so near-sinusoidal breathing no longer flickers between the true period and its octave; `present`/`confidence` semantics unchanged, so apnea detection is unaffected
 - Trends dashboard (D-1): bottom-bar navigation (Home / Trends / Report); weekly sleep-duration bars, 30-day deep-% line, snore-by-weekday heatmap, bedtime/wake consistency scatter with ±30 min target band and regularity score, and the 30-day median nightly breathing-rate trend (completes A-7). One SQL query per chart input via `TrendsRepository`; on-device Canvas charts, no new dependencies
+- External-audio filtering (A-4): on-device speech VAD (300–3000 Hz band + syllabic-rate modulation gate) exports a per-epoch speech fraction; `AudioManager.isMusicActive` polling lowers the verdict bar without ever deciding alone. Dominant-external epochs and their events are excluded from REI-a/snore denominators (DB migration 3→4); session screen shows "external audio filtered: NN min". CSV gains `breath_period_s`, `external_audio_fraction`, `playback_active` columns (appended)
+- Consolidated settings screen (D-3): single settings destination (gear on Home) backed by one `deltasleep_settings` store with frozen documented keys (`SettingsKeys`, the C-3 backup unit) — mic sensitivity (Low/Normal/High → ±6 dB snore-threshold offset via new `DspBridge.setSnoreThresholdOffsetDb` FFI, the A-5 hook), snore on/off (gates epoch flags and SNORE_EPISODE persistence), apnea screening flags migrated in from `apnea_prefs`, theme (system/light/dark/AMOLED-black), retention 30/90/365/never with purge-on-start-and-stop plus "N sessions would be removed" preview (C-2 home), auto-tracking opt-in + night window (B-4 home), clock format, and sleep-need hours (D-2 feed). "Delete all data" moved from Home to Settings → Data
 
 ## [0.2.3] - 2026-07-22
 
