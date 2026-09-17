@@ -296,14 +296,13 @@ IPC, not sockets — verify, and pin the exact artifact version). If the grep
 or dexdump check (G-2) flags anything network-shaped in the HC client, the
 idea dies — state that acceptance gate up front.
 
-### C-5. `docs/schema.md` truth pass — **S**
+### C-5. `docs/schema.md` truth pass — **S** — DONE
 
-The doc still describes v1 (3 tables, claims SQLDelight; the code is Room and
-v2 added `acoustic_event`, `night_summary`, `questionnaire_result`). Ideas
-above add migrations v3+. Regenerate the doc from the Room exported schema
-JSON (`room.schemaLocation` — enable it if not already) with a small script
-in `tools/`, and add a CI check that the doc's table list matches the
-exported schema so it can never rot again.
+The doc now describes v2 (5 Room tables). Ideas above add migrations v3+.
+`tools/check_schema_doc.sh` verifies every `@Entity(tableName=…)` in
+`data/model/` has a matching `## <table>` section in `docs/schema.md`,
+and CI runs it (`schema-doc-check` job) so the doc can never rot again.
+(Full `room.schemaLocation` JSON export remains an optional follow-up.)
 
 ---
 

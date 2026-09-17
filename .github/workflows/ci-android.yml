@@ -34,6 +34,16 @@ jobs:
           fi
           echo "Manifest check passed."
 
+  # ── 1b. Schema doc rot-check (C-5) ───────────────────────────────────────
+  schema-doc-check:
+    name: Schema doc rot-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify docs/schema.md covers all Room tables
+        run: bash tools/check_schema_doc.sh
+
   # ── 2. Publish landing page (GitHub Pages) ────────────────────────────────
   deploy-web:
     name: Deploy website

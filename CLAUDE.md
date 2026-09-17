@@ -17,7 +17,7 @@ UI Layer: Kotlin Multiplatform Compose (or React Native — TBD)
    ↓
 DSP Core: Rust compiled to .so/.a via Android NDK
    ↓
-Storage: SQLDelight + SQLite, files in app-private directory only
+Storage: Room + SQLite, files in app-private directory only
    ↓
 OS: Android 8.0+ / iOS 15+
 ```
@@ -51,8 +51,8 @@ Spectral analysis in the 20–300 Hz band. Each snore event records start time, 
 
 ## Data & Storage
 
-- SQLite via SQLDelight. Schema lives in `docs/schema.md` (to be created)
-- Export format documented in `docs/export_schema_v1.json`
+- SQLite via Room (DB v2: `sleep_sessions`, `sleep_epochs`, `acoustic_event`, `night_summary`, `questionnaire_result`). Schema lives in `docs/schema.md`
+- Export format to be documented in `docs/export_schema_v1.json` (planned; CSV export exists, JSON import/export is open backlog C-1)
 - Export targets: JSON + CSV, written to user-chosen folder via system file picker
 - Data retention: user-configurable (30/90/365 days or never), default 365 days
 - All files stored in app-private directory — never in shared storage except on explicit export
@@ -138,5 +138,5 @@ The `vX.Y.Z` tag triggers the CI release job, which extracts the release notes f
 ## Key Docs
 
 - `docs/PRD.md` — full product requirements
-- `docs/schema.md` — SQLite schema (planned)
+- `docs/schema.md` — SQLite schema (v2, current)
 - `docs/export_schema_v1.json` — open export format spec (planned)
