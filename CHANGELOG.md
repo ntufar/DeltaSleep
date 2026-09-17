@@ -5,6 +5,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — Versioning:
 
 ## [Unreleased]
 
+## [0.2.6] - 2026-09-17
+
+### Fixed
+- CI `sdkmanager: command not found` (exit 127): the runner's preinstalled `sdkmanager` is not on `PATH`, so the workflow now exports `$ANDROID_SDK_ROOT/cmdline-tools/latest/bin` before calling it
+
 ## [0.2.5] - 2026-09-17
 
 ### Fixed
