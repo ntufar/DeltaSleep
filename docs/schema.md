@@ -1,8 +1,8 @@
-# SQLite Schema v2 (Room)
+# SQLite Schema v3 (Room)
 
 Database file: app-private storage (`deltasleep.db`).
 Implementation: [Room](../app/src/main/java/io/github/ntufar/deltasleep/data/db/AppDatabase.kt)
-(current version `2`; entities in
+(current version `3`; entities in
 `data/model/`, DAOs in `data/db/`).
 
 Enum columns are stored as `INTEGER` ordinals via `Converters`
@@ -36,6 +36,7 @@ Index on `sessionId`.
 | rmsEnergy               | REAL    | Mean RMS over epoch (normalised 0–1), NOT NULL     |
 | breathingMarginDb       | REAL    | Breathing level minus noise floor (dB), NOT NULL, DEFAULT 0 — added in v2 |
 | breathingPresentFraction| REAL    | Fraction of frames with breathing present (0–1), NOT NULL, DEFAULT 0 — added in v2 |
+| breathPeriodS           | REAL    | Mean autocorrelation breath period (s) over breathing-present frames; NULL when never present — added in v3 (A-7) |
 
 ## acoustic_event
 
@@ -103,6 +104,9 @@ erasable (`deleteById`).
   `CREATE TABLE` for `acoustic_event`, `night_summary`,
   `questionnaire_result` plus the `acoustic_event(sessionId)` index.
   See `MIGRATION_1_2` in `AppDatabase.kt`.
+- **2 → 3**: `ALTER TABLE sleep_epochs ADD COLUMN breathPeriodS REAL`
+  (nullable, no default — pre-v3 epochs read back as NULL).
+  See `MIGRATION_2_3` in `AppDatabase.kt`.
 
 ## Rot-check
 

@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — Versioning:
 
 ## [Unreleased]
 
+### Added
+- Nightly breathing-rate chart (A-7): DSP exports mean autocorrelation breath period per epoch (`computeEpoch` index 8, persisted as nullable `sleep_epochs.breathPeriodS` via DB migration 2→3); session screen shows a breaths/min line chart with median rate, hidden on pre-v3 nights
+- Octave tie-break in the breathing periodicity tracker: report the smallest lag within 0.05 of the max autocorrelation (`PERIODICITY_TIE_EPSILON`) so near-sinusoidal breathing no longer flickers between the true period and its octave; `present`/`confidence` semantics unchanged, so apnea detection is unaffected
+
 ## [0.2.3] - 2026-07-22
 
 ### Changed

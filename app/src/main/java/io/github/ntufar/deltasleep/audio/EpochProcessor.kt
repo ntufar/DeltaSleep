@@ -68,7 +68,7 @@ class EpochProcessor(private val dsp: DspBridge) {
 
     private fun flush(): EpochResult {
         // [mean_rms, rms_variance, mean_zcr, mean_band_ratio, phase_ordinal, snore_flag,
-        //  mean_breathing_margin_db, breathing_present_fraction]
+        //  mean_breathing_margin_db, breathing_present_fraction, breath_period_s]
         val result = dsp.computeEpoch()
         // Drain pending events before resetting so we capture all events in this epoch window
         val rawEvents = dsp.pollEvents()
@@ -82,6 +82,10 @@ class EpochProcessor(private val dsp: DspBridge) {
         val hasSnore = result[5] != 0f
         val breathingMarginDb = if (result.size > 6) result[6] else 0f
         val breathingPresentFraction = if (result.size > 7) result[7] else 0f
+        // Index 8 is new in the A-7 native lib; older .so builds return 8
+        // elements. Non-positive means breathing was never present → NULL
+        // so the UI renders a gap instead of a fake 0 s period.
+        val breathPeriodS = if (result.size > 8 && result[8] > 0f) result[8] else null
 
         val epoch = SleepEpoch(
             sessionId = 0,  // caller must set this before inserting
@@ -91,6 +95,7 @@ class EpochProcessor(private val dsp: DspBridge) {
             rmsEnergy = result[0],
             breathingMarginDb = breathingMarginDb,
             breathingPresentFraction = breathingPresentFraction,
+            breathPeriodS = breathPeriodS,
         )
 
         val events = parseEvents(rawEvents)

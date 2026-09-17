@@ -27,7 +27,7 @@ pub struct FrameOutput {
     pub breathing_present: bool,
 }
 
-/// Per-epoch outputs, mirrored 1:1 by the 8-float `computeEpoch` FFI return.
+/// Per-epoch outputs, mirrored 1:1 by the 9-float `computeEpoch` FFI return.
 #[derive(Clone, Copy, Debug, Default)]
 pub struct EpochOutput {
     pub mean_rms: f32,
@@ -42,6 +42,11 @@ pub struct EpochOutput {
     pub mean_breathing_margin_db: f32,
     /// Fraction of epoch frames with `breathing_present`, 0–1.
     pub breathing_present_fraction: f32,
+    /// Mean autocorrelation breath period (seconds) over frames where
+    /// breathing was present; 0.0 when breathing was never present.
+    /// The Kotlin side persists this per epoch (A-7) and maps NULL
+    /// (≤ 0) to "no breathing detected".
+    pub breath_period_s: f32,
 }
 
 // ── Epoch accumulator ──────────────────────────────────────────────────────────
@@ -53,13 +58,15 @@ struct EpochAccumulator {
     zcr_sum: f64,
     band_ratio_sum: f64,
     margin_sum: f64,
+    period_sum: f64,
     count: usize,
     snore_frame_count: usize,
     breathing_present_count: usize,
+    period_count: usize,
 }
 
 impl EpochAccumulator {
-    fn add(&mut self, out: &FrameOutput) {
+    fn add(&mut self, out: &FrameOutput, period_s: f32) {
         self.rms_sum += out.rms as f64;
         self.rms_sq_sum += (out.rms * out.rms) as f64;
         self.zcr_sum += out.zcr as f64;
@@ -68,6 +75,8 @@ impl EpochAccumulator {
         self.count += 1;
         if out.breathing_present {
             self.breathing_present_count += 1;
+            self.period_sum += period_s as f64;
+            self.period_count += 1;
         }
     }
 }
@@ -207,7 +216,7 @@ impl SessionEngine {
             breathing_margin_db: margin_db,
             breathing_present: self.cached_periodicity.present,
         };
-        self.epoch.add(&out);
+        self.epoch.add(&out, self.cached_periodicity.period_s);
         if snore_frame {
             self.epoch.snore_frame_count += 1;
         }
@@ -235,6 +244,11 @@ impl SessionEngine {
             snore_flag: snore::detect_epoch(e.snore_frame_count, e.count),
             mean_breathing_margin_db: (e.margin_sum / n) as f32,
             breathing_present_fraction: e.breathing_present_count as f32 / e.count as f32,
+            breath_period_s: if e.period_count > 0 {
+                (e.period_sum / e.period_count as f64) as f32
+            } else {
+                0.0
+            },
         }
     }
 

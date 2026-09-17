@@ -444,12 +444,8 @@ impl PeriodicityTracker {
 
         let lag_min = (cfg::BREATH_PERIOD_MIN_S * cfg::PERIODICITY_DOWNSAMPLE_HZ) as usize;
         let lag_max = (cfg::BREATH_PERIOD_MAX_S * cfg::PERIODICITY_DOWNSAMPLE_HZ) as usize;
-        let mut best_corr = f32::MIN;
-        let mut best_lag = lag_min;
-        for lag in lag_min..=lag_max {
-            if lag + cfg::PERIODICITY_MIN_SAMPLES / 2 > n {
-                break;
-            }
+        // Normalised autocorrelation at one lag (mean already removed).
+        let norm_at = |buf: &[f32], lag: usize| -> f32 {
             let m = n - lag;
             let r: f32 = buf[..m]
                 .iter()
@@ -457,10 +453,25 @@ impl PeriodicityTracker {
                 .map(|(a, b)| a * b)
                 .sum::<f32>()
                 / m as f32;
-            let norm = r / r0;
-            if norm > best_corr {
-                best_corr = norm;
+            r / r0
+        };
+        let mut best_corr = f32::MIN;
+        for lag in lag_min..=lag_max {
+            if lag + cfg::PERIODICITY_MIN_SAMPLES / 2 > n {
+                break;
+            }
+            best_corr = best_corr.max(norm_at(&buf, lag));
+        }
+        // Octave tie-break: smallest lag within epsilon of the maximum
+        // (see PERIODICITY_TIE_EPSILON).
+        let mut best_lag = lag_min;
+        for lag in lag_min..=lag_max {
+            if lag + cfg::PERIODICITY_MIN_SAMPLES / 2 > n {
+                break;
+            }
+            if norm_at(&buf, lag) >= best_corr - cfg::PERIODICITY_TIE_EPSILON {
                 best_lag = lag;
+                break;
             }
         }
 

@@ -21,7 +21,7 @@ import io.github.ntufar.deltasleep.data.model.SleepSession
         NightSummary::class,
         QuestionnaireResult::class,
     ],
-    version = 2,
+    version = 3,
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
@@ -112,6 +112,20 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /**
+         * Migration 2 → 3: adds the A-7 breathing-rate column to sleep_epochs.
+         *
+         * Nullable with no default: epochs recorded before v3 (or without
+         * detected breathing) read back as NULL, which the UI renders as a
+         * gap rather than a fake 0. A-1 (REM) will take v3 → v4 when it
+         * lands — it originally planned to share this schema bump.
+         */
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE sleep_epochs ADD COLUMN breathPeriodS REAL")
+            }
+        }
+
         fun getInstance(context: Context): AppDatabase =
             instance ?: synchronized(this) {
                 instance ?: Room.databaseBuilder(
@@ -119,7 +133,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "deltasleep.db",
                 )
-                    .addMigrations(MIGRATION_1_2)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                     .fallbackToDestructiveMigration()
                     .build()
                     .also { instance = it }

@@ -211,6 +211,64 @@ fn snoring_night_emits_snore_episodes_and_epoch_flag() {
     assert!(!run.epochs[0].snore_flag, "epoch 0 has no snoring");
 }
 
+// ── Breath period export (A-7) ─────────────────────────────────────────────────
+
+#[test]
+fn epoch_breath_period_matches_synthesized_rate() {
+    // Ground truth: the fixture breathes at a 4.0 s period all night.
+    let cfg = NightConfig::baseline(2024);
+    let run = run_night(&cfg);
+
+    let mut periods: Vec<f32> = run
+        .epochs
+        .iter()
+        .skip(2) // allow periodicity-ring warm-up
+        .filter(|e| e.breathing_present_fraction > 0.5)
+        .map(|e| e.breath_period_s)
+        .collect();
+    assert!(
+        periods.len() >= run.epochs.len() - 3,
+        "breathing not recognised: {}/{} epochs",
+        periods.len(),
+        run.epochs.len()
+    );
+    for p in &periods {
+        assert!(
+            (2.0..=8.0).contains(p),
+            "breath period {p} outside tracker range 2–8 s"
+        );
+    }
+    let median = median_f32(&mut periods);
+    assert!(
+        (median - 4.0).abs() <= 0.3,
+        "median breath period {median} far from synthesized 4.0 s"
+    );
+}
+
+#[test]
+fn slow_breathing_period_is_not_pulled_down() {
+    // Octave tie-break must only resolve true ties: a genuine 7 s rhythm
+    // (sub-harmonic lags anti-correlate) must still read ≈ 7 s.
+    let mut cfg = NightConfig::baseline(555);
+    cfg.total_s = 150.0;
+    cfg.breathing_period_s = 7.0;
+    let run = run_night(&cfg);
+
+    let mut periods: Vec<f32> = run
+        .epochs
+        .iter()
+        .skip(2)
+        .filter(|e| e.breathing_present_fraction > 0.5)
+        .map(|e| e.breath_period_s)
+        .collect();
+    assert!(!periods.is_empty(), "breathing must be recognised on the slow night");
+    let median = median_f32(&mut periods);
+    assert!(
+        (median - 7.0).abs() <= 0.5,
+        "median breath period {median} far from synthesized 7.0 s"
+    );
+}
+
 // ── Low-margin night: LOW_SIGNAL_QUALITY visibility (FR-2.4) ──────────────────
 
 #[test]

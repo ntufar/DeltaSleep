@@ -149,7 +149,7 @@ per episode, but the UI shows only percentages.
 bar height in the snore timeline overlay and a "loudest snore" stat card.
 No schema change — derived at read time.
 
-### A-7. Nightly breathing-rate chart & long-term respiratory trend — **S/M**
+### A-7. Nightly breathing-rate chart & long-term respiratory trend — **S/M** — PARTLY DONE
 
 The periodicity tracker already computes breath period; it's discarded except
 for apnea logic.
@@ -160,6 +160,14 @@ chart infra as hypnogram). Trends screen (D-1) gains 30-day median nightly
 respiratory rate — an elevated resting RR trend is a genuinely useful,
 non-diagnostic wellness signal ("your average overnight breathing rate rose
 from 14 to 17/min this week").
+
+**Done:** `computeEpoch` index 8 exports the mean breath period (own v2→v3
+migration — A-1 will take v3→v4 when it lands); `BreathingChart` + median on
+the session screen; `BreathingRate.medianBpm()` is the per-night hook D-1
+will plot. **Remaining:** the D-1 30-day trend itself (no trends screen yet).
+Also fixed along the way: octave tie-break (`PERIODICITY_TIE_EPSILON`) —
+argmax flickered between period and octave, and epoch means of the mixture
+read ~6 s on 4 s truth; covered by two synthetic-night tests.
 
 ### A-8. Environment report: room noise profile — **S**
 

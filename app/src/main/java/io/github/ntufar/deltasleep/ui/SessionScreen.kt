@@ -38,6 +38,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import io.github.ntufar.deltasleep.audio.BreathingRate
 import io.github.ntufar.deltasleep.data.model.AcousticEventType
 import io.github.ntufar.deltasleep.data.model.SignalQuality
 import io.github.ntufar.deltasleep.data.model.SleepPhase
@@ -143,6 +144,24 @@ fun SessionScreen(
                     Modifier.weight(1f).height(88.dp),
                 )
             }
+        }
+
+        // Breathing rate (A-7) — shown only when epochs carry DSP breath
+        // periods; nights recorded before DB v3 have none and skip this.
+        val breathingEpochs = remember(s.epochs) { s.epochs.filter { it.breathPeriodS != null } }
+        if (breathingEpochs.isNotEmpty()) {
+            val medianBpm = remember(s.epochs) { BreathingRate.medianBpm(s.epochs) }
+            Spacer(Modifier.height(24.dp))
+            Text("Breathing rate", style = MaterialTheme.typography.titleMedium)
+            Spacer(Modifier.height(4.dp))
+            Text(
+                if (medianBpm != null) "Median %.0f breaths/min".format(medianBpm)
+                else "No breathing detected",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(8.dp))
+            BreathingChart(epochs = s.epochs)
         }
 
         Spacer(Modifier.height(24.dp))

@@ -82,6 +82,14 @@ pub const BREATH_PERIOD_MAX_S: f32 = 8.0;
 /// below 0.2; real AM breathing typically exceeds 0.4.
 pub const PERIODICITY_CONFIDENCE_THRESHOLD: f32 = 0.30;
 
+/// Octave tie-break (A-7): near-sinusoidal breathing correlates almost as
+/// well at twice the true period, so the raw argmax flickers between the
+/// fundamental and its octave. Report the SMALLEST lag whose normalised
+/// correlation is within this epsilon of the maximum. Sub-harmonic lags of
+/// a true period anti-correlate (≈ −1), so a genuine slow rhythm is never
+/// pulled down; only true ties resolve to the fundamental.
+pub const PERIODICITY_TIE_EPSILON: f32 = 0.05;
+
 /// Recompute the autocorrelation once per this many frames (100 = 1 s).
 /// Amortises the O(window × lags) scan instead of running it every frame.
 pub const PERIODICITY_UPDATE_FRAMES: u64 = 100;
