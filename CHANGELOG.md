@@ -5,6 +5,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — Versioning:
 
 ## [Unreleased]
 
+## [0.2.5] - 2026-09-17
+
+### Fixed
+- CI build job no longer uses `android-actions/setup-android@v3`, which failed with exit code 1 because it installs the long-removed `tools` SDK package; the workflow now installs `platform-tools`, `platforms;android-36`, `build-tools;36.0.0`, and the NDK directly via the runner's preinstalled `sdkmanager`
+
 ## [0.2.4] - 2026-09-17
 
 ### Added
