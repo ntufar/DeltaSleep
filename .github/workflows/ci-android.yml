@@ -91,13 +91,11 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      # Android SDK + NDK
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install NDK r26c
+      # Runner images ship an Android SDK already; just add the packages we need.
+      - name: Install Android SDK packages
         run: |
-          sdkmanager --install "ndk;28.2.13676358"
+          yes | sdkmanager --licenses > /dev/null
+          sdkmanager --install "platform-tools" "platforms;android-36" "build-tools;36.0.0" "ndk;28.2.13676358"
           echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/28.2.13676358" >> "$GITHUB_ENV"
 
       # Rust
@@ -172,12 +170,11 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install NDK r26c
+      # Runner images ship an Android SDK already; just add the packages we need.
+      - name: Install Android SDK packages
         run: |
-          sdkmanager --install "ndk;28.2.13676358"
+          yes | sdkmanager --licenses > /dev/null
+          sdkmanager --install "platform-tools" "platforms;android-36" "build-tools;36.0.0" "ndk;28.2.13676358"
           echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/28.2.13676358" >> "$GITHUB_ENV"
 
       - name: Set up Rust stable
