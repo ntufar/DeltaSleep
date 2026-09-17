@@ -6,10 +6,18 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import io.github.ntufar.deltasleep.ui.ActiveSleepScreen
@@ -19,6 +27,7 @@ import io.github.ntufar.deltasleep.ui.ApneaSetupScreen
 import io.github.ntufar.deltasleep.ui.HelpScreen
 import io.github.ntufar.deltasleep.ui.HomeScreen
 import io.github.ntufar.deltasleep.ui.SessionScreen
+import io.github.ntufar.deltasleep.ui.TrendsScreen
 import io.github.ntufar.deltasleep.ui.theme.DeltaSleepTheme
 
 class MainActivity : ComponentActivity() {
@@ -46,11 +55,46 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+/** Third top-level destination (D-1): Home / Trends / Report. */
+private val TOP_LEVEL_ROUTES = listOf(
+    Triple("home", "Home", "🌙"),
+    Triple("trends", "Trends", "📊"),
+    Triple("apnea", "Report", "❤"),
+)
+
 @Composable
 private fun DeltaSleepNavGraph() {
     val nav = rememberNavController()
+    val backStackEntry by nav.currentBackStackEntryAsState()
+    val route = backStackEntry?.destination?.route
 
-    NavHost(navController = nav, startDestination = "home") {
+    Scaffold(
+        bottomBar = {
+            if (route in TOP_LEVEL_ROUTES.map { it.first }) {
+                NavigationBar {
+                    TOP_LEVEL_ROUTES.forEach { (r, label, glyph) ->
+                        NavigationBarItem(
+                            selected = route == r,
+                            onClick = {
+                                nav.navigate(r) {
+                                    launchSingleTop = true
+                                    restoreState = true
+                                    popUpTo("home") { saveState = true }
+                                }
+                            },
+                            icon = { Text(glyph) },
+                            label = { Text(label) },
+                        )
+                    }
+                }
+            }
+        },
+    ) { padding ->
+        NavHost(
+            navController = nav,
+            startDestination = "home",
+            modifier = Modifier.padding(padding),
+        ) {
         composable("home") {
             HomeScreen(
                 onSessionTap = { sessionId -> nav.navigate("session/$sessionId") },
@@ -100,6 +144,10 @@ private fun DeltaSleepNavGraph() {
         }
         composable("help") {
             HelpScreen(onBack = { nav.popBackStack() })
+        }
+        composable("trends") {
+            TrendsScreen()
+        }
         }
     }
 }

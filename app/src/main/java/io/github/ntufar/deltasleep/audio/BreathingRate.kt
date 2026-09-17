@@ -20,8 +20,15 @@ object BreathingRate {
      * Median breathing rate over epochs with a measured period.
      * Null when no epoch has one (e.g. nights recorded before DB v3).
      */
-    fun medianBpm(epochs: List<SleepEpoch>): Float? {
-        val bpms = epochs.mapNotNull { bpm(it.breathPeriodS) }.sorted()
+    fun medianBpm(epochs: List<SleepEpoch>): Float? =
+        medianBpmFromPeriods(epochs.mapNotNull { it.breathPeriodS })
+
+    /**
+     * Median breathing rate over raw breath periods (seconds). Used by the
+     * trends repository, which loads periods without full epoch rows.
+     */
+    fun medianBpmFromPeriods(periods: List<Float>): Float? {
+        val bpms = periods.mapNotNull { bpm(it) }.sorted()
         if (bpms.isEmpty()) return null
         val mid = bpms.size / 2
         return if (bpms.size % 2 == 1) bpms[mid]

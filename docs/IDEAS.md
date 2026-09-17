@@ -164,7 +164,8 @@ from 14 to 17/min this week").
 **Done:** `computeEpoch` index 8 exports the mean breath period (own v2→v3
 migration — A-1 will take v3→v4 when it lands); `BreathingChart` + median on
 the session screen; `BreathingRate.medianBpm()` is the per-night hook D-1
-will plot. **Remaining:** the D-1 30-day trend itself (no trends screen yet).
+plots. **Completed by D-1:** the 30-day respiratory-rate trend now lives on
+the trends screen.
 Also fixed along the way: octave tie-break (`PERIODICITY_TIE_EPSILON`) —
 argmax flickered between period and octave, and epoch means of the mixture
 read ~6 s on 4 s truth; covered by two synthetic-night tests.
@@ -316,7 +317,7 @@ and CI runs it (`schema-doc-check` job) so the doc can never rot again.
 
 ## D. UX & visualization
 
-### D-1. Trends dashboard — the biggest unbuilt PRD promise — **L**
+### D-1. Trends dashboard — the biggest unbuilt PRD promise — **L** — DONE
 
 PRD 2.2.4 in full: weekly duration bars, 30-day deep-% line, snore heatmap by
 weekday, bedtime/wake consistency scatter.
@@ -334,6 +335,15 @@ weekday, bedtime/wake consistency scatter.
   target band; compute a "regularity score" = % of nights within 30 min of
   median bedtime (this is the Sleep Regularity Index, simplified — cite it).
 - Navigation: third top-level destination (Home / Trends / Report).
+
+**Done as:** `TrendsRepository` (sessions + epoch GROUP BY aggregates +
+breath periods — no `startTime` index: ≤365 rows scan sub-ms, and the schema
+bump stays reserved for A-1's v4); chart kit in `ui/TrendsCharts.kt`
+(`WeekBars`, `TrendLine`, `WeekdayHeatmap`, `BedtimeScatter`); bottom
+`NavigationBar`; per-night stats in `NightStat`, pure date math in
+`trends/TrendMath.kt` (9 unit tests). Also completes A-7's remaining
+30-day respiratory-rate trend. Deliberate deviation: scatter x = night order
+(not date) so irregular tracking gaps don't stretch the axis.
 
 ### D-2. Explainable sleep score 0–100 — **M**
 
