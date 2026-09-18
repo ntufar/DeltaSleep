@@ -5,8 +5,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — Versioning:
 
 ## [Unreleased]
 
+## [0.2.7] - 2026-09-18
+
 ### Added
 - Snore intensity 1–5 surfaced end-to-end (A-6): pure Kotlin `SnoreIntensity` mapper from per-episode peak dB over floor (<6 / 6–12 / 12–18 / 18–24 / ≥24 dB, derived at read time, no schema change); hypnogram draws snore-episode bars with height by intensity; session screen gains "Loudest snore n/5" and episode-count cards. Behavior fix: SNORE_EPISODE events now persist/load under the snore toggle instead of the apnea-screening flag, so intensity shows on screening-off nights (apnea types stay screening-gated)
+- REM sleep estimation (A-1): heuristic DSP candidate rule — near-atonia plus irregular breathing measured as the CV of breath-to-breath intervals from an envelope peak detector (`phase_config.rs`, gated on breathing-present, clean-audio-only) — emitting phase 3=REM with existing ordinals unchanged (DB migration 4→5, no column change); `NightSummarizer.smoothPhases` post-processing (5-epoch median filter, REM suppression in the first 60 min, merge of REM runs under 4 epochs); fourth hypnogram row in PRD purple; REM labeled "estimated" in the UI until validated
+- Offline validation harness (A-2): host-only `replay` binary feeding 16 kHz mono WAV through the on-device `SessionEngine` and printing epoch/event JSONL (zero-dependency WAV codec); `tools/validation/score.py` computing epoch-level Cohen's κ, per-night REI-a vs AHI Pearson r, and AHI≥15 accuracy — train split always reported, held-out gated on a thresholds freeze hash; 60 s fixture bit-rot test plus scorer self-test in a new `dsp-check` CI job. The corpus benchmark itself stays offline; results will be published in `docs/validation.md`
 
 ## [0.2.6] - 2026-09-17
 
