@@ -21,6 +21,7 @@ import io.github.ntufar.deltasleep.data.db.AppDatabase
 import io.github.ntufar.deltasleep.settings.RetentionPolicy
 import io.github.ntufar.deltasleep.settings.SettingsStore
 import io.github.ntufar.deltasleep.data.model.AcousticEvent
+import io.github.ntufar.deltasleep.data.model.AcousticEventType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -157,10 +158,22 @@ class SleepTrackingService : Service() {
                                 )
                             )
 
-                            // Insert acoustic events only when screening is enabled (FR-8.1)
-                            if (apneaPrefs.screeningEnabled && result.events.isNotEmpty()) {
+                            // Acoustic events: apnea types only when screening is
+                            // enabled (FR-8.1); SNORE_EPISODE follows the snore
+                            // toggle instead (A-6), so intensity survives on
+                            // nights with screening off. EpochProcessor already
+                            // drops SNORE_EPISODE when snore detection is off;
+                            // the flag check here is belt-and-braces.
+                            val eventsToSave = result.events.filter { parsed ->
+                                if (parsed.type == AcousticEventType.SNORE_EPISODE) {
+                                    processor.snoreDetectionEnabled
+                                } else {
+                                    apneaPrefs.screeningEnabled
+                                }
+                            }
+                            if (eventsToSave.isNotEmpty()) {
                                 val wallStartMs = dspStartWallMs
-                                val acousticEvents = result.events.map { parsed ->
+                                val acousticEvents = eventsToSave.map { parsed ->
                                     AcousticEvent(
                                         sessionId = sessionId,
                                         type = parsed.type,

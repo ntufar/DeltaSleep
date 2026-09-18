@@ -9,6 +9,7 @@ import io.github.ntufar.deltasleep.DeltaSleepApp
 import io.github.ntufar.deltasleep.apnea.ApneaPrefs
 import io.github.ntufar.deltasleep.audio.ExternalAudio
 import io.github.ntufar.deltasleep.data.model.AcousticEvent
+import io.github.ntufar.deltasleep.data.model.AcousticEventType
 import io.github.ntufar.deltasleep.data.model.NightSummary
 import io.github.ntufar.deltasleep.data.model.SleepEpoch
 import io.github.ntufar.deltasleep.data.model.SleepPhase
@@ -54,10 +55,15 @@ class SessionViewModel(
         val snoreCount = epochs.count { it.hasSnore }
         val deepCount = epochs.count { it.phase == SleepPhase.DEEP }
         val screeningEnabled = apneaPrefs.screeningEnabled
+        // A-6: snore episodes load regardless of screening so intensity is
+        // visible whenever snore detection is on; apnea types stay gated.
         val acousticEvents = if (screeningEnabled) {
             db.acousticEventDao().getForSession(sessionId)
         } else {
-            emptyList()
+            db.acousticEventDao().getByTypeForSession(
+                sessionId,
+                AcousticEventType.SNORE_EPISODE,
+            )
         }
         val nightSummary = if (screeningEnabled) {
             db.nightSummaryDao().getBySession(sessionId)

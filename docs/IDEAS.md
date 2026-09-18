@@ -154,7 +154,7 @@ and phones differ by >20 dB.
 - Guard: offsets only apply when ≥ 5 GOOD nights exist (mirrors the FR-5.2
   ≥ 5-night rule).
 
-### A-6. Snore intensity 1–5 surfaced end-to-end — **S**
+### A-6. Snore intensity 1–5 surfaced end-to-end — **S** — DONE
 
 PRD 2.1 specifies intensity 1–5; the DSP already records mean/peak band power
 per episode, but the UI shows only percentages.
@@ -163,6 +163,14 @@ per episode, but the UI shows only percentages.
 18–24 / ≥24 dB) as a pure Kotlin function with unit tests; show intensity as
 bar height in the snore timeline overlay and a "loudest snore" stat card.
 No schema change — derived at read time.
+
+**Done as:** `SnoreIntensity` pure Kotlin object (`level()` + `loudest()`,
+4 unit tests incl. bucket boundaries and degenerate input); hypnogram draws
+SNORE_EPISODE bars with height 5–13 dp by intensity; session screen gains a
+"Snore intensity" section (Loudest n/5 + episode count). Behavior fix along
+the way: SNORE_EPISODE persistence/loading now follows the snore toggle
+instead of the apnea-screening flag, so intensity is visible on screening-off
+nights (apnea types stay screening-gated per FR-8.1). No schema change.
 
 ### A-7. Nightly breathing-rate chart & long-term respiratory trend — **S/M** — PARTLY DONE
 

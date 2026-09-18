@@ -5,6 +5,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — Versioning:
 
 ## [Unreleased]
 
+### Added
+- Snore intensity 1–5 surfaced end-to-end (A-6): pure Kotlin `SnoreIntensity` mapper from per-episode peak dB over floor (<6 / 6–12 / 12–18 / 18–24 / ≥24 dB, derived at read time, no schema change); hypnogram draws snore-episode bars with height by intensity; session screen gains "Loudest snore n/5" and episode-count cards. Behavior fix: SNORE_EPISODE events now persist/load under the snore toggle instead of the apnea-screening flag, so intensity shows on screening-off nights (apnea types stay screening-gated)
+
 ## [0.2.6] - 2026-09-17
 
 ### Fixed

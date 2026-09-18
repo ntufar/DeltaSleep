@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.dp
+import io.github.ntufar.deltasleep.audio.SnoreIntensity
 import io.github.ntufar.deltasleep.data.model.AcousticEvent
 import io.github.ntufar.deltasleep.data.model.AcousticEventType
 import io.github.ntufar.deltasleep.data.model.SleepEpoch
@@ -34,7 +35,9 @@ private val PHASE_ROW_MAP = PHASE_ROWS.toMap()
  * overlaid as thick markers along the top edge of the chart:
  * - APNEA_LIKE → red segment spanning event start→end
  * - HYPOPNEA_LIKE → orange segment spanning event start→end
- * GASP and SNORE_EPISODE are not drawn (snore already has the magenta overlay).
+ * - SNORE_EPISODE → magenta bar spanning event start→end, taller when louder
+ *   (A-6 intensity 1–5 from peak dB over floor). GASP is not drawn.
+ *   The per-epoch magenta column overlay (snore presence) is unchanged.
  *
  * Default rendering (events = emptyList()) is identical to before this change.
  */
@@ -111,22 +114,35 @@ fun HypnogramChart(
         if (hasTimeAxis && events.isNotEmpty()) {
             val sessionDurationMs = endMs - startMs
             if (sessionDurationMs > 0) {
-                val markerH = 6.dp.toPx()
+                val apneaMarkerH = 6.dp.toPx()
                 for (event in events) {
-                    val color = when (event.type) {
-                        AcousticEventType.APNEA_LIKE -> Color(0xFFE53935)
-                        AcousticEventType.HYPOPNEA_LIKE -> Color(0xFFFF9800)
-                        else -> continue
-                    }
                     val startFrac = ((event.startUtc - startMs).toFloat() / sessionDurationMs).coerceIn(0f, 1f)
                     val endFrac = ((event.startUtc + event.durationMs - startMs).toFloat() / sessionDurationMs).coerceIn(0f, 1f)
                     val x0 = labelW + startFrac * chartW
                     val x1 = labelW + endFrac * chartW
-                    drawRect(
-                        color = color,
-                        topLeft = Offset(x0, 0f),
-                        size = Size((x1 - x0).coerceAtLeast(3.dp.toPx()), markerH),
-                    )
+                    val barW = (x1 - x0).coerceAtLeast(3.dp.toPx())
+                    when (event.type) {
+                        AcousticEventType.APNEA_LIKE -> drawRect(
+                            color = Color(0xFFE53935),
+                            topLeft = Offset(x0, 0f),
+                            size = Size(barW, apneaMarkerH),
+                        )
+                        AcousticEventType.HYPOPNEA_LIKE -> drawRect(
+                            color = Color(0xFFFF9800),
+                            topLeft = Offset(x0, 0f),
+                            size = Size(barW, apneaMarkerH),
+                        )
+                        // A-6: snore bar height encodes intensity 1–5.
+                        AcousticEventType.SNORE_EPISODE -> {
+                            val barH = (3 + 2 * SnoreIntensity.level(event.peakDbOverFloor)).dp.toPx()
+                            drawRect(
+                                color = Color(0xFFFF4081),
+                                topLeft = Offset(x0, 0f),
+                                size = Size(barW, barH),
+                            )
+                        }
+                        else -> continue
+                    }
                 }
             }
         }

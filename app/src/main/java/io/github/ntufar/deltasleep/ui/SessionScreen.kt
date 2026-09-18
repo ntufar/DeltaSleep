@@ -39,6 +39,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.ntufar.deltasleep.audio.BreathingRate
+import io.github.ntufar.deltasleep.audio.SnoreIntensity
 import io.github.ntufar.deltasleep.data.model.AcousticEventType
 import io.github.ntufar.deltasleep.data.model.SignalQuality
 import io.github.ntufar.deltasleep.data.model.SleepPhase
@@ -131,6 +132,40 @@ fun SessionScreen(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+        }
+
+        // Snore intensity (A-6): loudest episode 1–5 + episode count. Shown
+        // whenever snore episodes were recorded, independent of apnea screening.
+        val snoreEvents = remember(s.acousticEvents) {
+            s.acousticEvents.filter { it.type == AcousticEventType.SNORE_EPISODE }
+        }
+        val loudestSnore = remember(snoreEvents) { SnoreIntensity.loudest(snoreEvents) }
+        if (loudestSnore != null) {
+            Spacer(Modifier.height(16.dp))
+            Text("Snore intensity", style = MaterialTheme.typography.titleMedium)
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "Taller magenta bars in the chart above are louder snores.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(8.dp))
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.Top,
+            ) {
+                StatCard(
+                    "Loudest snore",
+                    "$loudestSnore/5",
+                    Modifier.weight(1f).height(88.dp),
+                )
+                StatCard(
+                    "Snore episodes",
+                    "${snoreEvents.size}",
+                    Modifier.weight(1f).height(88.dp),
+                )
+            }
         }
 
         // Apnea stats for this session (shown if screening enabled and summary available)

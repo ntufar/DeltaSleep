@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
 import io.github.ntufar.deltasleep.data.model.AcousticEvent
+import io.github.ntufar.deltasleep.data.model.AcousticEventType
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -16,6 +17,15 @@ interface AcousticEventDao {
 
     @Query("SELECT * FROM acoustic_event WHERE sessionId = :sessionId ORDER BY startUtc ASC")
     suspend fun getForSession(sessionId: Long): List<AcousticEvent>
+
+    /**
+     * Snore episodes for one session (A-6). Loaded even when apnea screening
+     * is off, so snore intensity is visible to every user with snore
+     * detection enabled. The [type] param is fixed to SNORE_EPISODE by all
+     * callers; it exists so Room can bind the converted enum.
+     */
+    @Query("SELECT * FROM acoustic_event WHERE sessionId = :sessionId AND type = :type ORDER BY startUtc ASC")
+    suspend fun getByTypeForSession(sessionId: Long, type: AcousticEventType): List<AcousticEvent>
 
     @Query("SELECT * FROM acoustic_event WHERE sessionId = :sessionId ORDER BY startUtc ASC")
     fun observeForSession(sessionId: Long): Flow<List<AcousticEvent>>
