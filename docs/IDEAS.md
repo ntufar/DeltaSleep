@@ -15,11 +15,22 @@ Effort scale: **S** ≤ 3 days, **M** ≤ 2 weeks, **L** ≥ 2 weeks.
 
 ## A. Sleep science & DSP core
 
-### A-1. REM stage estimation (heuristic, v0.3) — **L**
+### A-1. REM stage estimation (heuristic, v0.3) — **L** — DONE
 
 The PRD promises Awake/Light/Deep/REM; REM is still missing. The apnea work
 already added the two signals REM needs: a breathing-periodicity tracker and a
 respiratory envelope.
+
+**Landed:** DSP candidate rule (`phase_config.rs`, `classifier.rs` → phase
+3=REM) + Kotlin post-processing (`NightSummarizer.smoothPhases`: 5-epoch
+median, first-60-min suppression, <4-epoch run merge) + DB v5 + fourth
+hypnogram row + "estimated" UI label. Two spec deviations, both measured:
+(1) `breath_period_cv` is the CV of breath-to-breath intervals from an
+envelope peak detector, not of the tracker's smoothed period output (stable
+by design — CV ≈ 0.006 on steady breathing, so it cannot show
+irregularity); (2) `REM_MOVEMENT_MAX` is 0.5, not 0.15 — calm breathing
+modulation alone scores ≈ 0.22. Synthetic-night regression: 4/4 REM epochs
+detected, zero false REM on the steady night.
 
 **Signal model.** REM is characterized by (a) near-atonia — very low body
 movement, (b) irregular breathing — high variance of breath period, (c) it
@@ -47,10 +58,19 @@ occurs in ~90 min cycles, weighted toward the back half of the night.
 segment composer (irregular breath spacing, no movement bursts); golden-file
 regression extended; assert median-filter removes single-epoch REM islands.
 
-### A-2. Offline validation harness as a first-class tool — **M**
+### A-2. Offline validation harness as a first-class tool — **M** — DONE
 
 `validation.md` T-3 is still pending, and A-1 will need the same rig. Build it
 once, generically.
+
+**Landed:** `dsp/src/bin/replay.rs` (16 kHz mono WAV from path/stdin →
+`SessionEngine` → epoch/event JSONL) + `dsp/src/wav.rs` (zero-dep PCM
+mono codec) + `tools/validation/score.py` (epoch κ, REI-a vs AHI Pearson r,
+AHI≥15 accuracy; train always, held-out only with `--freeze`
+over `apnea_config`/`phase_config`/`classifier`/`engine`) + README +
+`dsp/tests/replay.rs` 60 s fixture bit-rot test + `dsp-check` CI job
+(clippy, cargo test, scorer self-test). The corpus run itself stays offline;
+results table still to be pasted into `validation.md` when T-3 executes.
 
 **Spec:**
 - New crate/bin `dsp/src/bin/replay.rs` (host-only, behind

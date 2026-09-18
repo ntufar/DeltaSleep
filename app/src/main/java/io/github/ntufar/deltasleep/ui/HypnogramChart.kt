@@ -19,15 +19,18 @@ import io.github.ntufar.deltasleep.data.model.SleepEpoch
 import io.github.ntufar.deltasleep.data.model.SleepPhase
 import java.util.Calendar
 
+// Display order is top-to-bottom Awake, Light, REM, Deep (conventional
+// hypnogram staging); SleepPhase ordinals are unchanged (A-1 appends REM=3).
 private val PHASE_ROWS = listOf(
     SleepPhase.AWAKE to 0,
     SleepPhase.LIGHT to 1,
-    SleepPhase.DEEP  to 2,
+    SleepPhase.REM   to 2,
+    SleepPhase.DEEP  to 3,
 )
 private val PHASE_ROW_MAP = PHASE_ROWS.toMap()
 
 /**
- * Hypnogram: X = time, Y = sleep phase (Awake / Light / Deep).
+ * Hypnogram: X = time, Y = sleep phase (Awake / Light / REM / Deep).
  * Snore epochs get a semi-transparent magenta column overlay.
  * Hour labels are drawn along the bottom when startMs / endMs are provided.
  *

@@ -16,6 +16,18 @@ in release notes and store listings, per T-3 of
 
 Synthetic tests validate the detector logic, not real-world performance.
 
+## Validation harness (A-2) — built, corpus pending
+
+- Replay: `cd dsp && cargo run --bin replay -- night_16k_mono.wav > night.jsonl`
+  (same `SessionEngine`, same 30 s cadence; resample to 16 kHz mono first).
+  Bit-rot covered by `dsp/tests/replay.rs` (binary on a 60 s fixture, in CI).
+- Score: `python3 tools/validation/score.py --manifest nights.csv`
+  (`night_id,jsonl,annotations,split,ahi`; annotations are
+  `epoch_index,phase` CSVs converted from corpus hypnograms). Train rows
+  always report; held-out rows print only with `--freeze thresholds.hash`
+  after `--write-freeze` (T-3.5 split discipline). Details in
+  `tools/validation/README.md`.
+
 ## Planned real-data benchmark (offline, not in CI)
 
 1. Corpus: PSG-annotated public dataset with ambient or tracheal microphone

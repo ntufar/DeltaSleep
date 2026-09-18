@@ -1,8 +1,8 @@
-# SQLite Schema v4 (Room)
+# SQLite Schema v5 (Room)
 
 Database file: app-private storage (`deltasleep.db`).
 Implementation: [Room](../app/src/main/java/io/github/ntufar/deltasleep/data/db/AppDatabase.kt)
-(current version `4`; entities in
+(current version `5`; entities in
 `data/model/`, DAOs in `data/db/`).
 
 Enum columns are stored as `INTEGER` ordinals via `Converters`
@@ -31,7 +31,7 @@ Index on `sessionId`.
 | id                      | INTEGER | PK, autoincrement                                  |
 | sessionId               | INTEGER | FK → sleep_sessions.id, NOT NULL                   |
 | timestamp               | INTEGER | Unix epoch ms at start of epoch, NOT NULL          |
-| phase                   | INTEGER | 0=Awake, 1=Light, 2=Deep (`SleepPhase` ordinal)    |
+| phase                   | INTEGER | 0=Awake, 1=Light, 2=Deep, 3=REM estimated (`SleepPhase` ordinal) |
 | hasSnore                | INTEGER | 0 or 1, NOT NULL                                   |
 | rmsEnergy               | REAL    | Mean RMS over epoch (normalised 0–1), NOT NULL     |
 | breathingMarginDb       | REAL    | Breathing level minus noise floor (dB), NOT NULL, DEFAULT 0 — added in v2 |
@@ -112,6 +112,9 @@ erasable (`deleteById`).
 - **3 → 4**: `ALTER TABLE sleep_epochs ADD COLUMN` for
   `externalAudioFraction` (DEFAULT 0) and `playbackActive` (DEFAULT 0).
   See `MIGRATION_3_4` in `AppDatabase.kt`.
+- **4 → 5**: no-op (`MIGRATION_4_5`): A-1 adds `SleepPhase.REM` as ordinal 3,
+  but `sleep_epochs.phase` is already an INTEGER ordinal column, so stored
+  rows need no edit and pre-v5 rows (0–2) read back unchanged.
 
 ## Rot-check
 

@@ -77,7 +77,9 @@ class EpochProcessor(private val dsp: DspBridge) {
     private fun flush(): EpochResult {
         // [mean_rms, rms_variance, mean_zcr, mean_band_ratio, phase_ordinal, snore_flag,
         //  mean_breathing_margin_db, breathing_present_fraction, breath_period_s,
-        //  external_audio_fraction]
+        //  external_audio_fraction, breath_period_cv]
+        // Index 10 (A-1 CV) is consumed DSP-side by the REM rule and ignored
+        // here; the phase verdict at index 4 already reflects it.
         val result = dsp.computeEpoch()
         // Drain pending events before resetting so we capture all events in this epoch window
         val rawEvents = dsp.pollEvents()

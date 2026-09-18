@@ -9,7 +9,9 @@ pub mod apnea_config;
 pub mod classifier;
 pub mod engine;
 pub mod features;
+pub mod phase_config;
 pub mod snore;
+pub mod wav;
 
 use engine::SessionEngine;
 use jni::objects::{JFloatArray, JObject, JShortArray};
@@ -58,12 +60,16 @@ pub extern "system" fn Java_io_github_ntufar_deltasleep_audio_DspBridge_processF
 }
 
 /// Summarise the accumulated epoch.
-/// Returns float[10]: [mean_rms, rms_variance, mean_zcr, mean_band_ratio,
+/// Returns float[11]: [mean_rms, rms_variance, mean_zcr, mean_band_ratio,
 /// phase_ordinal, snore_flag, mean_breathing_margin_db,
-/// breathing_present_fraction, breath_period_s, external_audio_fraction].
+/// breathing_present_fraction, breath_period_s, external_audio_fraction,
+/// breath_period_cv].
 /// breath_period_s is the mean autocorrelation breath period (seconds) over
 /// breathing-present frames, or 0.0 when breathing was never present (A-7).
 /// external_audio_fraction is the fraction of speech-like frames (A-4 VAD).
+/// breath_period_cv is the coefficient of variation of the breath period
+/// over the epoch (A-1 REM feature; 0.0 with < 2 period samples).
+/// rms_variance (index 1) doubles as the classifier's movement_score.
 #[no_mangle]
 pub extern "system" fn Java_io_github_ntufar_deltasleep_audio_DspBridge_computeEpoch<'local>(
     env: JNIEnv<'local>,
@@ -82,6 +88,7 @@ pub extern "system" fn Java_io_github_ntufar_deltasleep_audio_DspBridge_computeE
         epoch.breathing_present_fraction,
         epoch.breath_period_s,
         epoch.external_audio_fraction,
+        epoch.breath_period_cv,
     ];
     let arr = env.new_float_array(out.len() as i32).unwrap();
     env.set_float_array_region(&arr, 0, &out).unwrap();

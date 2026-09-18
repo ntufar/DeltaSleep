@@ -255,6 +255,54 @@ class NightSummarizerTest {
         breathingMarginDb: Float,
     ): List<SleepEpoch> = makeEpochs(count, phase, ++epochIdCounter * 30_000L, breathingMarginDb = breathingMarginDb)
 
+    // ─── A-1 REM post-processing ──────────────────────────────────────────────
+    // NOTE: REM fixtures start past index 120 so the first-60-min
+    // suppression does not confound the median/merge assertions (except in
+    // the suppression test itself).
+
+    @Test fun smoothPhases_emptyList_staysEmpty() {
+        assertEquals(emptyList<SleepPhase>(), NightSummarizer.smoothPhases(emptyList()))
+    }
+
+    @Test fun smoothPhases_singleRemIsland_isRemoved() {
+        // Single REM epoch at index 130 in LIGHT: median filter kills it.
+        val phases = List(130, { SleepPhase.LIGHT }) + SleepPhase.REM + List(5, { SleepPhase.LIGHT })
+        val smoothed = NightSummarizer.smoothPhases(phases)
+        assertTrue(smoothed.none { it == SleepPhase.REM })
+    }
+
+    @Test fun smoothPhases_shortRemRun_mergesIntoNeighbors() {
+        // 3-epoch REM run survives the median filter but merges (< 4).
+        val phases = List(130, { SleepPhase.LIGHT }) +
+            List(3, { SleepPhase.REM }) + List(10, { SleepPhase.LIGHT })
+        val smoothed = NightSummarizer.smoothPhases(phases)
+        assertEquals(List(phases.size, { SleepPhase.LIGHT }), smoothed)
+    }
+
+    @Test fun smoothPhases_longRemRun_isKept() {
+        // 6-epoch REM run late in the night survives all three passes.
+        val phases = List(130, { SleepPhase.LIGHT }) +
+            List(6, { SleepPhase.REM }) + List(10, { SleepPhase.LIGHT })
+        val smoothed = NightSummarizer.smoothPhases(phases)
+        assertEquals(List(130, { SleepPhase.LIGHT }) + List(6, { SleepPhase.REM }) + List(10, { SleepPhase.LIGHT }), smoothed)
+    }
+
+    @Test fun smoothPhases_remInFirstHour_isSuppressed() {
+        // 6-epoch REM run at index 10 would otherwise survive; suppression
+        // maps it to LIGHT.
+        val phases = List(10, { SleepPhase.LIGHT }) +
+            List(6, { SleepPhase.REM }) + List(130, { SleepPhase.LIGHT })
+        val smoothed = NightSummarizer.smoothPhases(phases)
+        assertTrue(smoothed.take(120).none { it == SleepPhase.REM })
+    }
+
+    @Test fun smoothPhases_noRemInput_isUnchanged() {
+        // Long stable runs are a fixed point of all three passes (blocks
+        // wider than the median window; past the suppression horizon).
+        val phases = List(130, { SleepPhase.LIGHT }) + List(70, { SleepPhase.DEEP })
+        assertEquals(phases, NightSummarizer.smoothPhases(phases))
+    }
+
     /**
      * Create an event with the given midpoint. startUtc is set so that
      * startUtc + durationMs/2 == midpointMs.

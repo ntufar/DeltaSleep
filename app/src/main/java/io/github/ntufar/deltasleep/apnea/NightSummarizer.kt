@@ -14,6 +14,11 @@ private const val SECONDS_PER_MINUTE = 60
 private const val BREATHING_MARGIN_THRESHOLD_DB = 6f
 private const val SIGNAL_QUALITY_LOW_THRESHOLD = 0.20f
 private const val SIGNAL_QUALITY_FAIR_THRESHOLD = 0.10f
+// A-1 REM post-processing: median filter half-width (±2 = 5 epochs / 2.5 min),
+// REM suppression window (first 60 min = 120 epochs), minimum REM run length.
+private const val SMOOTH_HALF_WIDTH = 2
+private const val REM_SUPPRESS_EPOCHS = 120
+private const val REM_MIN_RUN = 4
 
 /**
  * Pure computation of per-night sleep-apnea screening metrics.
@@ -42,14 +47,72 @@ object NightSummarizer {
      * @return Pair of (NightSummary, list of event IDs to delete as awake/external-phase discards).
      *         The caller is responsible for deleting those IDs from the DB.
      */
+    /**
+     * A-1 post-processing pass over per-epoch phases. The DSP scores each
+     * 30 s epoch independently, which flickers; this retrospective pass
+     * removes physiologically impossible patterns:
+     * 1. Median-filter phases over 5 epochs (±2, 2.5 min) — kills
+     *    single-epoch islands (first/last two epochs pass through).
+     * 2. Suppress REM in the first 60 min (→ LIGHT) — REM latency that
+     *    short is not physiological.
+     * 3. Merge REM runs shorter than 4 epochs into their neighbors.
+     *
+     * Pure function of the phase list so it is unit-testable. Callers pass
+     * raw DB phases and display/compute from the smoothed copy; stored rows
+     * keep the raw DSP verdicts.
+     */
+    fun smoothPhases(phases: List<SleepPhase>): List<SleepPhase> {
+        if (phases.isEmpty()) return phases
+        // 1. Ordinal median over ±2 where the full window exists; edge
+        // epochs (first/last two) pass through unfiltered so short inputs
+        // keep their endpoints instead of median-collapsing them.
+        val median = phases.indices.map { i ->
+            if (i < SMOOTH_HALF_WIDTH || i + SMOOTH_HALF_WIDTH >= phases.size) {
+                phases[i]
+            } else {
+                val window = ((i - SMOOTH_HALF_WIDTH)..(i + SMOOTH_HALF_WIDTH))
+                    .map { phases[it].ordinal }
+                    .sorted()
+                SleepPhase.entries[window[window.size / 2]]
+            }
+        }
+        // 2. REM suppression in the first 60 min.
+        val out = median.mapIndexed { i, phase ->
+            if (i < REM_SUPPRESS_EPOCHS && phase == SleepPhase.REM) SleepPhase.LIGHT else phase
+        }.toMutableList()
+        // 3. Merge short REM runs into neighbors (left to right; the left
+        // neighbor is always final when read).
+        var i = 0
+        while (i < out.size) {
+            if (out[i] != SleepPhase.REM) {
+                i++
+                continue
+            }
+            var j = i
+            while (j < out.size && out[j] == SleepPhase.REM) j++
+            if (j - i < REM_MIN_RUN) {
+                val fill = when {
+                    i > 0 -> out[i - 1]
+                    j < out.size -> out[j]
+                    else -> SleepPhase.LIGHT
+                }
+                for (k in i until j) out[k] = fill
+            }
+            i = j
+        }
+        return out
+    }
+
     fun compute(
         sessionId: Long,
         epochs: List<SleepEpoch>,
         events: List<AcousticEvent>,
     ): Pair<NightSummary, List<Long>> {
+        // Smoothed phases (A-1) drive every phase-dependent metric below.
+        val phases = smoothPhases(epochs.map { it.phase })
         // Build a set of AWAKE epoch time windows [startMs, endMs)
         val awakeWindows: List<LongRange> = epochs
-            .filter { it.phase == SleepPhase.AWAKE }
+            .filterIndexed { index, _ -> phases[index] == SleepPhase.AWAKE }
             .map { epoch ->
                 val start = epoch.timestamp - EPOCH_DURATION_S * 1000L
                 val end = epoch.timestamp
@@ -80,8 +143,8 @@ object NightSummarizer {
 
         // Sleep epochs minus external-audio time: non-AWAKE epochs that are
         // not dominant-external (A-4 exclusion from all denominators)
-        val sleepEpochs = epochs.filter {
-            it.phase != SleepPhase.AWAKE && !ExternalAudio.isExternal(it)
+        val sleepEpochs = epochs.filterIndexed { index, epoch ->
+            phases[index] != SleepPhase.AWAKE && !ExternalAudio.isExternal(epoch)
         }
         val sleepEpochCount = sleepEpochs.size
 

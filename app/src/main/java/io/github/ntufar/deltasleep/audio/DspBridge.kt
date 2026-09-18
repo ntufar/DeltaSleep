@@ -10,11 +10,14 @@ package io.github.ntufar.deltasleep.audio
  *
  * 1. [processFrame] — 6-float return: [rms, zcr, band_power_ratio, noise_floor_db,
  *    breathing_margin_db, breathing_present(0/1)]
- * 2. [computeEpoch] — 10-float return: [mean_rms, rms_variance, mean_zcr,
+ * 2. [computeEpoch] — 11-float return: [mean_rms, rms_variance, mean_zcr,
  *    mean_band_ratio, phase_ordinal, snore_flag, mean_breathing_margin_db,
- *    breathing_present_fraction, breath_period_s, external_audio_fraction]
+ *    breathing_present_fraction, breath_period_s, external_audio_fraction,
+ *    breath_period_cv]
  *    (index 8 is 0.0 when breathing was never present, A-7; index 9 is the
- *    A-4 VAD speech fraction, 0.0 when no speech-like frame was seen)
+ *    A-4 VAD speech fraction, 0.0 when no speech-like frame was seen;
+ *    index 10 is the A-1 breath-interval CV, 0.0 with < 2 intervals —
+ *    consumed DSP-side by the REM rule, not persisted)
  * 3. [resetEpoch] — clears epoch accumulator only
  * 4. [startSession] — full DSP session reset (call on tracking start/resume)
  * 5. [pollEvents] — flattened stride-8 array of acoustic events emitted since
@@ -40,18 +43,19 @@ class DspBridge {
     /**
      * Summarise the epoch accumulated since the last [resetEpoch] call.
      *
-     * Returns a 9-element array (older native libs may return 8 — index 8
-     * is then treated as absent):
+     * Returns an 11-element array (older native libs may return fewer —
+     * missing trailing indices are treated as absent):
      * [0] mean_rms
-     * [1] rms_variance
+     * [1] rms_variance          — doubles as the A-1 movement_score
      * [2] mean_zcr
      * [3] mean_band_ratio
-     * [4] phase_ordinal         — maps to SleepPhase.entries index
+     * [4] phase_ordinal         — maps to SleepPhase.entries index (3=REM, A-1)
      * [5] snore_flag            — 1.0 if snore detected in epoch, 0.0 otherwise
      * [6] mean_breathing_margin_db — mean breathing-to-noise margin across epoch frames
      * [7] breathing_present_fraction — fraction of frames with breathing detected (0–1)
      * [8] breath_period_s       — mean breath period (s), 0.0 if never present
      * [9] external_audio_fraction — fraction of speech-like frames (0–1)
+     * [10] breath_period_cv     — breath-interval CV for the REM rule (not persisted)
      */
     external fun computeEpoch(): FloatArray
 

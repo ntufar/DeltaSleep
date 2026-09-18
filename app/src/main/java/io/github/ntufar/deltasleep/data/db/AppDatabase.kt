@@ -21,7 +21,7 @@ import io.github.ntufar.deltasleep.data.model.SleepSession
         NightSummary::class,
         QuestionnaireResult::class,
     ],
-    version = 4,
+    version = 5,
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
@@ -144,6 +144,18 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /**
+         * Migration 4 → 5: A-1 REM stage. No column change — `sleep_epochs.phase`
+         * is already an INTEGER holding the `SleepPhase` ordinal, so value 3=REM
+         * needs no schema edit and pre-v5 rows (0–2) read back unchanged. The
+         * version bump records the enum extension for Room's schema check.
+         */
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // No-op by design (see above).
+            }
+        }
+
         fun getInstance(context: Context): AppDatabase =
             instance ?: synchronized(this) {
                 instance ?: Room.databaseBuilder(
@@ -151,7 +163,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "deltasleep.db",
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                     .fallbackToDestructiveMigration()
                     .build()
                     .also { instance = it }

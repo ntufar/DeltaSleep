@@ -324,8 +324,9 @@ private fun EpochScrollableChart(
 private fun DrawScope.drawPhaseHistory(epochs: List<SleepEpoch>) {
     if (epochs.isEmpty()) return
     val epochW  = size.width / epochs.size
-    val rowH    = size.height / 3f
-    val phaseRow = mapOf(SleepPhase.AWAKE to 0, SleepPhase.LIGHT to 1, SleepPhase.DEEP to 2)
+    val rowH    = size.height / 4f
+    // Same top-to-bottom staging as HypnogramChart: Awake, Light, REM, Deep.
+    val phaseRow = mapOf(SleepPhase.AWAKE to 0, SleepPhase.LIGHT to 1, SleepPhase.REM to 2, SleepPhase.DEEP to 3)
 
     epochs.forEachIndexed { i, epoch ->
         val x   = i * epochW
@@ -336,7 +337,7 @@ private fun DrawScope.drawPhaseHistory(epochs: List<SleepEpoch>) {
         }
     }
     // Row dividers
-    for (r in 1..2) {
+    for (r in 1..3) {
         drawLine(Color(0x22FFFFFF), Offset(0f, r * rowH), Offset(size.width, r * rowH), 1f)
     }
 }

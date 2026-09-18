@@ -8,6 +8,7 @@ use crate::apnea::{
 };
 use crate::apnea_config as cfg;
 use crate::features::{self, BandPassState};
+use crate::phase_config as pc;
 use crate::{classifier, snore};
 
 // ── Outputs ────────────────────────────────────────────────────────────────────
@@ -32,14 +33,16 @@ pub struct FrameOutput {
     pub speech_present: bool,
 }
 
-/// Per-epoch outputs, mirrored 1:1 by the 10-float `computeEpoch` FFI return.
+/// Per-epoch outputs, mirrored 1:1 by the 11-float `computeEpoch` FFI return.
 #[derive(Clone, Copy, Debug, Default)]
 pub struct EpochOutput {
     pub mean_rms: f32,
+    /// RMS variance over the epoch — the classifier's `movement_score`
+    /// (variance normalised by the awake threshold; A-1 feature vector).
     pub rms_variance: f32,
     pub mean_zcr: f32,
     pub mean_band_ratio: f32,
-    /// 0 = Awake, 1 = Light, 2 = Deep (matches the Kotlin SleepPhase order).
+    /// 0 = Awake, 1 = Light, 2 = Deep, 3 = REM (matches SleepPhase order).
     pub phase_ordinal: u8,
     pub snore_flag: bool,
     /// Mean breathing-to-noise margin across epoch frames, dB. The Kotlin
@@ -55,6 +58,12 @@ pub struct EpochOutput {
     /// The Kotlin side persists this per epoch (A-7) and maps NULL
     /// (≤ 0) to "no breathing detected".
     pub breath_period_s: f32,
+    /// Coefficient of variation (std / mean) of breath-to-breath intervals
+    /// from the envelope peak detector (A-1 feature vector); 0.0 with fewer
+    /// than two detected intervals. High values mark the irregular breathing
+    /// the REM rule keys on. Exported over FFI (index 10) but not persisted
+    /// — the phase verdict already consumes it.
+    pub breath_period_cv: f32,
 }
 
 // ── Epoch accumulator ──────────────────────────────────────────────────────────
@@ -67,6 +76,9 @@ struct EpochAccumulator {
     band_ratio_sum: f64,
     margin_sum: f64,
     period_sum: f64,
+    interval_sum: f64,
+    interval_sq_sum: f64, // for breath-interval CV: E[x²] − E[x]²
+    interval_count: usize,
     count: usize,
     snore_frame_count: usize,
     breathing_present_count: usize,
@@ -75,6 +87,13 @@ struct EpochAccumulator {
 }
 
 impl EpochAccumulator {
+    /// Record one breath-to-breath interval (seconds) for the epoch CV.
+    fn add_interval(&mut self, interval_s: f32) {
+        self.interval_sum += interval_s as f64;
+        self.interval_sq_sum += (interval_s * interval_s) as f64;
+        self.interval_count += 1;
+    }
+
     fn add(&mut self, out: &FrameOutput, period_s: f32) {
         self.rms_sum += out.rms as f64;
         self.rms_sq_sum += (out.rms * out.rms) as f64;
@@ -115,6 +134,13 @@ pub struct SessionEngine {
     median_tracker: BreathingMedianTracker,
     machine: EventStateMachine,
     snore_tracker: SnoreEpisodeTracker,
+    // Breath-peak detector (A-1): local maxima of the smoothed envelope.
+    prev_env: f32,
+    rising: bool,
+    peak_max: f32,
+    frames_since_peak: u64,
+    have_peak: bool,
+    peak_armed: bool,
     ring: EventRing,
     // Counters / accumulators.
     frame_counter: u64,
@@ -146,6 +172,12 @@ impl SessionEngine {
             median_tracker: BreathingMedianTracker::default(),
             machine: EventStateMachine::default(),
             snore_tracker: SnoreEpisodeTracker::default(),
+            prev_env: 0.0,
+            rising: false,
+            peak_max: 0.0,
+            frames_since_peak: 0,
+            have_peak: false,
+            peak_armed: true,
             ring: EventRing::default(),
             frame_counter: 0,
             epoch: EpochAccumulator::default(),
@@ -224,6 +256,50 @@ impl SessionEngine {
         let median_lin = self.median_tracker.median();
         let median_db = db(median_lin);
 
+        // 4b. Breath-peak detector (A-1 REM irregularity): a local maximum
+        // of the smoothed envelope counts as a breath when it clears
+        // BREATH_PEAK_PROMINENCE × the trailing median, sits ≥ 1.5 s after
+        // the previous RECORDED peak, arrives with the trough arm set (the
+        // envelope dipped below BREATH_TROUGH_ARM × median since the last
+        // peak, so wiggles atop one breath never double-count), and clears
+        // the noise floor by BREATH_PEAK_FLOOR_MARGIN_DB (silence/apnea
+        // wiggles mint no intervals). Separation is measured peak to peak;
+        // rejected candidates disturb neither the counter nor the arm.
+        // Intervals of 1.5–10 s feed the epoch breath-interval CV; longer
+        // gaps are apnea/silence, not rhythm.
+        self.frames_since_peak = self.frames_since_peak.saturating_add(1);
+        if env < pc::BREATH_TROUGH_ARM * median_lin {
+            self.peak_armed = true;
+        }
+        if env > self.prev_env {
+            if !self.rising {
+                self.rising = true;
+                self.peak_max = env;
+            } else if env > self.peak_max {
+                self.peak_max = env;
+            }
+        } else if env < self.prev_env && self.rising {
+            self.rising = false;
+            if !self.have_peak {
+                // First maximum only arms the interval clock.
+                self.have_peak = true;
+                self.frames_since_peak = 0;
+            } else if self.peak_armed
+                && self.frames_since_peak >= pc::BREATH_PEAK_MIN_SEP_FRAMES
+                && self.peak_max > pc::BREATH_PEAK_PROMINENCE * median_lin
+                && crate::apnea::db(self.peak_max) > floor_db + pc::BREATH_PEAK_FLOOR_MARGIN_DB
+            {
+                // 10 ms per frame.
+                let sep = self.frames_since_peak;
+                if sep <= pc::BREATH_INTERVAL_MAX_FRAMES {
+                    self.epoch.add_interval(sep as f32 / cfg::FRAMES_PER_SECOND as f32);
+                }
+                self.frames_since_peak = 0;
+                self.peak_armed = false;
+            }
+        }
+        self.prev_env = env;
+
         // 5. Spectral flatness / centroid (FR-1.1), amortised to 20 Hz.
         if idx.is_multiple_of(cfg::FFT_FRAME_STRIDE) {
             self.fft.compute_i16(samples);
@@ -289,21 +365,49 @@ impl SessionEngine {
         let mean_sq = e.rms_sq_sum / n;
         let mean = e.rms_sum / n;
         let variance = (mean_sq - mean * mean).max(0.0) as f32;
+        let breathing_present_fraction =
+            e.breathing_present_count as f32 / e.count as f32;
+        // A-1 irregularity signal: CV of breath-to-breath intervals from the
+        // peak detector (NOT of the tracker's smoothed period output, which
+        // is stable by design and cannot show breath-level irregularity).
+        let breath_period_cv = if e.interval_count >= 2 {
+            let imean = e.interval_sum / e.interval_count as f64;
+            let ivar =
+                (e.interval_sq_sum / e.interval_count as f64 - imean * imean).max(0.0);
+            if imean > 1e-6 {
+                (ivar.sqrt() / imean) as f32
+            } else {
+                0.0
+            }
+        } else {
+            0.0
+        };
+        // Strongly irregular breathing can depress the autocorrelation
+        // confidence, so direct breath-peak evidence corroborates breathing.
+        let breathing_present = breathing_present_fraction > pc::REM_BREATHING_FRACTION_MIN
+            || e.interval_count >= pc::REM_MIN_BREATH_INTERVALS;
         EpochOutput {
             mean_rms,
             rms_variance: variance,
             mean_zcr: (e.zcr_sum / n) as f32,
             mean_band_ratio: (e.band_ratio_sum / n) as f32,
-            phase_ordinal: classifier::classify(mean_rms, variance),
+            phase_ordinal: classifier::classify(
+                mean_rms,
+                variance,
+                breathing_present,
+                breath_period_cv,
+                e.speech_frame_count as f32 / e.count as f32,
+            ),
             snore_flag: snore::detect_epoch(e.snore_frame_count, e.count),
             mean_breathing_margin_db: (e.margin_sum / n) as f32,
-            breathing_present_fraction: e.breathing_present_count as f32 / e.count as f32,
+            breathing_present_fraction,
             external_audio_fraction: e.speech_frame_count as f32 / e.count as f32,
             breath_period_s: if e.period_count > 0 {
                 (e.period_sum / e.period_count as f64) as f32
             } else {
                 0.0
             },
+            breath_period_cv,
         }
     }
 
@@ -311,6 +415,11 @@ impl SessionEngine {
     /// Kotlin side; allocation happens here, never in `process_frame`.
     pub fn poll_events(&mut self) -> Vec<AcousticEvent> {
         self.ring.drain()
+    }
+
+    /// Intervals recorded in the current (unflushed) epoch (debug/tests).
+    pub fn epoch_interval_count(&self) -> usize {
+        self.epoch.interval_count
     }
 
     /// Frame count since session start (start_offset_ms = frames × 10).

@@ -322,6 +322,63 @@ fn clean_night_has_no_external_audio() {
     }
 }
 
+// ── REM estimation (A-1) ───────────────────────────────────────────────────────
+
+/// A night with a 120–240 s irregular-breathing segment (synthetic REM)
+/// must read phase 3 on the fully-covered epochs and must not read REM
+/// anywhere else; the same night without the segment must read no REM at
+/// all (specificity). Seed fixed: the detector is stochastic-input
+/// sensitive, so this is a golden-style regression — re-baseline on
+/// purpose, never by tweaking the seed to fit.
+#[test]
+fn rem_segment_classified_as_rem() {
+    let mut cfg = NightConfig::baseline(90210);
+    cfg.total_s = 300.0;
+    cfg.rem_intervals = vec![(120.0, 240.0)];
+    let run = run_night(&cfg);
+    assert_eq!(run.epochs.len(), 10);
+
+    // Epochs 4–7 (120–240 s) are fully inside the REM segment.
+    for &i in &[4, 5, 6, 7] {
+        assert_eq!(
+            run.epochs[i].phase_ordinal, 3,
+            "REM epoch {i}: phase {} cv {} bpf {}",
+            run.epochs[i].phase_ordinal,
+            run.epochs[i].breath_period_cv,
+            run.epochs[i].breathing_present_fraction,
+        );
+    }
+    // Fully-clean epochs on both sides must not read REM.
+    for &i in &[0, 1, 2, 3, 8, 9] {
+        assert_ne!(run.epochs[i].phase_ordinal, 3, "clean epoch {i} reads REM");
+    }
+    // REM-epoch CVs must clear the threshold with margin, clean ones must
+    // sit far below it (separation, not just the verdict).
+    for &i in &[4, 5, 6, 7] {
+        assert!(
+            run.epochs[i].breath_period_cv > 0.25,
+            "REM epoch {i} cv {}",
+            run.epochs[i].breath_period_cv
+        );
+    }
+    for &i in &[0, 1, 2, 3, 9] {
+        assert!(
+            run.epochs[i].breath_period_cv < 0.15,
+            "clean epoch {i} cv {}",
+            run.epochs[i].breath_period_cv
+        );
+    }
+}
+
+#[test]
+fn steady_night_produces_no_rem() {
+    let cfg = NightConfig::baseline(90210); // same seed, no REM segment
+    let run = run_night(&cfg);
+    for (i, epoch) in run.epochs.iter().enumerate() {
+        assert_ne!(epoch.phase_ordinal, 3, "steady epoch {i} reads REM");
+    }
+}
+
 // ── Low-margin night: LOW_SIGNAL_QUALITY visibility (FR-2.4) ──────────────────
 
 #[test]

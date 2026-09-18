@@ -7,6 +7,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import io.github.ntufar.deltasleep.DeltaSleepApp
 import io.github.ntufar.deltasleep.apnea.ApneaPrefs
+import io.github.ntufar.deltasleep.apnea.NightSummarizer
 import io.github.ntufar.deltasleep.audio.ExternalAudio
 import io.github.ntufar.deltasleep.data.model.AcousticEvent
 import io.github.ntufar.deltasleep.data.model.AcousticEventType
@@ -50,7 +51,11 @@ class SessionViewModel(
 
     private suspend fun load() {
         val session = db.sessionDao().getById(sessionId) ?: return
-        val epochs = db.epochDao().getForSession(sessionId)
+        // A-1: display the smoothed phases (median filter, first-60-min REM
+        // suppression, short-run merge); stored rows keep raw DSP verdicts.
+        val rawEpochs = db.epochDao().getForSession(sessionId)
+        val smoothed = NightSummarizer.smoothPhases(rawEpochs.map { it.phase })
+        val epochs = rawEpochs.mapIndexed { i, e -> e.copy(phase = smoothed[i]) }
         val totalSleepMs = (session.endTime ?: System.currentTimeMillis()) - session.startTime
         val snoreCount = epochs.count { it.hasSnore }
         val deepCount = epochs.count { it.phase == SleepPhase.DEEP }

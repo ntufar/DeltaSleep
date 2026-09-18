@@ -44,6 +44,32 @@ jobs:
       - name: Verify docs/schema.md covers all Room tables
         run: bash tools/check_schema_doc.sh
 
+  # ── 1c. DSP core + validation harness (A-2 bit-rot gate) ──────────────────
+  dsp-check:
+    name: DSP tests and replay harness
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust artifacts
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: dsp
+
+      - name: Clippy
+        run: cargo clippy --all-targets --manifest-path dsp/Cargo.toml
+
+      # Includes dsp/tests/replay.rs: runs the replay binary on a 60 s
+      # synthetic fixture. The corpus benchmark itself stays offline.
+      - name: DSP unit + regression tests
+        run: cargo test --manifest-path dsp/Cargo.toml
+
+      - name: Validation scorer self-test
+        run: python3 tools/validation/score.py --self-test
+
   # ── 2. Publish landing page (GitHub Pages) ────────────────────────────────
   deploy-web:
     name: Deploy website

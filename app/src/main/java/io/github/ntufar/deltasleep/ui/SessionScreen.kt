@@ -123,6 +123,18 @@ fun SessionScreen(
             }
         }
 
+        // A-1 honesty rule: REM is a heuristic estimate until validated
+        // (A-2), so say so whenever the night shows any.
+        if (s.epochs.any { it.phase == SleepPhase.REM }) {
+            Spacer(Modifier.height(12.dp))
+            Text(
+                "REM stages are estimated from movement and breathing " +
+                    "patterns — not validated sleep-lab staging.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+
         // External-audio note (A-4): show filtered time so users trust the numbers.
         if (s.externalAudioMin > 0) {
             Spacer(Modifier.height(12.dp))

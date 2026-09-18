@@ -71,6 +71,12 @@ pub struct NightConfig {
     /// Speech intervals as (start_s, end_s): band-limited (300–3000 Hz)
     /// noise with bursty syllabic-rate gating — a synthetic podcast (A-4).
     pub speech_intervals: Vec<(f32, f32)>,
+    /// REM intervals as (start_s, end_s): breathing continues at the same
+    /// amplitude but each breath cycle draws a fresh period ~ U(2.0, 7.0) s
+    /// (irregular spacing, no movement bursts) — synthetic REM (A-1). The
+    /// endpoints span rapid-shallow to slow breathing, both seen in REM;
+    /// ground-truth interval CV ≈ 0.32 vs ≈ 0.0 for steady breathing.
+    pub rem_intervals: Vec<(f32, f32)>,
     /// Peak amplitude of the speech component (linear).
     pub speech_amp: f32,
     /// Total night length in seconds.
@@ -91,6 +97,7 @@ impl NightConfig {
             snore_intervals: Vec::new(),
             snore_amp: 0.15,
             speech_intervals: Vec::new(),
+            rem_intervals: Vec::new(),
             speech_amp: 0.12,
             total_s: 300.0,
             seed,
@@ -122,11 +129,17 @@ pub struct NightGenerator {
     // Speech band-limiter: band ≈ 300–3000 Hz (one-pole HP + one-pole LP).
     speech_lp_slow: f32, // one-pole LP @ 300 Hz (subtracted → HP)
     speech_lp_fast: f32, // one-pole LP @ 3000 Hz
+    // Breathing phase accumulator (cycles): integrates DT / period so each
+    // cycle can use its own period inside REM intervals (A-1). Identical to
+    // absolute-time phase outside REM (starts at 0, constant period).
+    breath_phase: f32,
+    current_period_s: f32,
 }
 
 impl NightGenerator {
     pub fn new(cfg: NightConfig) -> Self {
         let seed = cfg.seed;
+        let period = cfg.breathing_period_s;
         Self {
             cfg,
             rng: Xorshift32::new(seed),
@@ -135,6 +148,8 @@ impl NightGenerator {
             snore_lp: 0.0,
             speech_lp_slow: 0.0,
             speech_lp_fast: 0.0,
+            breath_phase: 0.0,
+            current_period_s: period,
         }
     }
 
@@ -160,6 +175,10 @@ impl NightGenerator {
         self.cfg.speech_intervals.iter().any(|&(s, e)| t >= s && t < e)
     }
 
+    fn in_rem(&self, t: f32) -> bool {
+        self.cfg.rem_intervals.iter().any(|&(s, e)| t >= s && t < e)
+    }
+
     /// Generate one 10 ms frame (160 samples) for the given frame index.
     pub fn next_frame(&mut self, frame_idx: u64) -> [i16; FRAME_LEN] {
         const DT: f32 = 1.0 / SAMPLE_RATE;
@@ -178,11 +197,28 @@ impl NightGenerator {
         for (k, slot) in out.iter_mut().enumerate() {
             let t = frame_idx as f32 * 0.010 + k as f32 * DT;
 
-            // Breathing amplitude modulation: raised sinusoid, zero in gaps.
-            let breath_env = if self.in_gap(t) {
+            // Breathing amplitude modulation: raised sinusoid of the phase
+            // accumulator, zero in gaps. At each cycle boundary inside a REM
+            // interval a fresh period ~ U(2.5, 6.5) s is drawn (irregular
+            // spacing, A-1); elsewhere the configured period holds, which
+            // reproduces the old absolute-time phase exactly. Phase freezes
+            // during apnea gaps so post-gap alignment is preserved.
+            let in_gap = self.in_gap(t);
+            if !in_gap {
+                if self.breath_phase >= 1.0 {
+                    self.breath_phase -= 1.0;
+                    self.current_period_s = if self.in_rem(t) {
+                        2.0 + 5.0 * self.rng.next_f32()
+                    } else {
+                        self.cfg.breathing_period_s
+                    };
+                }
+                self.breath_phase += DT / self.current_period_s;
+            }
+            let breath_env = if in_gap {
                 0.0
             } else {
-                0.5 * (1.0 + (2.0 * std::f32::consts::PI * t / self.cfg.breathing_period_s).sin())
+                0.5 * (1.0 + (2.0 * std::f32::consts::PI * self.breath_phase).sin())
             };
 
             // Band-limited breathing noise (≈ 250–1200 Hz).
