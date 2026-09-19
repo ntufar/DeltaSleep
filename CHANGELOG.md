@@ -5,6 +5,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — Versioning:
 
 ## [Unreleased]
 
+## [0.2.8] - 2026-09-19
+
+### Fixed
+- Tracking-service crash (`SecurityException` in `startForeground`, Play report on 0.2.3): the microphone-type foreground service now checks `RECORD_AUDIO` before promoting itself and stops quietly when the mic permission is denied/revoked or the OS refuses the start, covering both manual start and `START_STICKY` resume instead of killing the process
+
 ## [0.2.7] - 2026-09-18
 
 ### Added
