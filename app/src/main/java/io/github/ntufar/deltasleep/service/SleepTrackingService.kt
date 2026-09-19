@@ -4,9 +4,11 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.Manifest
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.media.AudioManager
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
@@ -63,10 +65,17 @@ class SleepTrackingService : Service() {
                 dsp.startSession()
                 applyAudioSettings()
                 dspStartWallMs = System.currentTimeMillis()
-                startForeground(NOTIF_ID, buildNotification())
-                startCapture()
-                _isTracking.value = true
-                _activeSessionId.value = sessionId
+                if (!beginForeground()) {
+                    // Mic permission missing or foreground start refused: stop quietly
+                    // instead of crashing the process (SecurityException in
+                    // handleServiceArgs). The session row stays open and is closed
+                    // on the next user stop/start.
+                    stopSelf()
+                } else {
+                    startCapture()
+                    _isTracking.value = true
+                    _activeSessionId.value = sessionId
+                }
             }
             ACTION_STOP -> {
                 prefs.edit().remove(KEY_SESSION_ID).apply()
@@ -104,10 +113,13 @@ class SleepTrackingService : Service() {
                     dsp.startSession()
                     applyAudioSettings()
                     dspStartWallMs = System.currentTimeMillis()
-                    startForeground(NOTIF_ID, buildNotification())
-                    startCapture()
-                    _isTracking.value = true
-                    _activeSessionId.value = sessionId
+                    if (beginForeground()) {
+                        startCapture()
+                        _isTracking.value = true
+                        _activeSessionId.value = sessionId
+                    } else {
+                        stopSelf()
+                    }
                 } else {
                     stopSelf()
                 }
@@ -115,6 +127,20 @@ class SleepTrackingService : Service() {
         }
         return START_STICKY
     }
+
+    /**
+     * Promotes the service to foreground unless the mic permission is missing or the
+     * OS refuses the start. Returns false instead of throwing so [onStartCommand]
+     * can stop quietly — an uncaught [SecurityException] here kills the process.
+     */
+    private fun beginForeground(): Boolean =
+        ServiceStartGuard.tryStart(hasMicPermission()) {
+            startForeground(NOTIF_ID, buildNotification())
+        }
+
+    private fun hasMicPermission(): Boolean =
+        checkSelfPermission(Manifest.permission.RECORD_AUDIO) ==
+            PackageManager.PERMISSION_GRANTED
 
     /**
      * D-3: apply the audio settings to the live pipeline. The snore toggle
