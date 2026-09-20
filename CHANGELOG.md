@@ -5,6 +5,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — Versioning:
 
 ## [Unreleased]
 
+## [0.2.9] - 2026-09-20
+
+### Fixed
+- Trends/Report crash on entry (`IndexOutOfBoundsException` surfacing out of the composition, Play report): the loading/empty states used non-local `return@Column` out of the `Column` scope, which unbalanced the composition (slot-table corruption in `endRoot`) — every Trends visit crashed on the loading spinner, and Report crashed with screening off (the default). Both screens now use plain if/else branches with the remaining content extracted into `TrendsContent`/`ApneaReportContent`; covered by new Robolectric composition tests against the real database
+
 ## [0.2.8] - 2026-09-19
 
 ### Fixed
