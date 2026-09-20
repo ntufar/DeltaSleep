@@ -62,6 +62,7 @@
     <string name="apnea_report_snore_pct">Snore: %1$.0f%% of sleep</string>
     <string name="apnea_report_signal_quality">Signal quality: %1$s</string>
     <string name="apnea_report_export_html">Physician report (HTML)</string>
+    <string name="apnea_report_export_failed">Export failed — could not write the file. Try again.</string>
     <string name="apnea_report_questionnaire">STOP-BANG Questionnaire</string>
     <string name="apnea_report_setup">Screening setup</string>
     <string name="apnea_report_screening_off">Apnea screening is off.</string>

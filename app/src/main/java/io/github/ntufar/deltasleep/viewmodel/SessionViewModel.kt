@@ -38,19 +38,31 @@ class SessionViewModel(
     app: Application,
     savedState: SavedStateHandle,
 ) : AndroidViewModel(app) {
-    private val sessionId: Long = checkNotNull(savedState["sessionId"])
+    // Missing/invalid navigation argument degrades to the not-found UI
+    // instead of crashing in checkNotNull.
+    private val sessionId: Long = savedState["sessionId"] ?: -1L
     private val db = (app as DeltaSleepApp).database
     private val apneaPrefs = ApneaPrefs(app)
 
     private val _summary = MutableStateFlow<SessionSummary?>(null)
     val summary: StateFlow<SessionSummary?> = _summary
 
+    private val _loadFailed = MutableStateFlow(false)
+    val loadFailed: StateFlow<Boolean> = _loadFailed
+
+    private val _exportError = MutableStateFlow(false)
+    val exportError: StateFlow<Boolean> = _exportError
+
     init {
         viewModelScope.launch { load() }
     }
 
     private suspend fun load() {
-        val session = db.sessionDao().getById(sessionId) ?: return
+        val session = if (sessionId < 0) null else db.sessionDao().getById(sessionId)
+        if (session == null) {
+            _loadFailed.value = true
+            return
+        }
         // A-1: display the smoothed phases (median filter, first-60-min REM
         // suppression, short-run merge); stored rows keep raw DSP verdicts.
         val rawEpochs = db.epochDao().getForSession(sessionId)
@@ -99,7 +111,12 @@ class SessionViewModel(
 
     fun exportCsv(uri: Uri) {
         viewModelScope.launch {
-            CsvExporter.export(getApplication(), uri, sessionId)
+            _exportError.value = false
+            _exportError.value = try {
+                !CsvExporter.export(getApplication(), uri, sessionId)
+            } catch (_: Exception) {
+                true
+            }
         }
     }
 }

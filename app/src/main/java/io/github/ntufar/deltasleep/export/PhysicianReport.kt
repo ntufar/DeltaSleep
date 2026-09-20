@@ -39,11 +39,16 @@ object PhysicianReport {
      * @param uri     Write-only URI from ACTION_CREATE_DOCUMENT.
      * @param riskResult Pre-computed risk result (pass from the view-model to avoid re-querying).
      */
+    /**
+     * @return true when the report was written; false when the stream could
+     *         not be opened, so callers can show a failure instead of a
+     *         silent success.
+     */
     suspend fun export(
         context: Context,
         uri: Uri,
         riskResult: RiskModel.RiskResult?,
-    ) = withContext(Dispatchers.IO) {
+    ): Boolean = withContext(Dispatchers.IO) {
         val db = AppDatabase.getInstance(context)
         val recentSummaries = db.nightSummaryDao()
             .getRecentGoodFairNights(MAX_NIGHTS_IN_REPORT, SignalQuality.LOW)
@@ -51,11 +56,13 @@ object PhysicianReport {
 
         val html = buildHtml(recentSummaries, latestQuestionnaire, riskResult)
 
-        context.contentResolver.openOutputStream(uri)?.use { stream ->
-            PrintWriter(stream, false, Charsets.UTF_8).use { writer ->
+        val stream = context.contentResolver.openOutputStream(uri) ?: return@withContext false
+        stream.use {
+            PrintWriter(it, false, Charsets.UTF_8).use { writer ->
                 writer.print(html)
             }
         }
+        true
     }
 
     /**

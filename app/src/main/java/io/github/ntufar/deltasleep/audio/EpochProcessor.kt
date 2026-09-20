@@ -44,6 +44,46 @@ data class EpochResult(
  *
  * Thread-safety: call from a single coroutine (the audio capture loop in SleepTrackingService).
  */
+/**
+ * Indices 0..5 must exist on every native build; trailing indices are
+ * optional (older .so builds return fewer floats).
+ */
+const val MIN_EPOCH_RESULT_SIZE = 6
+
+/**
+ * Map a raw `computeEpoch()` array to a [SleepEpoch], or null when the native
+ * array is too short (stale/mismatched .so). Pure function so the contract is
+ * unit-testable without the native library.
+ */
+internal fun epochFromResult(result: FloatArray, snoreDetectionEnabled: Boolean): SleepEpoch? {
+    if (result.size < MIN_EPOCH_RESULT_SIZE) return null
+    // mean_rms == 0 means the mic returned all-zero samples (access revoked); don't
+    // let the DSP classifier call that DEEP sleep.
+    val phase = if (result[0] == 0f) SleepPhase.AWAKE
+                else SleepPhase.entries[result[4].toInt().coerceIn(0, SleepPhase.entries.lastIndex)]
+    val hasSnore = snoreDetectionEnabled && result[5] != 0f
+    val breathingMarginDb = if (result.size > 6) result[6] else 0f
+    val breathingPresentFraction = if (result.size > 7) result[7] else 0f
+    // Index 8 is new in the A-7 native lib; older .so builds return 8
+    // elements. Non-positive means breathing was never present → NULL
+    // so the UI renders a gap instead of a fake 0 s period.
+    val breathPeriodS = if (result.size > 8 && result[8] > 0f) result[8] else null
+    // Index 9 is new in the A-4 native lib; older .so builds return fewer
+    // elements. Clamped to 0–1 defensively.
+    val externalAudioFraction = if (result.size > 9) result[9].coerceIn(0f, 1f) else 0f
+    return SleepEpoch(
+        sessionId = 0,  // caller must set this before inserting
+        timestamp = System.currentTimeMillis(),
+        phase = phase,
+        hasSnore = hasSnore,
+        rmsEnergy = result[0],
+        breathingMarginDb = breathingMarginDb,
+        breathingPresentFraction = breathingPresentFraction,
+        breathPeriodS = breathPeriodS,
+        externalAudioFraction = externalAudioFraction,
+    )
+}
+
 class EpochProcessor(private val dsp: DspBridge) {
     /**
      * D-3 snore detection toggle. When false, epochs are stored with
@@ -74,7 +114,7 @@ class EpochProcessor(private val dsp: DspBridge) {
         return if (frameCount >= framesPerEpoch) flush() else null
     }
 
-    private fun flush(): EpochResult {
+    private fun flush(): EpochResult? {
         // [mean_rms, rms_variance, mean_zcr, mean_band_ratio, phase_ordinal, snore_flag,
         //  mean_breathing_margin_db, breathing_present_fraction, breath_period_s,
         //  external_audio_fraction, breath_period_cv]
@@ -86,33 +126,9 @@ class EpochProcessor(private val dsp: DspBridge) {
         dsp.resetEpoch()
         frameCount = 0
 
-        // mean_rms == 0 means the mic returned all-zero samples (access revoked); don't
-        // let the DSP classifier call that DEEP sleep.
-        val phase = if (result[0] == 0f) SleepPhase.AWAKE
-                    else SleepPhase.entries[result[4].toInt().coerceIn(0, SleepPhase.entries.lastIndex)]
-        val hasSnore = snoreDetectionEnabled && result[5] != 0f
-        val breathingMarginDb = if (result.size > 6) result[6] else 0f
-        val breathingPresentFraction = if (result.size > 7) result[7] else 0f
-        // Index 8 is new in the A-7 native lib; older .so builds return 8
-        // elements. Non-positive means breathing was never present → NULL
-        // so the UI renders a gap instead of a fake 0 s period.
-        val breathPeriodS = if (result.size > 8 && result[8] > 0f) result[8] else null
-        // Index 9 is new in the A-4 native lib; older .so builds return fewer
-        // elements. Clamped to 0–1 defensively.
-        val externalAudioFraction = if (result.size > 9) result[9].coerceIn(0f, 1f) else 0f
-
-        val epoch = SleepEpoch(
-            sessionId = 0,  // caller must set this before inserting
-            timestamp = System.currentTimeMillis(),
-            phase = phase,
-            hasSnore = hasSnore,
-            rmsEnergy = result[0],
-            breathingMarginDb = breathingMarginDb,
-            breathingPresentFraction = breathingPresentFraction,
-            breathPeriodS = breathPeriodS,
-            externalAudioFraction = externalAudioFraction,
-        )
-
+        // Too-short native array (stale/mismatched .so): skip this epoch and
+        // keep tracking instead of throwing on every flush.
+        val epoch = epochFromResult(result, snoreDetectionEnabled) ?: return null
         val events = parseEvents(rawEvents)
             .filter { snoreDetectionEnabled || it.type != AcousticEventType.SNORE_EPISODE }
         return EpochResult(epoch = epoch, events = events)

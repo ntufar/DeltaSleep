@@ -55,6 +55,9 @@ fun BreathingChart(
         val labelW = 40.dp.toPx()
         val chartH = size.height
         val chartW = size.width - labelW
+        // Absurdly narrow windows must skip drawing, not feed negative
+        // sizes into drawRect/drawCircle.
+        if (chartW <= 0f || chartH <= 0f) return@Canvas
         val epochW = chartW / epochs.size.toFloat()
 
         fun yFor(bpm: Float): Float {

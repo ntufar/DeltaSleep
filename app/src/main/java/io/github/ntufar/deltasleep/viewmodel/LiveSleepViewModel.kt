@@ -27,7 +27,9 @@ class LiveSleepViewModel(
     savedState: SavedStateHandle,
 ) : AndroidViewModel(app) {
 
-    val sessionId: Long = checkNotNull(savedState["sessionId"])
+    // Missing/invalid navigation argument degrades to empty live data
+    // (id -1 matches no session) instead of crashing in checkNotNull.
+    val sessionId: Long = savedState["sessionId"] ?: -1L
     private val db = (app as DeltaSleepApp).database
 
     // --- live sensor histories --------------------------------------------------

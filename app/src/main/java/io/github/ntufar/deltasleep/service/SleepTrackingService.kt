@@ -223,14 +223,16 @@ class SleepTrackingService : Service() {
                             val m = processor.lastFrameMetrics
                             // lastFrameMetrics is now 6 elements:
                             // [0]=rms, [1]=zcr, [2]=bandRatio, [3]=noiseFloorDb,
-                            // [4]=breathingMarginDb, [5]=breathingPresent
+                            // [4]=breathingMarginDb, [5]=breathingPresent.
+                            // Guard every index: a short array from any native
+                            // build must degrade the live card, never crash it.
                             _liveFrame.value = LiveFrame(
-                                rms = m[0],
-                                zcr = m[1],
-                                bandRatio = m[2],
-                                noiseFloorDb = if (m.size > 3) m[3] else 0f,
-                                breathingMarginDb = if (m.size > 4) m[4] else 0f,
-                                breathingPresent = if (m.size > 5) m[5] != 0f else false,
+                                rms = m.getOrElse(0) { 0f },
+                                zcr = m.getOrElse(1) { 0f },
+                                bandRatio = m.getOrElse(2) { 0f },
+                                noiseFloorDb = m.getOrElse(3) { 0f },
+                                breathingMarginDb = m.getOrElse(4) { 0f },
+                                breathingPresent = m.getOrElse(5) { 0f } != 0f,
                             )
                         }
                     }

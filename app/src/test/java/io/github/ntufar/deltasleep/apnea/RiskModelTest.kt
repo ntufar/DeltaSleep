@@ -131,19 +131,23 @@ class RiskModelTest {
     // ─── Median logic ─────────────────────────────────────────────────────────
 
     @Test fun median_oddCount() {
-        assertEquals(3f, RiskModel.median(listOf(1f, 2f, 3f, 4f, 5f)), 0.001f)
+        assertEquals(3f, RiskModel.median(listOf(1f, 2f, 3f, 4f, 5f))!!, 0.001f)
     }
 
     @Test fun median_evenCount() {
-        assertEquals(2.5f, RiskModel.median(listOf(1f, 2f, 3f, 4f)), 0.001f)
+        assertEquals(2.5f, RiskModel.median(listOf(1f, 2f, 3f, 4f))!!, 0.001f)
     }
 
     @Test fun median_singleValue() {
-        assertEquals(7f, RiskModel.median(listOf(7f)), 0.001f)
+        assertEquals(7f, RiskModel.median(listOf(7f))!!, 0.001f)
     }
 
     @Test fun median_unsortedInput() {
-        assertEquals(3f, RiskModel.median(listOf(5f, 1f, 3f)), 0.001f)
+        assertEquals(3f, RiskModel.median(listOf(5f, 1f, 3f))!!, 0.001f)
+    }
+
+    @Test fun median_emptyList_returnsNullInsteadOfThrowing() {
+        assertNull(RiskModel.median(emptyList()))
     }
 
     // ─── Single bad night must NOT produce HIGH ───────────────────────────────

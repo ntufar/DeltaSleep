@@ -25,23 +25,39 @@ private const val SILENT_FRAME_LIMIT = 200
  * mix-with-others mode — Spotify/Audible continue playing uninterrupted.
  * Raw PCM is never stored; frames are forwarded directly to DspBridge.
  */
+/**
+ * Resolve the native recorder buffer size, rejecting [AudioRecord] error
+ * codes instead of masking them. Pure function so the contract is
+ * unit-testable without the microphone.
+ *
+ * @throws IOException when [minBuf] is an [AudioRecord] error
+ *         ([AudioRecord.ERROR_BAD_VALUE]/[AudioRecord.ERROR]).
+ */
+internal fun bufferSizeFor(minBuf: Int): Int {
+    if (minBuf <= 0) throw IOException("AudioRecord.getMinBufferSize failed: $minBuf")
+    return maxOf(minBuf, FRAME_SAMPLES * 2)
+}
+
 class AudioCapture {
     @SuppressLint("MissingPermission")
     fun frames(): Flow<ShortArray> = flow {
-        val minBuf = AudioRecord.getMinBufferSize(
-            SAMPLE_RATE,
-            AudioFormat.CHANNEL_IN_MONO,
-            AudioFormat.ENCODING_PCM_16BIT,
-        )
-        val bufSize = maxOf(minBuf, FRAME_SAMPLES * 2)
-
         val recorder = AudioRecord(
             MediaRecorder.AudioSource.VOICE_RECOGNITION,
             SAMPLE_RATE,
             AudioFormat.CHANNEL_IN_MONO,
             AudioFormat.ENCODING_PCM_16BIT,
-            bufSize,
+            bufferSizeFor(
+                AudioRecord.getMinBufferSize(
+                    SAMPLE_RATE,
+                    AudioFormat.CHANNEL_IN_MONO,
+                    AudioFormat.ENCODING_PCM_16BIT,
+                )
+            ),
         )
+        if (recorder.state != AudioRecord.STATE_INITIALIZED) {
+            runCatching { recorder.release() }
+            throw IOException("AudioRecord not initialized (state=${recorder.state})")
+        }
 
         try {
             recorder.startRecording()
@@ -60,8 +76,12 @@ class AudioCapture {
                 emit(buf.copyOf(read))
             }
         } finally {
-            recorder.stop()
-            recorder.release()
+            // Guarded teardown: stop() throws IllegalStateException when the
+            // recorder never started, which must never mask the real failure.
+            if (recorder.recordingState == AudioRecord.RECORDSTATE_RECORDING) {
+                runCatching { recorder.stop() }
+            }
+            runCatching { recorder.release() }
         }
     }.flowOn(Dispatchers.IO)
 }

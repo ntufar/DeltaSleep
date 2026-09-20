@@ -163,8 +163,12 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "deltasleep.db",
                 )
+                    // No fallbackToDestructiveMigration: an unmigrated version
+                    // bump must fail loudly in development instead of silently
+                    // wiping the user's nights. All historical paths
+                    // (1→2→3→4→5) are defined above; every future bump needs
+                    // its Migration added here.
                     .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
-                    .fallbackToDestructiveMigration()
                     .build()
                     .also { instance = it }
             }

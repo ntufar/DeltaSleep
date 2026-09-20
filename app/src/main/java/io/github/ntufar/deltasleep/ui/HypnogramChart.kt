@@ -59,6 +59,7 @@ fun HypnogramChart(
     ) {
         if (epochs.isEmpty()) return@Canvas
 
+        if (size.width <= 0f || size.height <= 0f) return@Canvas
         val hasTimeAxis = startMs > 0L && endMs > startMs
         val timeAxisH = if (hasTimeAxis) 22.dp.toPx() else 0f
         val labelW = 52.dp.toPx()

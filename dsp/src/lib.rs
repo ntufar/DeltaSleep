@@ -27,6 +27,39 @@ fn engine() -> &'static Mutex<SessionEngine> {
     ENGINE.get_or_init(|| Mutex::new(SessionEngine::new()))
 }
 
+/// Lock the global engine without aborting the process: a poisoned mutex
+/// means a previous JNI call panicked, so recover the inner engine instead
+/// of `unwrap()`ing across FFI (a Rust panic in a `#[no_mangle]` export
+/// aborts the whole app process).
+fn lock_engine() -> std::sync::MutexGuard<'static, SessionEngine> {
+    engine().lock().unwrap_or_else(|poisoned| poisoned.into_inner())
+}
+
+/// Allocate a Java float array, throwing a catchable
+/// `IllegalStateException` (handled by the Kotlin callers' retry paths)
+/// instead of panicking across FFI when allocation fails.
+fn new_float_array_or_throw<'local>(mut env: JNIEnv<'local>, out: &[f32]) -> JFloatArray<'local> {
+    match env.new_float_array(out.len() as i32) {
+        Ok(arr) => {
+            if env.set_float_array_region(&arr, 0, out).is_ok() {
+                return arr;
+            }
+            let _ = env.throw_new(
+                "java/lang/IllegalStateException",
+                "DSP: failed to fill result array",
+            );
+            JObject::null().into()
+        }
+        Err(_) => {
+            let _ = env.throw_new(
+                "java/lang/IllegalStateException",
+                "DSP: failed to allocate result array",
+            );
+            JObject::null().into()
+        }
+    }
+}
+
 // ── JNI exports ───────────────────────────────────────────────────────────────
 
 /// Process one 10 ms frame of 16 kHz mono PCM.
@@ -44,7 +77,7 @@ pub extern "system" fn Java_io_github_ntufar_deltasleep_audio_DspBridge_processF
     let len = (env.get_array_length(&samples).unwrap_or(0) as usize).min(FRAME_SAMPLES);
     env.get_short_array_region(&samples, 0, &mut buf[..len]).unwrap_or(());
 
-    let frame = engine().lock().unwrap().process_frame(&buf[..len]);
+    let frame = lock_engine().process_frame(&buf[..len]);
 
     let out = [
         frame.rms,
@@ -54,9 +87,7 @@ pub extern "system" fn Java_io_github_ntufar_deltasleep_audio_DspBridge_processF
         frame.breathing_margin_db,
         if frame.breathing_present { 1.0 } else { 0.0 },
     ];
-    let arr = env.new_float_array(out.len() as i32).unwrap();
-    env.set_float_array_region(&arr, 0, &out).unwrap();
-    arr
+    new_float_array_or_throw(env, &out)
 }
 
 /// Summarise the accumulated epoch.
@@ -75,7 +106,7 @@ pub extern "system" fn Java_io_github_ntufar_deltasleep_audio_DspBridge_computeE
     env: JNIEnv<'local>,
     _obj: JObject<'local>,
 ) -> JFloatArray<'local> {
-    let epoch = engine().lock().unwrap().compute_epoch();
+    let epoch = lock_engine().compute_epoch();
 
     let out = [
         epoch.mean_rms,
@@ -90,9 +121,7 @@ pub extern "system" fn Java_io_github_ntufar_deltasleep_audio_DspBridge_computeE
         epoch.external_audio_fraction,
         epoch.breath_period_cv,
     ];
-    let arr = env.new_float_array(out.len() as i32).unwrap();
-    env.set_float_array_region(&arr, 0, &out).unwrap();
-    arr
+    new_float_array_or_throw(env, &out)
 }
 
 /// Discard accumulated epoch data ONLY. Noise floor, periodicity, state
@@ -102,7 +131,7 @@ pub extern "system" fn Java_io_github_ntufar_deltasleep_audio_DspBridge_resetEpo
     _env: JNIEnv<'local>,
     _obj: JObject<'local>,
 ) {
-    engine().lock().unwrap().reset_epoch();
+    lock_engine().reset_epoch();
 }
 
 /// Full DSP session reset: clears all trackers, the event ring buffer, the
@@ -112,7 +141,7 @@ pub extern "system" fn Java_io_github_ntufar_deltasleep_audio_DspBridge_startSes
     _env: JNIEnv<'local>,
     _obj: JObject<'local>,
 ) {
-    engine().lock().unwrap().start_session();
+    lock_engine().start_session();
 }
 
 /// Set the D-3 mic-sensitivity offset (dB) applied to the snore RMS
@@ -127,10 +156,7 @@ pub extern "system" fn Java_io_github_ntufar_deltasleep_audio_DspBridge_setSnore
     _obj: JObject<'local>,
     offset_db: f32,
 ) {
-    engine()
-        .lock()
-        .unwrap()
-        .set_snore_threshold_offset_db(offset_db);
+    lock_engine().set_snore_threshold_offset_db(offset_db);
 }
 
 /// Drain completed acoustic events. Returns a flattened float array with
@@ -144,7 +170,7 @@ pub extern "system" fn Java_io_github_ntufar_deltasleep_audio_DspBridge_pollEven
     env: JNIEnv<'local>,
     _obj: JObject<'local>,
 ) -> JFloatArray<'local> {
-    let events = engine().lock().unwrap().poll_events();
+    let events = lock_engine().poll_events();
 
     let mut out = Vec::with_capacity(events.len() * 8);
     for ev in &events {
@@ -157,9 +183,5 @@ pub extern "system" fn Java_io_github_ntufar_deltasleep_audio_DspBridge_pollEven
         out.push(if ev.terminated_by_gasp { 1.0 } else { 0.0 });
         out.push(ev.mean_db_over_floor);
     }
-    let arr = env.new_float_array(out.len() as i32).unwrap();
-    if !out.is_empty() {
-        env.set_float_array_region(&arr, 0, &out).unwrap();
-    }
-    arr
+    new_float_array_or_throw(env, &out)
 }

@@ -59,6 +59,7 @@ fun ApneaReportScreen(
     vm: ApneaReportViewModel = viewModel(),
 ) {
     val state by vm.state.collectAsState()
+    val exportError by vm.exportError.collectAsState()
 
     val htmlLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("text/html")
@@ -98,6 +99,7 @@ fun ApneaReportScreen(
         } else {
             ApneaReportContent(
                 state = state,
+                exportError = exportError,
                 onExportHtml = { htmlLauncher.launch("deltasleep_apnea_report.html") },
                 onQuestionnaire = onQuestionnaire,
                 onSetup = onSetup,
@@ -109,6 +111,7 @@ fun ApneaReportScreen(
 @Composable
 private fun ApneaReportContent(
     state: ApneaReportState,
+    exportError: Boolean,
     onExportHtml: () -> Unit,
     onQuestionnaire: () -> Unit,
     onSetup: () -> Unit,
@@ -214,6 +217,14 @@ private fun ApneaReportContent(
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text(stringResource(R.string.apnea_report_export_html))
+        }
+        if (exportError) {
+            Spacer(Modifier.height(8.dp))
+            Text(
+                stringResource(R.string.apnea_report_export_failed),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+            )
         }
         Spacer(Modifier.height(8.dp))
         TextButton(
@@ -375,6 +386,7 @@ private fun ReiATrendChart(summaries: List<NightSummary>) {
         val padB = 16.dp.toPx()
         val chartW = size.width - padL - padR
         val chartH = size.height - padT - padB
+        if (chartW <= 0f || chartH <= 0f) return@Canvas
 
         val maxRei = (summaries.maxOfOrNull { it.reiA } ?: 30f).coerceAtLeast(30f)
         val barW = (chartW / summaries.size.toFloat()).coerceAtMost(24.dp.toPx())

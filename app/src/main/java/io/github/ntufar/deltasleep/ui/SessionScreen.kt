@@ -58,9 +58,28 @@ fun SessionScreen(
     vm: SessionViewModel = viewModel(),
 ) {
     val summary by vm.summary.collectAsState()
+    val loadFailed by vm.loadFailed.collectAsState()
+    val exportError by vm.exportError.collectAsState()
     val csvLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("text/csv")
     ) { uri: Uri? -> uri?.let { vm.exportCsv(it) } }
+
+    if (loadFailed) {
+        Column(
+            Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+        ) {
+            TextButton(onClick = onBack) { Text("← Back") }
+            Spacer(Modifier.height(8.dp))
+            Text(
+                "Session not found — it may have been deleted or purged.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        return
+    }
 
     if (summary == null) {
         CircularProgressIndicator(modifier = Modifier.fillMaxSize())
@@ -266,6 +285,14 @@ fun SessionScreen(
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text("Export CSV")
+        }
+        if (exportError) {
+            Spacer(Modifier.height(8.dp))
+            Text(
+                "Export failed — could not write the file. Try again.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+            )
         }
     }
 }

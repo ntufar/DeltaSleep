@@ -74,13 +74,21 @@ class ApneaReportViewModel(app: Application) : AndroidViewModel(app) {
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ApneaReportState())
 
+    private val _exportError = MutableStateFlow(false)
+    val exportError: StateFlow<Boolean> = _exportError
+
     fun exportPhysicianReport(uri: Uri) {
         viewModelScope.launch {
-            PhysicianReport.export(
-                context = getApplication(),
-                uri = uri,
-                riskResult = state.value.riskResult,
-            )
+            _exportError.value = false
+            _exportError.value = try {
+                !PhysicianReport.export(
+                    context = getApplication(),
+                    uri = uri,
+                    riskResult = state.value.riskResult,
+                )
+            } catch (_: Exception) {
+                true
+            }
         }
     }
 }

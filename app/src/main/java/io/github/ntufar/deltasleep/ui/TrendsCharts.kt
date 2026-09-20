@@ -68,6 +68,7 @@ fun WeekBars(
         val xLabelH = 22.dp.toPx()
         val chartH = size.height - xLabelH
         val chartW = size.width - labelW
+        if (chartW <= 0f || chartH <= 0f) return@Canvas
         val maxMin = maxOf(480f, days.maxOf { it.minutes })
         val gridHours = listOf(0, 4, 8, 12).filter { it * 60 <= maxMin + 1 }
 
@@ -127,6 +128,7 @@ fun TrendLine(
         val labelW = 44.dp.toPx()
         val chartH = size.height
         val chartW = size.width - labelW
+        if (chartW <= 0f || chartH <= 0f) return@Canvas
         val span = (yMax - yMin).coerceAtLeast(1f)
         fun yFor(v: Float) = chartH - ((v.coerceIn(yMin, yMax) - yMin) / span) * chartH
 
@@ -188,6 +190,7 @@ fun WeekdayHeatmap(
                 }
             },
     ) {
+        if (size.width <= 0f) return@Canvas
         val cellW = size.width / 7
         val center = centerPaint()
         order.forEachIndexed { i, dow ->
@@ -246,6 +249,7 @@ fun BedtimeScatter(
         val labelW = 44.dp.toPx()
         val chartH = size.height
         val chartW = size.width - labelW
+        if (chartW <= 0f || chartH <= 0f) return@Canvas
         val yMax = 1080f // 18:00 → 12:00 next day
         fun yFor(m: Int) = chartH - (m.coerceIn(0, 1080).toFloat() / yMax) * chartH
 

@@ -114,6 +114,7 @@ object RiskModel {
         }
 
         val medianReiA = median(qualifyingNights.map { it.reiA })
+            ?: return RiskResult.NotEnoughData(nightsSoFar = qualifyingNights.size)
         val acousticBand = NightSummarizer.reiAToAcousticBand(medianReiA)
 
         val questionnaireBand = latestQuestionnaire?.let { q ->
@@ -179,8 +180,8 @@ object RiskModel {
 
         if (qualifyingNights.size < MIN_NIGHTS_FOR_TRENDING) return null
 
-        val medianSnorePct = median(qualifyingNights.map { it.snorePctOfSleep })
-        val medianReiA = median(qualifyingNights.map { it.reiA })
+        val medianSnorePct = median(qualifyingNights.map { it.snorePctOfSleep }) ?: return null
+        val medianReiA = median(qualifyingNights.map { it.reiA }) ?: return null
 
         val suggestSnoring = medianSnorePct > SNORE_PCT_PREFILL_THRESHOLD
         val suggestObservedApnea = medianReiA >= REI_A_PREFILL_THRESHOLD
@@ -190,9 +191,9 @@ object RiskModel {
 
     // ─── Utilities ───────────────────────────────────────────────────────────
 
-    /** Compute the median of a non-empty list of floats. */
-    fun median(values: List<Float>): Float {
-        require(values.isNotEmpty()) { "Cannot compute median of empty list" }
+    /** Median of a list of floats, or null when empty (same contract as TrendMath.median). */
+    fun median(values: List<Float>): Float? {
+        if (values.isEmpty()) return null
         val sorted = values.sorted()
         val mid = sorted.size / 2
         return if (sorted.size % 2 == 0) {
