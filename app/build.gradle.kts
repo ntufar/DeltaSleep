@@ -1,4 +1,5 @@
 import java.util.Properties
+import org.gradle.api.tasks.testing.Test
 
 plugins {
     id("com.android.application")
@@ -61,6 +62,14 @@ android {
 
     buildFeatures {
         compose = true
+    }
+
+    testOptions {
+        unitTests {
+            // Required so Robolectric picks up the merged manifest (DeltaSleepApp)
+            // and resources when running Compose UI tests on the JVM.
+            isIncludeAndroidResources = true
+        }
     }
 
     composeOptions {
@@ -141,4 +150,28 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
     testImplementation("junit:junit:4.13.2")
+    // Compose UI tests running on the JVM via Robolectric (TrendsScreenTest).
+    // Test-only: never packaged into the APK, no effect on the offline build.
+    testImplementation("androidx.compose.ui:ui-test-junit4")
+    testImplementation("org.robolectric:robolectric:4.17")
+
+// Robolectric downloads android-all jars at test runtime and keeps a
+// lock/cache under user.home. ROBO_HOME redirects that to a writable dir
+// (only needed on machines with a read-only HOME); the proxy forwarding
+// below is a no-op unless *_proxy env vars are set.
+tasks.withType<Test> {
+    System.getenv("ROBO_HOME")?.let { systemProperty("user.home", it) }
+    val proxy = (System.getenv("https_proxy") ?: System.getenv("HTTPS_PROXY") ?: "")
+        .removePrefix("http://").removePrefix("https://")
+    if (proxy.isNotBlank()) {
+        val host = proxy.substringBefore(":")
+        val port = proxy.substringAfter(":").substringBefore("/")
+        systemProperty("http.proxyHost", host)
+        systemProperty("http.proxyPort", port)
+        systemProperty("https.proxyHost", host)
+        systemProperty("https.proxyPort", port)
+        systemProperty("http.nonProxyHosts", "localhost|127.0.0.1")
+        systemProperty("https.nonProxyHosts", "localhost|127.0.0.1")
+    }
+}
 }

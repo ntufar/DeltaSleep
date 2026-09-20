@@ -43,6 +43,7 @@ import io.github.ntufar.deltasleep.apnea.RiskModel
 import io.github.ntufar.deltasleep.data.model.NightSummary
 import io.github.ntufar.deltasleep.data.model.RiskBand
 import io.github.ntufar.deltasleep.data.model.SignalQuality
+import io.github.ntufar.deltasleep.viewmodel.ApneaReportState
 import io.github.ntufar.deltasleep.viewmodel.ApneaReportViewModel
 
 private val CardBgR = Color(0xFF12192B)
@@ -78,7 +79,9 @@ fun ApneaReportScreen(
         )
         Spacer(Modifier.height(16.dp))
 
-        // Screening off state
+        // Screening off state. Plain if/else branches: a non-local return
+        // out of the Column scope unbalanced the composition and crashed on
+        // entry (same slot-table corruption as the old TrendsScreen).
         if (!state.screeningEnabled) {
             ReportCard {
                 Text(
@@ -92,9 +95,24 @@ fun ApneaReportScreen(
                 }
             }
             DisclaimerCard()
-            return@Column
+        } else {
+            ApneaReportContent(
+                state = state,
+                onExportHtml = { htmlLauncher.launch("deltasleep_apnea_report.html") },
+                onQuestionnaire = onQuestionnaire,
+                onSetup = onSetup,
+            )
         }
+    }
+}
 
+@Composable
+private fun ApneaReportContent(
+    state: ApneaReportState,
+    onExportHtml: () -> Unit,
+    onQuestionnaire: () -> Unit,
+    onSetup: () -> Unit,
+) {
         // Risk band headline
         when (val rr = state.riskResult) {
             is RiskModel.RiskResult.NotEnoughData -> {
@@ -192,7 +210,7 @@ fun ApneaReportScreen(
 
         // Action buttons
         Button(
-            onClick = { htmlLauncher.launch("deltasleep_apnea_report.html") },
+            onClick = onExportHtml,
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text(stringResource(R.string.apnea_report_export_html))
@@ -215,7 +233,6 @@ fun ApneaReportScreen(
         Spacer(Modifier.height(16.dp))
         DisclaimerCard()
         Spacer(Modifier.height(24.dp))
-    }
 }
 
 // ── Sub-composables ──────────────────────────────────────────────────────────
