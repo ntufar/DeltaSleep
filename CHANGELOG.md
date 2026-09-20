@@ -5,6 +5,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — Versioning:
 
 ## [Unreleased]
 
+## [0.2.10] - 2026-09-20
+
+### Fixed
+- Crash-hardening pass over review findings: short native `computeEpoch()` arrays skip the epoch instead of throwing on every flush (pure `epochFromResult` contract); JNI exports recover a poisoned engine mutex and throw catchable `IllegalStateException` on allocation failure instead of aborting the process; `AudioCapture` rejects `AudioRecord` error codes, verifies initialization, and guards teardown so `stop()` never masks the real failure; missing session arguments degrade to not-found/empty UI instead of `checkNotNull` crashes; all label-padded Canvas charts skip drawing on non-positive areas; `RiskModel.median` returns null on empty like `TrendMath.median`; removed `fallbackToDestructiveMigration` so unmigrated bumps fail loudly instead of wiping nights; CSV/HTML exports return success and the session/report screens show a failure message instead of a silent zero-byte success
+
 ## [0.2.9] - 2026-09-20
 
 ### Fixed
