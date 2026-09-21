@@ -26,7 +26,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -71,7 +70,7 @@ fun SessionScreen(
                 .fillMaxSize()
                 .padding(24.dp),
         ) {
-            TextButton(onClick = onBack) { Text("← Back") }
+            BackButton(onBack)
             Spacer(Modifier.height(8.dp))
             Text(
                 "Session not found — it may have been deleted or purged.",
@@ -98,7 +97,7 @@ fun SessionScreen(
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp, vertical = 16.dp),
     ) {
-        TextButton(onClick = onBack) { Text("‹ Back") }
+        BackButton(onBack)
         Spacer(Modifier.height(4.dp))
 
         Text("Last Night", style = MaterialTheme.typography.headlineMedium)

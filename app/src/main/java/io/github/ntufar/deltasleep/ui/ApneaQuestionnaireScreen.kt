@@ -53,7 +53,7 @@ fun ApneaQuestionnaireScreen(
             .verticalScroll(rememberScrollState())
             .padding(24.dp),
     ) {
-        TextButton(onClick = onBack) { Text("← Back") }
+        BackButton(onBack)
         Spacer(Modifier.height(8.dp))
 
         Text(
@@ -211,7 +211,7 @@ private fun QuestionItem(
                 Text(
                     label,
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFFE0E8FF),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 if (hasPrefill) {
                     Text(

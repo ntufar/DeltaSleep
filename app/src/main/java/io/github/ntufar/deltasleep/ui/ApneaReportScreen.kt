@@ -68,7 +68,7 @@ fun ApneaReportScreen(
             .verticalScroll(rememberScrollState())
             .padding(24.dp),
     ) {
-        TextButton(onClick = onBack) { Text("← Back") }
+        BackButton(onBack)
         Spacer(Modifier.height(8.dp))
 
         Text(
@@ -349,10 +349,10 @@ private fun SmallStatCard(label: String, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(8.dp))
-            .background(Color(0xFF0A0E1A))
+            .background(MaterialTheme.colorScheme.surface)
             .padding(horizontal = 10.dp, vertical = 8.dp),
     ) {
-        Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
     }
 }
 

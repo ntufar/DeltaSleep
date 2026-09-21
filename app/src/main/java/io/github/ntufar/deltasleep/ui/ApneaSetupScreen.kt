@@ -60,7 +60,7 @@ fun ApneaSetupScreen(
             .verticalScroll(rememberScrollState())
             .padding(24.dp),
     ) {
-        TextButton(onClick = onBack) { Text("← Back") }
+        BackButton(onBack)
         Spacer(Modifier.height(8.dp))
 
         Text(

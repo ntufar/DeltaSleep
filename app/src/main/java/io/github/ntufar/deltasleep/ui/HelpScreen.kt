@@ -20,7 +20,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,7 +46,7 @@ fun HelpScreen(onBack: () -> Unit) {
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp, vertical = 24.dp),
     ) {
-        TextButton(onClick = onBack) { Text("← Back") }
+        BackButton(onBack)
         Spacer(Modifier.height(4.dp))
 
         Text("User Guide", style = MaterialTheme.typography.headlineLarge)

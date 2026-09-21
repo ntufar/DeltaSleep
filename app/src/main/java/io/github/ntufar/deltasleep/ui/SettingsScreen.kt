@@ -65,7 +65,7 @@ fun SettingsScreen(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            TextButton(onClick = onBack) { Text("‹ Back") }
+            BackButton(onBack)
             Text("Settings", style = MaterialTheme.typography.headlineMedium)
         }
         Spacer(Modifier.height(8.dp))
