@@ -5,6 +5,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — Versioning:
 
 ## [Unreleased]
 
+## [0.2.12] - 2026-09-21
+
+### Fixed
+- Back navigation used a Unicode text arrow that rendered in a mismatched serif fallback font; all back buttons now share a `BackButton` composable with the Material auto-mirrored arrow icon
+- STOP-BANG questionnaire labels were hardcoded near-white and invisible on the light theme ("empty" screen); now theme `onSurfaceVariant`, with a structural Robolectric regression test covering all 8 items in the light theme
+- Report "Latest night" stat pills paired a hardcoded near-black background with theme text, unreadable in light mode; now theme `surface`/`onSurface`
+
 ## [0.2.11] - 2026-09-21
 
 ### Changed
