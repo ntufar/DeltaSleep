@@ -7,6 +7,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Bedtime
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -64,10 +69,12 @@ class MainActivity : ComponentActivity() {
 }
 
 /** Third top-level destination (D-1): Home / Trends / Report. */
+private data class TopLevelDestination(val route: String, val label: String, val icon: @Composable () -> Unit)
+
 private val TOP_LEVEL_ROUTES = listOf(
-    Triple("home", "Home", "🌙"),
-    Triple("trends", "Trends", "📊"),
-    Triple("apnea", "Report", "❤"),
+    TopLevelDestination("home", "Home") { Icon(Icons.Filled.Bedtime, contentDescription = null) },
+    TopLevelDestination("trends", "Trends") { Icon(Icons.Filled.BarChart, contentDescription = null) },
+    TopLevelDestination("apnea", "Report") { Icon(Icons.Filled.Favorite, contentDescription = null) },
 )
 
 @Composable
@@ -78,20 +85,20 @@ private fun DeltaSleepNavGraph() {
 
     Scaffold(
         bottomBar = {
-            if (route in TOP_LEVEL_ROUTES.map { it.first }) {
+            if (route in TOP_LEVEL_ROUTES.map { it.route }) {
                 NavigationBar {
-                    TOP_LEVEL_ROUTES.forEach { (r, label, glyph) ->
+                    TOP_LEVEL_ROUTES.forEach { dest ->
                         NavigationBarItem(
-                            selected = route == r,
+                            selected = route == dest.route,
                             onClick = {
-                                nav.navigate(r) {
+                                nav.navigate(dest.route) {
                                     launchSingleTop = true
                                     restoreState = true
                                     popUpTo("home") { saveState = true }
                                 }
                             },
-                            icon = { Text(glyph) },
-                            label = { Text(label) },
+                            icon = dest.icon,
+                            label = { Text(dest.label) },
                         )
                     }
                 }

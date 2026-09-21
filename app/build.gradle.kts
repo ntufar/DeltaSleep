@@ -19,8 +19,8 @@ android {
         applicationId = "io.github.ntufar.deltasleep"
         minSdk = 26
         targetSdk = 36
-        versionCode = 27
-        versionName = "0.2.10"
+        versionCode = 28
+        versionName = "0.2.11"
     }
 
     signingConfigs {
@@ -139,6 +139,7 @@ dependencies {
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.navigation:navigation-compose:2.7.7")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
     implementation("androidx.room:room-runtime:2.6.1")

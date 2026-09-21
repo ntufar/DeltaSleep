@@ -70,14 +70,26 @@ fun HypnogramChart(
         val rowH = chartH / rows
         val epochW = chartW / epochs.size.toFloat()
 
-        // Phase blocks (offset by labelW on the X axis)
-        epochs.forEachIndexed { i, epoch ->
-            val row = PHASE_ROW_MAP[epoch.phase] ?: 0
-            drawRect(
-                color = epoch.phase.color,
-                topLeft = Offset(labelW + i * epochW, row * rowH),
-                size = Size(epochW, rowH),
+        // Phase blocks (offset by labelW on the X axis). Contiguous runs of
+        // the same phase merge into one rounded pill — calmer than per-epoch
+        // bricks, same data.
+        val cornerR = 3.dp.toPx()
+        var runStart = 0
+        while (runStart < epochs.size) {
+            val phase = epochs[runStart].phase
+            var runEnd = runStart + 1
+            while (runEnd < epochs.size && epochs[runEnd].phase == phase) runEnd++
+            val row = PHASE_ROW_MAP[phase] ?: 0
+            val inset = 1.dp.toPx()
+            drawRoundRect(
+                color = phase.color,
+                topLeft = Offset(labelW + runStart * epochW + inset / 2f, row * rowH + inset / 2f),
+                size = Size((runEnd - runStart) * epochW - inset, rowH - inset),
+                cornerRadius = androidx.compose.ui.geometry.CornerRadius(cornerR, cornerR),
             )
+            runStart = runEnd
+        }
+        epochs.forEachIndexed { i, epoch ->
             if (epoch.hasSnore) {
                 drawRect(
                     color = Color(0x55FF4081),
@@ -90,7 +102,7 @@ fun HypnogramChart(
         // Row dividers
         for (row in 1 until rows.toInt()) {
             drawLine(
-                color = Color(0x33000000),
+                color = Color(0x14000000),
                 start = Offset(labelW, row * rowH),
                 end = Offset(size.width, row * rowH),
                 strokeWidth = 1f,
@@ -99,7 +111,7 @@ fun HypnogramChart(
 
         // Y-axis labels
         val labelPaint = Paint().apply {
-            color = Color(0xFF888888).toArgb()
+            color = Color(0xFF8A94A8).toArgb()
             textSize = 28f
             isAntiAlias = true
             textAlign = Paint.Align.RIGHT
@@ -155,7 +167,7 @@ fun HypnogramChart(
         if (hasTimeAxis) {
             val durationMs = endMs - startMs
             val timePaint = Paint().apply {
-                color = Color(0xFF888888).toArgb()
+                color = Color(0xFF8A94A8).toArgb()
                 textSize = 26f
                 isAntiAlias = true
                 textAlign = Paint.Align.CENTER

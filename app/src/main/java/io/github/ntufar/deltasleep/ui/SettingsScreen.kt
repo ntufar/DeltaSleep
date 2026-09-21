@@ -30,7 +30,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -203,7 +202,7 @@ fun SettingsScreen(
             onClick = { showNukeDialog = true },
             modifier = Modifier.fillMaxWidth(),
         ) {
-            Text("Delete all data", color = Color(0xFFE53935))
+            Text("Delete all data", color = MaterialTheme.colorScheme.error)
         }
         Spacer(Modifier.height(24.dp))
     }
@@ -215,7 +214,7 @@ fun SettingsScreen(
             text = { Text("This cannot be undone.") },
             confirmButton = {
                 TextButton(onClick = { vm.nukeAllData(); showNukeDialog = false }) {
-                    Text("Delete", color = Color(0xFFE53935))
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
@@ -240,7 +239,7 @@ private fun OptionRow(title: String, summary: String?) {
             Text(
                 summary,
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF7A8FB5),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }
@@ -265,7 +264,7 @@ private fun SwitchRow(
             Text(
                 summary,
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF7A8FB5),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
         Spacer(Modifier.width(8.dp))

@@ -38,9 +38,6 @@ private val AwakeColor = Color(0xFFE53935)
 private val LightColor = Color(0xFF42A5F5)
 private val DeepColor  = Color(0xFF1565C0)
 private val SnoreColor = Color(0xFFFF4081)
-private val MutedColor = Color(0xFF7A8FB5)
-private val CardBg     = Color(0xFF12192B)
-private val BorderColor = Color(0xFF1E2D4A)
 
 @Composable
 fun HelpScreen(onBack: () -> Unit) {
@@ -57,7 +54,7 @@ fun HelpScreen(onBack: () -> Unit) {
         Text(
             "Everything you need to track, review, and export your sleep.",
             style = MaterialTheme.typography.bodyMedium,
-            color = MutedColor,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
         Spacer(Modifier.height(32.dp))
@@ -238,7 +235,7 @@ private fun SectionHeader(title: String) {
 private fun HelpCard(content: @Composable () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp),
-        colors = CardDefaults.cardColors(containerColor = CardBg),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
         shape = RoundedCornerShape(12.dp),
     ) {
         Column(Modifier.padding(16.dp)) { content() }
@@ -253,14 +250,14 @@ private fun SubHeading(text: String) {
 
 @Composable
 private fun BodyText(text: String) {
-    Text(text, style = MaterialTheme.typography.bodySmall, color = MutedColor)
+    Text(text, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
 }
 
 @Composable
 private fun BulletItem(text: String) {
     Row(verticalAlignment = Alignment.Top, modifier = Modifier.padding(vertical = 3.dp)) {
-        Text("•", color = MutedColor, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(end = 8.dp, top = 1.dp))
-        Text(text, style = MaterialTheme.typography.bodySmall, color = MutedColor)
+        Text("•", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(end = 8.dp, top = 1.dp))
+        Text(text, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
@@ -277,7 +274,7 @@ private fun StepItem(n: Int, text: String) {
             Text("$n", color = LightColor, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
         }
         Spacer(Modifier.width(10.dp))
-        Text(text, style = MaterialTheme.typography.bodySmall, color = MutedColor, modifier = Modifier.weight(1f))
+        Text(text, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
     }
 }
 
@@ -291,7 +288,7 @@ private fun PermRow(perm: String, desc: String) {
             color = Color(0xFFEF9A9A),
             modifier = Modifier.width(130.dp),
         )
-        Text(desc, style = MaterialTheme.typography.bodySmall, color = MutedColor, modifier = Modifier.weight(1f))
+        Text(desc, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
     }
 }
 
@@ -314,7 +311,7 @@ private fun SignalLegendRow(color: Color, label: String, desc: String) {
         Spacer(Modifier.width(8.dp))
         Column {
             Text(label, style = MaterialTheme.typography.labelSmall, color = color.copy(alpha = 0.9f), fontWeight = FontWeight.SemiBold)
-            Text(desc, style = MaterialTheme.typography.bodySmall, color = MutedColor)
+            Text(desc, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -325,7 +322,7 @@ private fun PhaseLegendRow() {
         listOf(AwakeColor to "Awake", LightColor to "Light", DeepColor to "Deep", SnoreColor to "Snore").forEach { (c, l) ->
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
                 Box(Modifier.size(12.dp, 10.dp).clip(RoundedCornerShape(2.dp)).background(c))
-                Text(l, style = MaterialTheme.typography.labelSmall, color = MutedColor)
+                Text(l, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
@@ -335,7 +332,7 @@ private fun PhaseLegendRow() {
 private fun StatInfoRow(label: String, desc: String) {
     Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.Top) {
         Text(label, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold, modifier = Modifier.width(80.dp))
-        Text(desc, style = MaterialTheme.typography.bodySmall, color = MutedColor, modifier = Modifier.weight(1f))
+        Text(desc, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
     }
 }
 
@@ -349,7 +346,7 @@ private fun CsvColumnRow(col: String, desc: String) {
             color = LightColor,
             modifier = Modifier.width(100.dp),
         )
-        Text(desc, style = MaterialTheme.typography.bodySmall, color = MutedColor, modifier = Modifier.weight(1f))
+        Text(desc, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
     }
 }
 
@@ -364,7 +361,7 @@ private fun InfoBox(text: String) {
     ) {
         Text(buildAnnotatedString {
             withStyle(SpanStyle(color = LightColor, fontWeight = FontWeight.Bold)) { append("Note  ") }
-            withStyle(SpanStyle(color = MutedColor)) { append(text) }
+            withStyle(SpanStyle(color = MaterialTheme.colorScheme.onSurfaceVariant)) { append(text) }
         }, style = MaterialTheme.typography.bodySmall)
     }
 }
@@ -380,7 +377,7 @@ private fun WarnBox(text: String) {
     ) {
         Text(buildAnnotatedString {
             withStyle(SpanStyle(color = AwakeColor, fontWeight = FontWeight.Bold)) { append("Warning  ") }
-            withStyle(SpanStyle(color = MutedColor)) { append(text) }
+            withStyle(SpanStyle(color = MaterialTheme.colorScheme.onSurfaceVariant)) { append(text) }
         }, style = MaterialTheme.typography.bodySmall)
     }
 }

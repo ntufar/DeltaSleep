@@ -32,9 +32,6 @@ import io.github.ntufar.deltasleep.R
 import io.github.ntufar.deltasleep.apnea.RiskModel
 import io.github.ntufar.deltasleep.viewmodel.ApneaQuestionnaireViewModel
 
-private val CardBgQ = Color(0xFF12192B)
-private val MutedQ = Color(0xFF7A8FB5)
-private val AccentQ = Color(0xFF42A5F5)
 private val WarnQ = Color(0xFFE65100)
 
 @Composable
@@ -67,7 +64,7 @@ fun ApneaQuestionnaireScreen(
         Text(
             stringResource(R.string.apnea_questionnaire_subtitle),
             style = MaterialTheme.typography.bodySmall,
-            color = MutedQ,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
         // Prefill notice (FR-4.2)
@@ -77,7 +74,7 @@ fun ApneaQuestionnaireScreen(
                 stringResource(R.string.apnea_questionnaire_prefill_caption),
                 style = MaterialTheme.typography.bodySmall,
                 fontStyle = FontStyle.Italic,
-                color = AccentQ,
+                color = MaterialTheme.colorScheme.primary,
             )
         }
 
@@ -139,7 +136,7 @@ fun ApneaQuestionnaireScreen(
             }
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = CardBgQ),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                 shape = RoundedCornerShape(12.dp),
             ) {
                 Column(Modifier.padding(16.dp)) {
@@ -153,7 +150,7 @@ fun ApneaQuestionnaireScreen(
                     Text(
                         stringResource(R.string.apnea_questionnaire_citation),
                         style = MaterialTheme.typography.bodySmall,
-                        color = MutedQ,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
@@ -197,7 +194,7 @@ private fun QuestionItem(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
-        colors = CardDefaults.cardColors(containerColor = CardBgQ),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
         shape = RoundedCornerShape(12.dp),
     ) {
         Row(
@@ -220,7 +217,7 @@ private fun QuestionItem(
                     Text(
                         "suggested",
                         style = MaterialTheme.typography.labelSmall,
-                        color = AccentQ,
+                        color = MaterialTheme.colorScheme.primary,
                         fontStyle = FontStyle.Italic,
                     )
                 }

@@ -9,12 +9,22 @@ import androidx.compose.ui.graphics.Color
 import io.github.ntufar.deltasleep.settings.AppTheme
 
 private val DarkScheme = darkColorScheme(
-    primary = Color(0xFF42A5F5),
-    secondary = Color(0xFF1565C0),
-    background = Color(0xFF0A0E1A),
-    surface = Color(0xFF12192B),
-    onBackground = Color(0xFFE0E8FF),
-    onSurface = Color(0xFFE0E8FF),
+    primary = Color(0xFF8AB4FF),
+    onPrimary = Color(0xFF0A1A33),
+    primaryContainer = Color(0xFF1B3A66),
+    onPrimaryContainer = Color(0xFFD9E5FF),
+    secondary = Color(0xFF7DD3C0),
+    onSecondary = Color(0xFF06302A),
+    tertiary = Color(0xFFB388FF),
+    background = Color(0xFF0B0F19),
+    onBackground = Color(0xFFE3E9F7),
+    surface = Color(0xFF121826),
+    onSurface = Color(0xFFE3E9F7),
+    surfaceVariant = Color(0xFF1C2438),
+    onSurfaceVariant = Color(0xFFA9B6D1),
+    outline = Color(0xFF2A3550),
+    outlineVariant = Color(0xFF1E2942),
+    error = Color(0xFFFFB4AB),
 )
 
 /**
@@ -22,22 +32,38 @@ private val DarkScheme = darkColorScheme(
  * on at night next to a sleeping user — every non-black pixel is glare.
  */
 private val AmoledScheme = darkColorScheme(
-    primary = Color(0xFF42A5F5),
-    secondary = Color(0xFF1565C0),
+    primary = Color(0xFF8AB4FF),
+    onPrimary = Color(0xFF000000),
+    primaryContainer = Color(0xFF1B3A66),
+    onPrimaryContainer = Color(0xFFD9E5FF),
+    secondary = Color(0xFF7DD3C0),
+    tertiary = Color(0xFFB388FF),
     background = Color(0xFF000000),
+    onBackground = Color(0xFFE3E9F7),
     surface = Color(0xFF000000),
-    surfaceVariant = Color(0xFF0A0A0A),
-    onBackground = Color(0xFFE0E8FF),
-    onSurface = Color(0xFFE0E8FF),
+    onSurface = Color(0xFFE3E9F7),
+    surfaceVariant = Color(0xFF101014),
+    onSurfaceVariant = Color(0xFFA9B6D1),
+    outline = Color(0xFF26262B),
+    outlineVariant = Color(0xFF17171B),
+    error = Color(0xFFFFB4AB),
 )
 
 private val LightScheme = lightColorScheme(
-    primary = Color(0xFF1565C0),
-    secondary = Color(0xFF42A5F5),
-    background = Color(0xFFF5F7FC),
+    primary = Color(0xFF2456A6),
+    onPrimary = Color(0xFFFFFFFF),
+    primaryContainer = Color(0xFFD9E5FF),
+    onPrimaryContainer = Color(0xFF0A1A33),
+    secondary = Color(0xFF0E6B5C),
+    tertiary = Color(0xFF6A4FC7),
+    background = Color(0xFFF6F8FC),
+    onBackground = Color(0xFF101828),
     surface = Color(0xFFFFFFFF),
-    onBackground = Color(0xFF0A0E1A),
-    onSurface = Color(0xFF0A0E1A),
+    onSurface = Color(0xFF101828),
+    surfaceVariant = Color(0xFFE8EDF6),
+    onSurfaceVariant = Color(0xFF4A5878),
+    outline = Color(0xFFCBD5E8),
+    outlineVariant = Color(0xFFE1E8F5),
 )
 
 @Composable

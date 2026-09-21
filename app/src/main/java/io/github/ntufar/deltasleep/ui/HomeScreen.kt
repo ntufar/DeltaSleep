@@ -17,10 +17,18 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
+import androidx.compose.material.icons.filled.Bedtime
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -73,40 +81,59 @@ fun HomeScreen(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(24.dp),
+            .padding(horizontal = 20.dp, vertical = 16.dp),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("DeltaSleep", style = MaterialTheme.typography.headlineLarge)
+            Column {
+                Text(
+                    "DeltaSleep",
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.onBackground,
+                )
+                Text(
+                    "Your sleep data stays in your bed",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
             Row(verticalAlignment = Alignment.CenterVertically) {
-                TextButton(onClick = onSettings) {
-                    Text("⚙", style = MaterialTheme.typography.labelLarge, textAlign = TextAlign.End)
+                IconButton(onClick = onSettings) {
+                    Icon(Icons.Filled.Settings, contentDescription = "Settings")
                 }
-                TextButton(onClick = onHelp) {
-                    Text("? Help", style = MaterialTheme.typography.labelLarge, textAlign = TextAlign.End)
+                IconButton(onClick = onHelp) {
+                    Icon(Icons.AutoMirrored.Filled.HelpOutline, contentDescription = "Help")
                 }
             }
         }
-        Spacer(Modifier.height(32.dp))
+        Spacer(Modifier.height(24.dp))
 
-        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-            Button(
-                onClick = {
-                    if (isTracking && activeSessionId >= 0L) onActiveSession(activeSessionId)
-                    else vm.startTracking()
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isTracking) Color(0xFF00897B) else MaterialTheme.colorScheme.primary,
-                ),
-            ) {
-                Text(
-                    if (isTracking) "View Active Session" else "Start Sleep",
-                    style = MaterialTheme.typography.titleLarge,
-                )
-            }
+        Button(
+            onClick = {
+                if (isTracking && activeSessionId >= 0L) onActiveSession(activeSessionId)
+                else vm.startTracking()
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(64.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = if (isTracking) MaterialTheme.colorScheme.secondary
+                else MaterialTheme.colorScheme.primary,
+            ),
+            shape = CircleShape,
+        ) {
+            Icon(
+                Icons.Filled.Bedtime,
+                contentDescription = null,
+                modifier = Modifier.padding(end = 8.dp),
+            )
+            Text(
+                if (isTracking) "View Active Session" else "Start Sleep",
+                style = MaterialTheme.typography.titleLarge,
+            )
         }
 
         Spacer(Modifier.height(16.dp))
@@ -118,6 +145,9 @@ fun HomeScreen(
                 .clickable {
                     if (vm.shouldShowApneaSetup()) onApneaSetup() else onApnea()
                 },
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            ),
         ) {
             Row(
                 modifier = Modifier
@@ -126,15 +156,23 @@ fun HomeScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Column {
-                    Text("Apnea Screening", style = MaterialTheme.typography.titleSmall)
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        "Apnea Screening",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                     Text(
                         "Risk indication from breathing sounds",
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF7A8FB5),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
                     )
                 }
-                Text("›", style = MaterialTheme.typography.titleLarge, color = Color(0xFF42A5F5))
+                Icon(
+                    Icons.Filled.ChevronRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                )
             }
         }
 
@@ -158,15 +196,27 @@ private fun SessionRow(session: SleepSession, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+        ),
     ) {
         Row(
             Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(fmt.format(Date(session.startTime)))
-            Text("${hours}h ${minutes}m")
+            Text(
+                fmt.format(Date(session.startTime)),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                "${hours}h ${minutes}m",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }
@@ -217,7 +267,7 @@ private fun PreviousSessionsCalendar(
                     modifier = Modifier.weight(1f),
                     textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.labelSmall,
-                    color = Color(0xFF7A8FB5),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
@@ -253,7 +303,7 @@ private fun PreviousSessionsCalendar(
                                     .background(
                                         color = when {
                                             hasSessions -> MaterialTheme.colorScheme.primary
-                                            isToday -> Color(0xFF1E2A42)
+                                            isToday -> MaterialTheme.colorScheme.surfaceVariant
                                             else -> Color.Transparent
                                         },
                                         shape = CircleShape,
@@ -270,7 +320,8 @@ private fun PreviousSessionsCalendar(
                             ) {
                                 Text(
                                     dayNumber.toString(),
-                                    color = if (hasSessions) Color(0xFF0A0E1A) else MaterialTheme.colorScheme.onBackground,
+                                    color = if (hasSessions) MaterialTheme.colorScheme.onPrimary
+                                    else MaterialTheme.colorScheme.onBackground,
                                     style = MaterialTheme.typography.bodyMedium,
                                 )
                             }

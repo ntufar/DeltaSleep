@@ -46,9 +46,6 @@ import io.github.ntufar.deltasleep.data.model.SignalQuality
 import io.github.ntufar.deltasleep.viewmodel.ApneaReportState
 import io.github.ntufar.deltasleep.viewmodel.ApneaReportViewModel
 
-private val CardBgR = Color(0xFF12192B)
-private val MutedR = Color(0xFF7A8FB5)
-private val AccentR = Color(0xFF42A5F5)
 private val WarnR = Color(0xFFE65100)
 
 @Composable
@@ -88,7 +85,7 @@ fun ApneaReportScreen(
                 Text(
                     stringResource(R.string.apnea_report_screening_off),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MutedR,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Spacer(Modifier.height(12.dp))
                 Button(onClick = onSetup, modifier = Modifier.fillMaxWidth()) {
@@ -123,14 +120,14 @@ private fun ApneaReportContent(
                     Text(
                         stringResource(R.string.apnea_report_not_enough_data, rr.nightsSoFar),
                         style = MaterialTheme.typography.titleMedium,
-                        color = AccentR,
+                        color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold,
                     )
                     Spacer(Modifier.height(6.dp))
                     Text(
                         stringResource(R.string.apnea_report_not_enough_desc),
                         style = MaterialTheme.typography.bodySmall,
-                        color = MutedR,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
@@ -148,7 +145,7 @@ private fun ApneaReportContent(
                     Text(
                         stringResource(R.string.apnea_report_not_enough_desc),
                         style = MaterialTheme.typography.bodySmall,
-                        color = MutedR,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
@@ -168,13 +165,13 @@ private fun ApneaReportContent(
                 Spacer(Modifier.height(8.dp))
                 // Legend
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    legendDot(Color(0xFF4CAF50)); Text(" None  ", style = MaterialTheme.typography.labelSmall, color = MutedR)
-                    legendDot(Color(0xFFFF9800)); Text(" Mild  ", style = MaterialTheme.typography.labelSmall, color = MutedR)
-                    legendDot(Color(0xFFF44336)); Text(" Moderate  ", style = MaterialTheme.typography.labelSmall, color = MutedR)
-                    legendDot(Color(0xFF7B1FA2)); Text(" Severe  ", style = MaterialTheme.typography.labelSmall, color = MutedR)
+                    legendDot(Color(0xFF4CAF50)); Text(" None  ", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    legendDot(Color(0xFFFF9800)); Text(" Mild  ", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    legendDot(Color(0xFFF44336)); Text(" Moderate  ", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    legendDot(Color(0xFF7B1FA2)); Text(" Severe  ", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    legendDot(Color(0x664CAF50)); Text(" Low quality (excluded)", style = MaterialTheme.typography.labelSmall, color = MutedR)
+                    legendDot(Color(0x664CAF50)); Text(" Low quality (excluded)", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }
@@ -285,12 +282,12 @@ private fun RiskBandCard(rr: RiskModel.RiskResult.Result) {
             }
         }
         Spacer(Modifier.height(8.dp))
-        Text(explanation, style = MaterialTheme.typography.bodySmall, color = MutedR)
+        Text(explanation, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.height(6.dp))
         Text(
             stringResource(R.string.apnea_report_median_rei, rr.medianReiA),
             style = MaterialTheme.typography.bodySmall,
-            color = AccentR,
+            color = MaterialTheme.colorScheme.primary,
         )
     }
 }
@@ -313,7 +310,7 @@ private fun WhatToDoNextCard() {
             Text(
                 stringResource(R.string.apnea_report_what_next_body),
                 style = MaterialTheme.typography.bodySmall,
-                color = MutedR,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }
@@ -340,7 +337,7 @@ private fun DisclaimerCard() {
 private fun ReportCard(content: @Composable () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
-        colors = CardDefaults.cardColors(containerColor = CardBgR),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
         shape = RoundedCornerShape(12.dp),
     ) {
         Column(Modifier.padding(16.dp)) { content() }
@@ -355,7 +352,7 @@ private fun SmallStatCard(label: String, modifier: Modifier = Modifier) {
             .background(Color(0xFF0A0E1A))
             .padding(horizontal = 10.dp, vertical = 8.dp),
     ) {
-        Text(label, style = MaterialTheme.typography.bodySmall, color = MutedR)
+        Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 

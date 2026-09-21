@@ -35,9 +35,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.ntufar.deltasleep.R
 import io.github.ntufar.deltasleep.viewmodel.ApneaSetupViewModel
 
-private val CardBg = Color(0xFF12192B)
-private val MutedColor = Color(0xFF7A8FB5)
-private val AccentColor = Color(0xFF42A5F5)
 private val WarnColor = Color(0xFFE65100)
 private val ErrorColor = Color(0xFFE53935)
 
@@ -116,7 +113,7 @@ fun ApneaSetupScreen(
                         Text(
                             stringResource(R.string.apnea_setup_level_test_running),
                             style = MaterialTheme.typography.bodySmall,
-                            color = AccentColor,
+                            color = MaterialTheme.colorScheme.primary,
                         )
                         Spacer(Modifier.height(8.dp))
                         LinearProgressIndicator(
@@ -129,7 +126,7 @@ fun ApneaSetupScreen(
                         Text(
                             "%.1f dB".format(breathingMarginDb),
                             style = MaterialTheme.typography.bodySmall,
-                            color = MutedColor,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                     ApneaSetupViewModel.TestState.DONE -> {
@@ -151,7 +148,7 @@ fun ApneaSetupScreen(
                         )
                         Spacer(Modifier.height(8.dp))
                         TextButton(onClick = { vm.cancelLevelTest() }) {
-                            Text("Test again", color = AccentColor)
+                            Text("Test again", color = MaterialTheme.colorScheme.primary)
                         }
                     }
                 }
@@ -173,7 +170,7 @@ fun ApneaSetupScreen(
                     Text(
                         stringResource(R.string.apnea_setup_enable_desc),
                         style = MaterialTheme.typography.bodySmall,
-                        color = MutedColor,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
                 Switch(
@@ -202,7 +199,7 @@ fun ApneaSetupScreen(
 private fun SetupCard(content: @Composable () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
-        colors = CardDefaults.cardColors(containerColor = CardBg),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
         shape = RoundedCornerShape(12.dp),
     ) {
         Column(Modifier.padding(16.dp)) { content() }
@@ -217,7 +214,7 @@ private fun SubHeading(text: String) {
 
 @Composable
 private fun BodyText(text: String) {
-    Text(text, style = MaterialTheme.typography.bodySmall, color = MutedColor)
+    Text(text, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
 }
 
 @Composable

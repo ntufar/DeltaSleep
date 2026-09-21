@@ -22,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -95,12 +96,17 @@ fun SessionScreen(
         Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(24.dp),
+            .padding(horizontal = 20.dp, vertical = 16.dp),
     ) {
-        TextButton(onClick = onBack) { Text("← Back") }
-        Spacer(Modifier.height(8.dp))
+        TextButton(onClick = onBack) { Text("‹ Back") }
+        Spacer(Modifier.height(4.dp))
 
         Text("Last Night", style = MaterialTheme.typography.headlineMedium)
+        Text(
+            "Movement + breathing staging, all on-device",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
         Spacer(Modifier.height(16.dp))
 
         Row(
@@ -108,9 +114,9 @@ fun SessionScreen(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.Top,
         ) {
-            StatCard("Sleep time", sleepLabel, Modifier.weight(1f).height(88.dp))
-            StatCard("Snore", "${s.snorePercent.toInt()}%", Modifier.weight(1f).height(88.dp))
-            StatCard("Deep", "${s.deepPercent.toInt()}%", Modifier.weight(1f).height(88.dp))
+            StatCard("Sleep time", sleepLabel, Modifier.weight(1f))
+            StatCard("Snore", "${s.snorePercent.toInt()}%", Modifier.weight(1f))
+            StatCard("Deep", "${s.deepPercent.toInt()}%", Modifier.weight(1f))
         }
 
         Spacer(Modifier.height(24.dp))
@@ -189,12 +195,12 @@ fun SessionScreen(
                 StatCard(
                     "Loudest snore",
                     "$loudestSnore/5",
-                    Modifier.weight(1f).height(88.dp),
+                    Modifier.weight(1f),
                 )
                 StatCard(
                     "Snore episodes",
                     "${snoreEvents.size}",
-                    Modifier.weight(1f).height(88.dp),
+                    Modifier.weight(1f),
                 )
             }
         }
@@ -213,12 +219,12 @@ fun SessionScreen(
                 StatCard(
                     "REI-a",
                     "%.1f/h".format(ns.reiA),
-                    Modifier.weight(1f).height(88.dp),
+                    Modifier.weight(1f),
                 )
                 StatCard(
                     "Signal",
                     ns.signalQuality.name,
-                    Modifier.weight(1f).height(88.dp),
+                    Modifier.weight(1f),
                 )
             }
         }
@@ -315,13 +321,27 @@ private fun LegendChip(color: Color, label: String) {
 
 @Composable
 private fun StatCard(label: String, value: String, modifier: Modifier = Modifier) {
-    Card(modifier = modifier) {
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+        ),
+    ) {
         Column(
-            Modifier.padding(12.dp),
+            Modifier.padding(horizontal = 12.dp, vertical = 14.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Text(value, style = MaterialTheme.typography.headlineSmall)
-            Text(label, style = MaterialTheme.typography.bodySmall)
+            Text(
+                value,
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(2.dp))
+            Text(
+                label.uppercase(),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+            )
         }
     }
 }
