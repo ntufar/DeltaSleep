@@ -5,6 +5,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — Versioning:
 
 ## [Unreleased]
 
+## [0.2.11] - 2026-09-21
+
+### Changed
+- UI elegance pass: complete Material 3 palettes for dark, AMOLED-black, and light themes; bottom-nav and home header emoji glyphs replaced with Material icons (adds `material-icons-extended`, stripped by R8 in release builds)
+- Home screen: tagline under the title, full-width pill Start button with moon icon, tonal apnea card with chevron, theme-aware session calendar
+- Session screen: tonal stat cards with uppercase labels, subtitle under the header; hypnogram merges contiguous same-phase runs into rounded pills with softer dividers
+- Light theme fixed across Apnea setup/questionnaire/report, Help, and Settings, which previously hardcoded dark card and muted colors; destructive actions now use the theme error color
+
 ## [0.2.10] - 2026-09-20
 
 ### Fixed
