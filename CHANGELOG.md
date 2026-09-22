@@ -5,6 +5,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — Versioning:
 
 ## [Unreleased]
 
+## [0.2.13] - 2026-09-22
+
+### Changed
+- Enabled Android resource shrinking in release builds (`shrinkResources`, alongside the existing R8 minification), addressing the Play Store recommendation and reducing install size by stripping unused resources
+
 ## [0.2.12] - 2026-09-21
 
 ### Fixed

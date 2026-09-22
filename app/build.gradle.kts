@@ -19,8 +19,8 @@ android {
         applicationId = "io.github.ntufar.deltasleep"
         minSdk = 26
         targetSdk = 36
-        versionCode = 29
-        versionName = "0.2.12"
+        versionCode = 30
+        versionName = "0.2.13"
     }
 
     signingConfigs {
@@ -44,6 +44,7 @@ android {
         release {
             signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
