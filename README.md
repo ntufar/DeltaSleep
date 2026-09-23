@@ -14,7 +14,7 @@
 
 Free, open-source Android app for sleep phase and snore tracking. Every byte of analysis happens on your device. The app ships without the `INTERNET` permission and a CI job verifies this on every commit.
 
-**[Website](https://ntufar.github.io/DeltaSleep)** · **[Changelog](CHANGELOG.md)** · **[F-Droid](https://f-droid.org)** *(planned)*
+**[Get it on Google Play](https://play.google.com/store/apps/details?id=io.github.ntufar.deltasleep&pcampaignid=web_share)** · **[Website](https://ntufar.github.io/DeltaSleep)** · **[Changelog](CHANGELOG.md)** · **[F-Droid](https://f-droid.org)** *(planned)*
 
 ---
 
