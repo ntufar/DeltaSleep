@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 DeltaSleep is a free, open-source, fully offline sleep phase and snore tracking mobile app. **Zero network egress** is a hard constraint — no analytics, no telemetry, no crash reporting. The app must function 100% offline after install.
 
-- License: GPLv3
+- License: MIT
 - Platforms: Android v1.0 first, iOS v1.1 later
 - MVP scope: Android only, manual start/stop, movement-based sleep phases (no REM yet), basic snore detection, nightly hypnogram, CSV export
 

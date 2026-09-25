@@ -6,7 +6,7 @@ event-level snore detection, opt-in apnea screening with REI-a + STOP-BANG,
 hypnogram + session calendar, CSV export, physician HTML report).
 
 Every idea must respect the non-negotiables: **zero network egress**, no new
-dangerous permissions, raw PCM never persisted by default, GPLv3, buildable by
+dangerous permissions, raw PCM never persisted by default, MIT-licensed, buildable by
 F-Droid. Ideas that bend a constraint say so explicitly.
 
 Effort scale: **S** ≤ 3 days, **M** ≤ 2 weeks, **L** ≥ 2 weeks.
@@ -571,7 +571,7 @@ SQLCipher via `net.zetetic:sqlcipher-android` with the key in Android
 Keystore (`setUserAuthenticationRequired(false)` — must decrypt during
 unattended overnight writes). Migration path both directions
 (`sqlcipher_export`). License check: SQLCipher community edition is
-BSD-style, GPLv3-compatible. APK cost ~3 MB — check against F-3 budget; if
+BSD-style, MIT-compatible. APK cost ~3 MB — check against F-3 budget; if
 it busts the budget, flavor-gate it.
 
 ### G-2. Harden the network-egress CI beyond grep — **S/M**

@@ -5,6 +5,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — Versioning:
 
 ## [Unreleased]
 
+### Changed
+- Relicensed from GPLv3 to MIT to allow distribution through the Apple App Store (planned iOS port); added the missing `LICENSE` file
+
 ## [0.2.13] - 2026-09-22
 
 ### Changed

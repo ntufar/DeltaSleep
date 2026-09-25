@@ -2,7 +2,7 @@
 
 **Status:** Draft for implementation
 **Depends on:** existing audio pipeline (16 kHz / 10 ms frames), Rust DSP (`dsp/`), Room DB, epoch model
-**License/positioning:** GPLv3, on-device only, screening — NOT diagnosis
+**License/positioning:** MIT, on-device only, screening — NOT diagnosis
 
 ---
 

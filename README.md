@@ -5,7 +5,7 @@
 </p>
 
 [![CI — Android](https://github.com/ntufar/DeltaSleep/actions/workflows/ci-android.yml/badge.svg)](https://github.com/ntufar/DeltaSleep/actions/workflows/ci-android.yml)
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Min SDK](https://img.shields.io/badge/Min%20SDK-API%2026%20(Android%208.0)-green.svg)](https://developer.android.com/about/versions/oreo)
 [![No Internet](https://img.shields.io/badge/INTERNET%20permission-absent-brightgreen.svg)](#privacy-guarantees)
 [![Rust DSP](https://img.shields.io/badge/DSP-Rust%20%E2%86%92%20NDK-orange.svg)](dsp/)
@@ -103,4 +103,4 @@ grep -rE '\b(http|socket|URL|fetch)\b' app/src/main/java/
 
 ## License
 
-GPLv3 — if you improve it, everyone benefits. See [LICENSE](LICENSE).
+MIT — free to use, modify, and redistribute. See [LICENSE](LICENSE).

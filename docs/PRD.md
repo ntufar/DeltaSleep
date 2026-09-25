@@ -5,7 +5,7 @@
 **Product**: DeltaSleep  
 **Tagline**: "Your sleep data stays in your bed"  
 **Type**: Free, open-source mobile app for sleep phase + snore tracking  
-**License**: GPLv3 - if you improve it, everyone benefits  
+**License**: MIT  
 **Platforms**: Android v1.0, iOS v1.1  
 
 **Core Principle**: Zero network egress. No analytics, no crash reporting, no "anonymous telemetry". The app works 100% offline after install.
