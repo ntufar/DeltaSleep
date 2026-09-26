@@ -124,8 +124,11 @@ xcodebuild -exportArchive -archivePath build/DeltaSleep.xcarchive -exportOptions
   -exportPath build/upload -allowProvisioningUpdates
 ```
 
-Bump `MARKETING_VERSION` / `CURRENT_PROJECT_VERSION` in `ios/DeltaSleep.xcodeproj/project.pbxproj`
-for each upload. DEBUG-only launch args for screenshots: `-seedDemoData`, `-openLatestSession YES`,
+Releases go through CI (`.github/workflows/ci-ios.yml`): push a tag `ios-vX.Y.Z` and the
+workflow archives, signs (cloud-managed certificate via the App Store Connect API key in secrets
+`ASC_KEY_ID` / `ASC_ISSUER_ID` / `ASC_KEY_P8`) and uploads to App Store Connect. The tag sets
+`MARKETING_VERSION`; the build number is the workflow run number + 1. Submitting for review is
+manual in App Store Connect. iOS tags are separate from the Android `vX.Y.Z` tags. DEBUG-only launch args for screenshots: `-seedDemoData`, `-openLatestSession YES`,
 `-initialTab trends|report`, `-autoStartTracking`, `-theme dark`. App Store screenshots live in
 `ios/appstore/screenshots/`. The iOS simulator cannot open the Mac microphone reliably
 (AURemoteIO RPC timeout abort) — test live capture on a device.

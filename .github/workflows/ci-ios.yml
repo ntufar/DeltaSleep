@@ -1,0 +1,103 @@
+name: CI iOS
+
+# Every push/PR: build the Rust DSP for the simulator and run the Swift tests.
+# Tag ios-vX.Y.Z: archive, sign with cloud-managed certificates via an App
+# Store Connect API key, and upload to App Store Connect (lands in TestFlight;
+# submitting for review stays a manual step in App Store Connect).
+#
+# Secrets: ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8 (base64 of AuthKey_<id>.p8,
+# key role Admin so Xcode may create the distribution certificate).
+
+on:
+  push:
+    branches: [master]
+    tags: ['ios-v*']
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Rust targets
+        run: rustup target add aarch64-apple-ios aarch64-apple-ios-sim
+
+      - name: Pick an iPhone simulator
+        id: sim
+        run: |
+          UDID=$(xcrun simctl list devices available -j \
+            | jq -r '[.devices | to_entries[] | select(.key | test("iOS")) | .value[] | select(.name | startswith("iPhone"))][0].udid')
+          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
+
+      - name: Build and test
+        working-directory: ios
+        run: |
+          xcodebuild -project DeltaSleep.xcodeproj -scheme DeltaSleep \
+            -destination "id=${{ steps.sim.outputs.udid }}" \
+            -derivedDataPath build/DerivedData \
+            CODE_SIGNING_ALLOWED=NO test
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/ios-v')
+    needs: test
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Rust target
+        run: rustup target add aarch64-apple-ios
+
+      - name: Version from tag
+        run: |
+          echo "MARKETING_VERSION=${GITHUB_REF_NAME#ios-v}" >> "$GITHUB_ENV"
+          # Build 1 was uploaded by hand; keep CI builds strictly above it.
+          echo "BUILD_NUMBER=$((GITHUB_RUN_NUMBER + 1))" >> "$GITHUB_ENV"
+
+      - name: App Store Connect API key
+        env:
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+        run: |
+          KEY_PATH="$RUNNER_TEMP/AuthKey.p8"
+          echo "$ASC_KEY_P8" | base64 --decode > "$KEY_PATH"
+          echo "ASC_KEY_PATH=$KEY_PATH" >> "$GITHUB_ENV"
+
+      # Archive unsigned; -exportArchive signs with a cloud-managed Apple
+      # Distribution certificate, so no certificates live in the repo or secrets.
+      - name: Archive
+        working-directory: ios
+        run: |
+          xcodebuild -project DeltaSleep.xcodeproj -scheme DeltaSleep -configuration Release \
+            -destination 'generic/platform=iOS' -archivePath build/DeltaSleep.xcarchive \
+            MARKETING_VERSION="$MARKETING_VERSION" CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
+            CODE_SIGNING_ALLOWED=NO archive
+
+      - name: Sign and upload to App Store Connect
+        working-directory: ios
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+        run: |
+          xcodebuild -exportArchive -archivePath build/DeltaSleep.xcarchive \
+            -exportOptionsPlist ExportOptions.plist -exportPath build/upload \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$ASC_KEY_PATH" \
+            -authenticationKeyID "$ASC_KEY_ID" \
+            -authenticationKeyIssuerID "$ASC_ISSUER_ID"
+
+      - name: Remove API key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/AuthKey.p8"
