@@ -102,6 +102,34 @@ cd dsp && cargo clippy && cargo test
 readelf -l app/src/main/jniLibs/arm64-v8a/libdeltasleep_dsp.so | grep -E "LOAD|alignment"
 ```
 
+### iOS app (`ios/`)
+
+Native SwiftUI app (iOS 17+, iPhone only) linking the same Rust DSP through a C ABI
+(`dsp/src/ffi_c.rs`, declared in `ios/DeltaSleepDSP.h`). The JNI shim and `jni` crate are
+compiled out on Apple targets. Swift analysis code (`ios/DeltaSleep/Analysis/`) is a 1:1 port
+of the Kotlin logic — change both together. SQLite schema matches Room v5.
+
+```bash
+# Build Rust static lib by hand (the Xcode "Build Rust DSP" phase runs this automatically)
+ios/build-rust.sh iphonesimulator   # or iphoneos
+
+# Build + unit tests on simulator
+cd ios && xcodebuild -project DeltaSleep.xcodeproj -scheme DeltaSleep \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' test
+
+# Archive + upload to App Store Connect (team 6CT959RWB8, automatic signing)
+cd ios && xcodebuild -project DeltaSleep.xcodeproj -scheme DeltaSleep -configuration Release \
+  -destination 'generic/platform=iOS' -archivePath build/DeltaSleep.xcarchive -allowProvisioningUpdates archive
+xcodebuild -exportArchive -archivePath build/DeltaSleep.xcarchive -exportOptionsPlist ExportOptions.plist \
+  -exportPath build/upload -allowProvisioningUpdates
+```
+
+Bump `MARKETING_VERSION` / `CURRENT_PROJECT_VERSION` in `ios/DeltaSleep.xcodeproj/project.pbxproj`
+for each upload. DEBUG-only launch args for screenshots: `-seedDemoData`, `-openLatestSession YES`,
+`-initialTab trends|report`, `-autoStartTracking`, `-theme dark`. App Store screenshots live in
+`ios/appstore/screenshots/`. The iOS simulator cannot open the Mac microphone reliably
+(AURemoteIO RPC timeout abort) — test live capture on a device.
+
 ### CI network-egress check
 
 The CI pipeline must fail if any of these strings appear in Kotlin/Java source:

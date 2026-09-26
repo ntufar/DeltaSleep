@@ -10,7 +10,8 @@ name = "deltasleep_dsp"
 # link against the crate; the Android build still only packages the cdylib.
 crate-type = ["cdylib", "rlib"]
 
-[dependencies]
+# JNI is Android-only; Apple targets link the C ABI in src/ffi_c.rs.
+[target.'cfg(not(target_vendor = "apple"))'.dependencies]
 jni = "0.21"
 
 [profile.release]

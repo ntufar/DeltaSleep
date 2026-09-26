@@ -3,18 +3,23 @@
 //! All signal processing lives in pure-Rust modules ([`engine`], [`apnea`],
 //! [`features`], [`snore`], [`classifier`]) so it is testable on the host;
 //! this file is only a thin JNI shim over a global [`engine::SessionEngine`].
+//! The iOS app uses the equivalent C ABI in [`ffi_c`]; the JNI exports are
+//! compiled out on Apple targets so the `jni` crate never ships there.
 
 pub mod apnea;
 pub mod apnea_config;
 pub mod classifier;
 pub mod engine;
 pub mod features;
+pub mod ffi_c;
 pub mod phase_config;
 pub mod snore;
 pub mod wav;
 
 use engine::SessionEngine;
+#[cfg(not(target_vendor = "apple"))]
 use jni::objects::{JFloatArray, JObject, JShortArray};
+#[cfg(not(target_vendor = "apple"))]
 use jni::JNIEnv;
 use std::sync::{Mutex, OnceLock};
 
@@ -31,13 +36,14 @@ fn engine() -> &'static Mutex<SessionEngine> {
 /// means a previous JNI call panicked, so recover the inner engine instead
 /// of `unwrap()`ing across FFI (a Rust panic in a `#[no_mangle]` export
 /// aborts the whole app process).
-fn lock_engine() -> std::sync::MutexGuard<'static, SessionEngine> {
+pub(crate) fn lock_engine() -> std::sync::MutexGuard<'static, SessionEngine> {
     engine().lock().unwrap_or_else(|poisoned| poisoned.into_inner())
 }
 
 /// Allocate a Java float array, throwing a catchable
 /// `IllegalStateException` (handled by the Kotlin callers' retry paths)
 /// instead of panicking across FFI when allocation fails.
+#[cfg(not(target_vendor = "apple"))]
 fn new_float_array_or_throw<'local>(mut env: JNIEnv<'local>, out: &[f32]) -> JFloatArray<'local> {
     match env.new_float_array(out.len() as i32) {
         Ok(arr) => {
@@ -65,6 +71,7 @@ fn new_float_array_or_throw<'local>(mut env: JNIEnv<'local>, out: &[f32]) -> JFl
 /// Process one 10 ms frame of 16 kHz mono PCM.
 /// Returns float[6]: [rms, zcr, band_power_ratio, noise_floor_db,
 /// breathing_margin_db, breathing_present(0/1)].
+#[cfg(not(target_vendor = "apple"))]
 #[no_mangle]
 pub extern "system" fn Java_io_github_ntufar_deltasleep_audio_DspBridge_processFrame<'local>(
     env: JNIEnv<'local>,
@@ -101,6 +108,7 @@ pub extern "system" fn Java_io_github_ntufar_deltasleep_audio_DspBridge_processF
 /// breath_period_cv is the coefficient of variation of the breath period
 /// over the epoch (A-1 REM feature; 0.0 with < 2 period samples).
 /// rms_variance (index 1) doubles as the classifier's movement_score.
+#[cfg(not(target_vendor = "apple"))]
 #[no_mangle]
 pub extern "system" fn Java_io_github_ntufar_deltasleep_audio_DspBridge_computeEpoch<'local>(
     env: JNIEnv<'local>,
@@ -126,6 +134,7 @@ pub extern "system" fn Java_io_github_ntufar_deltasleep_audio_DspBridge_computeE
 
 /// Discard accumulated epoch data ONLY. Noise floor, periodicity, state
 /// machine, event ring, and frame counter all persist across epochs.
+#[cfg(not(target_vendor = "apple"))]
 #[no_mangle]
 pub extern "system" fn Java_io_github_ntufar_deltasleep_audio_DspBridge_resetEpoch<'local>(
     _env: JNIEnv<'local>,
@@ -136,6 +145,7 @@ pub extern "system" fn Java_io_github_ntufar_deltasleep_audio_DspBridge_resetEpo
 
 /// Full DSP session reset: clears all trackers, the event ring buffer, the
 /// epoch accumulator, and the frame counter (event offsets restart at 0).
+#[cfg(not(target_vendor = "apple"))]
 #[no_mangle]
 pub extern "system" fn Java_io_github_ntufar_deltasleep_audio_DspBridge_startSession<'local>(
     _env: JNIEnv<'local>,
@@ -148,6 +158,7 @@ pub extern "system" fn Java_io_github_ntufar_deltasleep_audio_DspBridge_startSes
 /// threshold. Negative = more sensitive. Clamped to ±12 dB engine-side.
 /// The offset survives [startSession]. Older native libs lack this symbol;
 /// the Kotlin side calls it behind an UnsatisfiedLinkError guard.
+#[cfg(not(target_vendor = "apple"))]
 #[no_mangle]
 pub extern "system" fn Java_io_github_ntufar_deltasleep_audio_DspBridge_setSnoreThresholdOffsetDb<
     'local,
@@ -165,6 +176,7 @@ pub extern "system" fn Java_io_github_ntufar_deltasleep_audio_DspBridge_setSnore
 ///  envelope_reduction_pct(0–1), terminated_by_gasp(0/1), mean_db_over_floor]
 /// where type is 0=APNEA_LIKE, 1=HYPOPNEA_LIKE, 2=GASP, 3=SNORE_EPISODE.
 /// Empty array when no events are pending.
+#[cfg(not(target_vendor = "apple"))]
 #[no_mangle]
 pub extern "system" fn Java_io_github_ntufar_deltasleep_audio_DspBridge_pollEvents<'local>(
     env: JNIEnv<'local>,
