@@ -160,7 +160,7 @@
   <div class="page-header">
     <div class="eyebrow">Legal</div>
     <h1>Privacy Policy</h1>
-    <p class="meta">Effective date: 2026-06-08 &nbsp;·&nbsp; App: DeltaSleep for Android &nbsp;·&nbsp; Developer: Nicolai Tufar</p>
+    <p class="meta">Effective date: 2026-09-26 &nbsp;·&nbsp; App: DeltaSleep for Android and iPhone &nbsp;·&nbsp; Developer: Nicolai Tufar</p>
   </div>
 
   <div class="policy">
@@ -184,7 +184,7 @@
 
     <section>
       <h2>2. Microphone access</h2>
-      <p>The app uses the <span class="pill">RECORD_AUDIO</span> permission exclusively to detect movement and snoring while you sleep. Audio processing is performed in real time, on your device, by a native Rust library.</p>
+      <p>The app uses the <span class="pill">RECORD_AUDIO</span> permission (on iPhone: microphone access, <span class="pill">NSMicrophoneUsageDescription</span>) exclusively to detect movement and snoring while you sleep. Audio processing is performed in real time, on your device, by a native Rust library.</p>
       <ul>
         <li><span class="check">✓</span> Raw audio (PCM) is <strong>never written to disk</strong> by default.</li>
         <li><span class="check">✓</span> Only derived metrics are stored: sleep phase labels, snore flags, and per-epoch aggregates (RMS, band power).</li>
@@ -227,8 +227,11 @@
         <li><span class="check">✓</span> <span class="pill">RECORD_AUDIO</span> — required to detect sleep phases and snoring</li>
         <li><span class="check">✓</span> <span class="pill">FOREGROUND_SERVICE</span> — keeps the tracking service running while your screen is off</li>
         <li><span class="check">✓</span> <span class="pill">POST_NOTIFICATIONS</span> — shows the persistent "DeltaSleep is running" notification required by Android for foreground services</li>
+        <li><span class="check">✓</span> iPhone: <span class="pill">Microphone</span> — the only permission requested; the <span class="pill">audio</span> background mode keeps analysis running while the screen is locked</li>
       </ul>
       <p>No other permissions are requested or used.</p>
+      <h2>iPhone app</h2>
+      <p>The iPhone version follows the same rules: it contains no networking code, analytics, advertising, or third-party SDKs, and its App Store privacy label is "Data Not Collected". Data lives in a SQLite database inside the app's private container; iOS device backups may include it like any other app data. Exports are written only where you choose in the Files picker. "Delete all data" zero-fills deleted database pages (SQLite secure_delete) before compacting the file.</p>
     </section>
 
     <section>
