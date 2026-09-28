@@ -9,6 +9,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -132,20 +134,12 @@ fun SessionScreen(
 
         // Legend
         Spacer(Modifier.height(10.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-            SleepPhase.entries.forEach { phase ->
-                LegendChip(color = phase.color, label = phase.label)
-            }
-            LegendChip(color = SnoreLegendColor, label = "Snore")
-            // Apnea markers legend — shown only when screening is on or events exist
-            val hasApneaEvents = s.acousticEvents.any {
+        SessionLegendRow(
+            screeningEnabled = s.screeningEnabled,
+            hasApneaEvents = s.acousticEvents.any {
                 it.type == AcousticEventType.APNEA_LIKE || it.type == AcousticEventType.HYPOPNEA_LIKE
-            }
-            if (s.screeningEnabled || hasApneaEvents) {
-                LegendChip(color = Color(0xFFE53935), label = "Apnea-like")
-                LegendChip(color = Color(0xFFFF9800), label = "Hypopnea-like")
-            }
-        }
+            },
+        )
 
         // A-1 honesty rule: REM is a heuristic estimate until validated
         // (A-2), so say so whenever the night shows any.
@@ -298,6 +292,38 @@ fun SessionScreen(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.error,
             )
+        }
+    }
+}
+
+/**
+ * Hypnogram legend. A [FlowRow] so the up-to-seven chips (four phases +
+ * snore + two apnea markers) wrap onto multiple lines on narrow phones
+ * instead of overflowing: a plain [Row] squeezed the trailing chips into a
+ * sliver where "Apnea-like" rendered as a vertical letter stack, ballooning
+ * the section height and pushing the rest of the screen down (issue #6).
+ * Mirrors the wrapping `FlowRow` in iOS `SessionView`.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+internal fun SessionLegendRow(
+    screeningEnabled: Boolean,
+    hasApneaEvents: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    FlowRow(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        SleepPhase.entries.forEach { phase ->
+            LegendChip(color = phase.color, label = phase.label)
+        }
+        LegendChip(color = SnoreLegendColor, label = "Snore")
+        // Apnea markers legend — shown only when screening is on or events exist
+        if (screeningEnabled || hasApneaEvents) {
+            LegendChip(color = Color(0xFFE53935), label = "Apnea-like")
+            LegendChip(color = Color(0xFFFF9800), label = "Hypopnea-like")
         }
     }
 }

@@ -62,9 +62,22 @@ fun HypnogramChart(
         if (size.width <= 0f || size.height <= 0f) return@Canvas
         val hasTimeAxis = startMs > 0L && endMs > startMs
         val timeAxisH = if (hasTimeAxis) 22.dp.toPx() else 0f
-        val labelW = 52.dp.toPx()
+        // Y-axis labels
+        val labelPaint = Paint().apply {
+            color = Color(0xFF8A94A8).toArgb()
+            textSize = 28f
+            isAntiAlias = true
+            textAlign = Paint.Align.RIGHT
+        }
+        // Size the label column from the widest phase label ("REM (est.)")
+        // instead of a fixed 52 dp that clipped it at the screen edge.
+        val labelW = PHASE_ROWS.maxOf { labelPaint.measureText(it.first.label) } +
+            8.dp.toPx()
         val chartH = size.height - timeAxisH
         val chartW = size.width - labelW
+        // Absurdly narrow windows must skip drawing, not feed negative
+        // sizes into drawRoundRect/drawRect (same guard as BreathingChart).
+        if (chartW <= 0f || chartH <= 0f) return@Canvas
 
         val rows = PHASE_ROWS.size.toFloat()
         val rowH = chartH / rows
@@ -109,13 +122,6 @@ fun HypnogramChart(
             )
         }
 
-        // Y-axis labels
-        val labelPaint = Paint().apply {
-            color = Color(0xFF8A94A8).toArgb()
-            textSize = 28f
-            isAntiAlias = true
-            textAlign = Paint.Align.RIGHT
-        }
         PHASE_ROWS.forEach { (phase, row) ->
             val y = row * rowH + rowH / 2f + labelPaint.textSize * 0.35f
             drawContext.canvas.nativeCanvas.drawText(
@@ -194,9 +200,19 @@ fun HypnogramChart(
                     cal.get(Calendar.HOUR_OF_DAY),
                     cal.get(Calendar.MINUTE),
                 )
+                // Keep edge-hour labels (e.g. the session-end hour) inside
+                // the canvas instead of clipping them at the screen edge.
+                // Clamp only when the label fits, so absurdly narrow
+                // windows can't invert the coerce range and crash.
+                val halfText = timePaint.measureText(hourLabel) / 2f
+                val tx = if (labelW + halfText * 2f < size.width) {
+                    x.coerceIn(labelW + halfText, size.width - halfText)
+                } else {
+                    x
+                }
                 drawContext.canvas.nativeCanvas.drawText(
                     hourLabel,
-                    x,
+                    tx,
                     size.height - 4.dp.toPx(),
                     timePaint,
                 )
