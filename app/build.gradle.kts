@@ -2,8 +2,11 @@ import java.util.Properties
 import org.gradle.api.tasks.testing.Test
 
 plugins {
+    // NOTE: no explicit org.jetbrains.kotlin.android — AGP 9 registers the
+    // `kotlin` extension itself (built-in Kotlin); applying it again fails
+    // configuration with "Cannot add extension with name 'kotlin'".
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.plugin.compose")
     id("com.google.devtools.ksp")
 }
 
@@ -19,8 +22,8 @@ android {
         applicationId = "io.github.ntufar.deltasleep"
         minSdk = 26
         targetSdk = 36
-        versionCode = 30
-        versionName = "0.2.13"
+        versionCode = 31
+        versionName = "0.2.14"
     }
 
     signingConfigs {
@@ -57,10 +60,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
-    }
-
     buildFeatures {
         compose = true
     }
@@ -73,9 +72,11 @@ android {
         }
     }
 
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.10"
-    }
+    // Compose compiler comes from org.jetbrains.kotlin.plugin.compose (tracks
+    // AGP's built-in KGP); the legacy composeOptions.kotlinCompilerExtensionVersion
+    // must stay unset. No kotlin.compilerOptions.jvmTarget needed either —
+    // built-in Kotlin defaults it from android.compileOptions.targetCompatibility.
+
 
     packaging {
         // Store .so files uncompressed so the OS can mmap them directly,
@@ -130,7 +131,7 @@ tasks.named("preBuild") {
 }
 
 dependencies {
-    val composeBom = platform("androidx.compose:compose-bom:2024.02.00")
+    val composeBom = platform("androidx.compose:compose-bom:2025.08.01")
     implementation(composeBom)
 
     implementation("androidx.core:core-ktx:1.12.0")
@@ -143,9 +144,9 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.navigation:navigation-compose:2.7.7")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
-    implementation("androidx.room:room-runtime:2.6.1")
-    implementation("androidx.room:room-ktx:2.6.1")
-    ksp("androidx.room:room-compiler:2.6.1")
+    implementation("androidx.room:room-runtime:2.8.4")
+    implementation("androidx.room:room-ktx:2.8.4")
+    ksp("androidx.room:room-compiler:2.8.4")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.0")
 
     debugImplementation("androidx.compose.ui:ui-tooling")

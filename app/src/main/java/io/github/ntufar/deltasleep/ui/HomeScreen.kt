@@ -1,5 +1,8 @@
 package io.github.ntufar.deltasleep.ui
 
+import android.Manifest
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -75,6 +78,19 @@ fun HomeScreen(
     // Auto-navigate to the active screen whenever tracking starts
     LaunchedEffect(activeSessionId) {
         if (activeSessionId >= 0L) onActiveSession(activeSessionId)
+    }
+
+    // startTracking() declines when RECORD_AUDIO is missing; ask for it and
+    // retry on grant instead of launching a service that can never promote.
+    val micPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) vm.startTracking()
+    }
+    LaunchedEffect(Unit) {
+        vm.micPermissionNeeded.collect {
+            micPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+        }
     }
 
     Column(

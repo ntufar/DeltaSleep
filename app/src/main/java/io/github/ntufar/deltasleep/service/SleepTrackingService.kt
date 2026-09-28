@@ -59,23 +59,27 @@ class SleepTrackingService : Service() {
         val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         when (intent?.action) {
             ACTION_START -> {
-                sessionId = intent.getLongExtra(EXTRA_SESSION_ID, -1L)
-                prefs.edit().putLong(KEY_SESSION_ID, sessionId).apply()
-                // Full DSP session reset; record wall time for event offset conversion
-                dsp.startSession()
-                applyAudioSettings()
-                dspStartWallMs = System.currentTimeMillis()
+                // Promote FIRST, before any native/prefs/DB work: the system kills
+                // the process with ForegroundServiceDidNotStartInTimeException when
+                // a service started via startForegroundService() doesn't promote in
+                // time, and dsp.startSession() runs native init on this thread.
                 if (!beginForeground()) {
                     // Mic permission missing or foreground start refused: stop quietly
                     // instead of crashing the process (SecurityException in
                     // handleServiceArgs). The session row stays open and is closed
                     // on the next user stop/start.
                     stopSelf()
-                } else {
-                    startCapture()
-                    _isTracking.value = true
-                    _activeSessionId.value = sessionId
+                    return START_STICKY
                 }
+                sessionId = intent.getLongExtra(EXTRA_SESSION_ID, -1L)
+                prefs.edit().putLong(KEY_SESSION_ID, sessionId).apply()
+                // Full DSP session reset; record wall time for event offset conversion
+                dsp.startSession()
+                applyAudioSettings()
+                dspStartWallMs = System.currentTimeMillis()
+                startCapture()
+                _isTracking.value = true
+                _activeSessionId.value = sessionId
             }
             ACTION_STOP -> {
                 prefs.edit().remove(KEY_SESSION_ID).apply()
@@ -109,17 +113,18 @@ class SleepTrackingService : Service() {
             null -> {
                 sessionId = prefs.getLong(KEY_SESSION_ID, -1L)
                 if (sessionId != -1L) {
+                    // Promote before native init here too (same timeout rule).
+                    if (!beginForeground()) {
+                        stopSelf()
+                        return START_STICKY
+                    }
                     // Full DSP reset on sticky-restart; previous session state is lost
                     dsp.startSession()
                     applyAudioSettings()
                     dspStartWallMs = System.currentTimeMillis()
-                    if (beginForeground()) {
-                        startCapture()
-                        _isTracking.value = true
-                        _activeSessionId.value = sessionId
-                    } else {
-                        stopSelf()
-                    }
+                    startCapture()
+                    _isTracking.value = true
+                    _activeSessionId.value = sessionId
                 } else {
                     stopSelf()
                 }

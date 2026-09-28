@@ -8,6 +8,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — Versioning:
 ### Changed
 - Relicensed from GPLv3 to MIT to allow distribution through the Apple App Store (planned iOS port); added the missing `LICENSE` file
 
+## [0.2.14] - 2026-09-28
+
+### Fixed
+- Tracking-service startup crash (`ForegroundServiceDidNotStartInTimeException`, Play report): the service now promotes itself to foreground before running native DSP init on the main thread; tapping Start without `RECORD_AUDIO` no longer inserts a session row or starts a service that can never promote — the home screen requests the mic permission and retries on grant instead (one-shot event carried by a buffered channel, since a replay-less SharedFlow drops emissions with no active collector); covered by a new Robolectric `HomeViewModelTest`
+
+### Changed
+- Upgraded Android Gradle plugin 8.13.0 → 9.0.1 with Gradle wrapper 9.1.0, addressing the Play Store R8 recommendation (resource shrinking itself already shipped in 0.2.13 and is confirmed active in the release bundle). AGP 9 cascade: built-in Kotlin (explicit `kotlin-android` plugin removed), Compose compiler plugin 2.2.10, KSP 2.2.10, Room 2.6.1 → 2.8.4, Compose BOM 2024.02.00 → 2025.08.01, plus `android.disallowKotlinSourceSets=false` until KSP registers its codegen output through the new source-set DSL
+
 ## [0.2.13] - 2026-09-22
 
 ### Changed
