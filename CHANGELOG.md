@@ -5,11 +5,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — Versioning:
 
 ## [Unreleased]
 
-### Fixed
-- Sleep results screen legend overflowed narrow phones: the seven hypnogram chips sat in a non-wrapping row, so the trailing "Apnea-like"/"Hypopnea-like" chips collapsed into a vertical letter stack that ballooned the section and pushed content down; the legend now wraps (matching iOS), the "REM (est.)" axis label sizes its column instead of clipping at the screen edge, and edge hour labels stay inside the chart; covered by a new `SessionLegendTest`
-
 ### Changed
 - Relicensed from GPLv3 to MIT to allow distribution through the Apple App Store (planned iOS port); added the missing `LICENSE` file
+
+## [0.3.0] - 2026-09-28
+
+### Fixed
+- Sleep results screen legend overflowed narrow phones: the seven hypnogram chips sat in a non-wrapping row, so the trailing "Apnea-like"/"Hypopnea-like" chips collapsed into a vertical letter stack that ballooned the section and pushed content down; the legend now wraps (matching iOS), the "REM (est.)" axis label sizes its column instead of clipping at the screen edge, and edge hour labels stay inside the chart; covered by a new `SessionLegendTest`
 
 ## [0.2.14] - 2026-09-28
 
