@@ -123,6 +123,11 @@ fun SessionScreen(
         Spacer(Modifier.height(24.dp))
 
         Text("Sleep stages", style = MaterialTheme.typography.titleMedium)
+        Text(
+            "Swipe left–right to inspect the night",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
         Spacer(Modifier.height(8.dp))
 
         HypnogramChart(
@@ -320,9 +325,11 @@ internal fun SessionLegendRow(
             LegendChip(color = phase.color, label = phase.label)
         }
         LegendChip(color = SnoreLegendColor, label = "Snore")
-        // Apnea markers legend — shown only when screening is on or events exist
+        // Apnea markers legend — shown only when screening is on or events exist.
+        // Matches the dark-maroon apnea marker in HypnogramChart (deliberately
+        // darker than the Awake-phase red so the two are distinguishable).
         if (screeningEnabled || hasApneaEvents) {
-            LegendChip(color = Color(0xFFE53935), label = "Apnea-like")
+            LegendChip(color = ApneaMarkerColor, label = "Apnea-like")
             LegendChip(color = Color(0xFFFF9800), label = "Hypopnea-like")
         }
     }

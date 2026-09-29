@@ -90,6 +90,7 @@ struct SessionView: View {
             }
 
             Text("Sleep stages").font(.headline).padding(.top, 12)
+            Text("Swipe left–right to inspect the night").font(.footnote).foregroundStyle(p.onSurfaceVariant)
             HypnogramChart(epochs: s.epochs, startMs: s.session.startTime,
                            endMs: s.session.endTime ?? nowMs(), events: s.events)
 
@@ -98,7 +99,7 @@ struct SessionView: View {
                 ForEach(SleepPhase.allCases) { LegendChip(color: $0.color, label: $0.label) }
                 LegendChip(color: Warn.snore, label: "Snore")
                 if s.screeningEnabled || hasApnea {
-                    LegendChip(color: Warn.bad, label: "Apnea-like")
+                    LegendChip(color: Warn.apnea, label: "Apnea-like")
                     LegendChip(color: Warn.fair, label: "Hypopnea-like")
                 }
             }

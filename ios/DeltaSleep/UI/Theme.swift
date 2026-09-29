@@ -61,6 +61,11 @@ enum Warn {
     static let fair = Color(hex: 0xFF9800)
     static let bad = Color(hex: 0xE53935)
     static let snore = Color(hex: 0xFF4081)
+    /// Hypnogram apnea marker: deliberately darker than both the Awake-phase
+    /// red (0xE53935) and the snore magenta, with its own lane, so the three
+    /// are distinguishable. Mirrors Android `ApneaMarkerColor`.
+    static let apnea = Color(hex: 0xB71C1C)
+    static let apneaOutline = Color(hex: 0xFFEBEE)
 }
 
 // MARK: - Shared building blocks

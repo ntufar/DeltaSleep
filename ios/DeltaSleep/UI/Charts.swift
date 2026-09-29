@@ -2,79 +2,113 @@ import SwiftUI
 
 private let axisColor = Color(hex: 0x8A94A8)
 
-/// Hypnogram: X = time, Y = Awake / Light / REM / Deep. Snore epochs get a
-/// translucent magenta column; acoustic events are markers on the top edge
-/// (apnea red, hypopnea orange, snore magenta with height = intensity).
+/// Hypnogram: X = time, Y = Awake / Light / REM / Deep.
+///
+/// Readability design (mirrors Android `HypnogramChart`):
+/// - The data area scrolls horizontally with at least `minEpochWidth` per
+///   30 s epoch, so a full night is inspected by swiping instead of reading
+///   sub-pixel slivers. Y-axis labels stay fixed on the left.
+/// - The top `stripH` is reserved for event markers: apnea/hypopnea bars in
+///   the top lane, snore bars (height = intensity) in a lane below. Apnea
+///   uses dark maroon `Warn.apnea` — never the Awake-phase red — with a
+///   light outline, so Awake / apnea / snore are distinguishable.
 struct HypnogramChart: View {
     let epochs: [SleepEpoch]
     let startMs: Int64
     let endMs: Int64
     let events: [AcousticEvent]
+    var minEpochWidth: CGFloat = 4
+
+    private let totalH: CGFloat = 240
+    private let labelW: CGFloat = 64
+    private let stripH: CGFloat = 20
 
     var body: some View {
-        Canvas { ctx, size in
-            guard !epochs.isEmpty, size.width > 0 else { return }
+        GeometryReader { geo in
             let axisH: CGFloat = endMs > startMs ? 22 : 0
-            let labelW: CGFloat = 64
-            let chartH = size.height - axisH
-            let chartW = size.width - labelW
-            let rowH = chartH / 4
-            let epochW = chartW / CGFloat(epochs.count)
+            let chartH = totalH - axisH
+            let phaseH = chartH - stripH
+            let rowH = phaseH / 4
+            let viewportW = max(geo.size.width - labelW, 48)
+            let contentW = max(viewportW, minEpochWidth * CGFloat(max(epochs.count, 1)))
+            HStack(spacing: 0) {
+                // Fixed Y-axis labels.
+                VStack(spacing: 0) {
+                    Spacer().frame(height: stripH)
+                    ForEach(SleepPhase.hypnogramOrder, id: \.self) { phase in
+                        Text(phase.label).font(.system(size: 11)).foregroundStyle(axisColor)
+                            .frame(width: labelW - 6, height: rowH, alignment: .trailing)
+                    }
+                    Spacer().frame(height: axisH)
+                }
+                .frame(width: labelW)
+                // Scrollable data area.
+                ScrollView(.horizontal, showsIndicators: true) {
+                    Canvas { ctx, size in
+                        guard !epochs.isEmpty, size.width > 0, rowH > 0 else { return }
+                        let chartHPx = chartH
+                        let epochW = size.width / CGFloat(epochs.count)
 
-            // Contiguous runs of a phase merge into one rounded block.
-            var i = 0
-            while i < epochs.count {
-                let phase = epochs[i].phase
-                var j = i + 1
-                while j < epochs.count && epochs[j].phase == phase { j += 1 }
-                let rect = CGRect(x: labelW + CGFloat(i) * epochW + 0.5, y: CGFloat(phase.hypnogramRow) * rowH + 0.5,
-                                  width: CGFloat(j - i) * epochW - 1, height: rowH - 1)
-                ctx.fill(Path(roundedRect: rect, cornerRadius: 3), with: .color(phase.color))
-                i = j
-            }
-            for (k, e) in epochs.enumerated() where e.hasSnore {
-                ctx.fill(Path(CGRect(x: labelW + CGFloat(k) * epochW, y: 0, width: epochW, height: chartH)),
-                         with: .color(Warn.snore.opacity(0.33)))
-            }
-            for r in 1..<4 {
-                ctx.stroke(hLine(y: CGFloat(r) * rowH, from: labelW, to: size.width), with: .color(.gray.opacity(0.15)), lineWidth: 1)
-            }
-            for phase in SleepPhase.hypnogramOrder {
-                ctx.draw(Text(phase.label).font(.system(size: 11)).foregroundStyle(axisColor),
-                         at: CGPoint(x: labelW - 6, y: CGFloat(phase.hypnogramRow) * rowH + rowH / 2), anchor: .trailing)
-            }
+                        // Faint snore-epoch wash, phase area only.
+                        for (k, e) in epochs.enumerated() where e.hasSnore {
+                            ctx.fill(Path(CGRect(x: CGFloat(k) * epochW, y: stripH, width: epochW, height: chartHPx - stripH)),
+                                     with: .color(Warn.snore.opacity(0.08)))
+                        }
 
-            guard endMs > startMs else { return }
-            let dur = CGFloat(endMs - startMs)
-            for e in events {
-                let x0 = labelW + min(max(CGFloat(e.startUtc - startMs) / dur, 0), 1) * chartW
-                let x1 = labelW + min(max(CGFloat(e.startUtc + e.durationMs - startMs) / dur, 0), 1) * chartW
-                let w = max(x1 - x0, 3)
-                switch e.type {
-                case .apneaLike: ctx.fill(Path(CGRect(x: x0, y: 0, width: w, height: 6)), with: .color(Warn.bad))
-                case .hypopneaLike: ctx.fill(Path(CGRect(x: x0, y: 0, width: w, height: 6)), with: .color(Warn.fair))
-                case .snoreEpisode:
-                    let h = CGFloat(3 + 2 * SnoreIntensity.level(e.peakDbOverFloor))
-                    ctx.fill(Path(CGRect(x: x0, y: 0, width: w, height: h)), with: .color(Warn.snore))
-                case .gasp: break
+                        // Contiguous runs of a phase merge into one rounded block.
+                        var i = 0
+                        while i < epochs.count {
+                            let phase = epochs[i].phase
+                            var j = i + 1
+                            while j < epochs.count && epochs[j].phase == phase { j += 1 }
+                            let rect = CGRect(x: CGFloat(i) * epochW + 0.5, y: stripH + CGFloat(phase.hypnogramRow) * rowH + 0.5,
+                                              width: CGFloat(j - i) * epochW - 1, height: rowH - 1)
+                            ctx.fill(Path(roundedRect: rect, cornerRadius: 3), with: .color(phase.color))
+                            i = j
+                        }
+                        for r in 1..<4 {
+                            ctx.stroke(hLine(y: stripH + CGFloat(r) * rowH, from: 0, to: size.width), with: .color(.gray.opacity(0.15)), lineWidth: 1)
+                        }
+
+                        guard endMs > startMs else { return }
+                        let dur = CGFloat(endMs - startMs)
+                        for e in events {
+                            let x0 = min(max(CGFloat(e.startUtc - startMs) / dur, 0), 1) * size.width
+                            let x1 = min(max(CGFloat(e.startUtc + e.durationMs - startMs) / dur, 0), 1) * size.width
+                            let w = max(x1 - x0, 3)
+                            switch e.type {
+                            case .apneaLike:
+                                let r = CGRect(x: x0, y: 0, width: w, height: 6)
+                                ctx.fill(Path(r), with: .color(Warn.apnea))
+                                ctx.stroke(Path(r), with: .color(Warn.apneaOutline), lineWidth: 1)
+                            case .hypopneaLike:
+                                ctx.fill(Path(CGRect(x: x0, y: 0, width: w, height: 6)), with: .color(Warn.fair))
+                            case .snoreEpisode:
+                                let h = CGFloat(3 + 2 * SnoreIntensity.level(e.peakDbOverFloor))
+                                ctx.fill(Path(CGRect(x: x0, y: 8, width: w, height: h)), with: .color(Warn.snore))
+                            case .gasp: break
+                            }
+                        }
+
+                        // Hour ticks.
+                        let cal = Calendar.current
+                        var tick = cal.nextDate(after: Date(ms: startMs), matching: DateComponents(minute: 0, second: 0),
+                                                matchingPolicy: .nextTime)!
+                        let end = Date(ms: endMs)
+                        while tick <= end {
+                            let x = CGFloat(tick.timeIntervalSince1970 * 1000 - Double(startMs)) / dur * size.width
+                            ctx.stroke(Path { $0.move(to: CGPoint(x: x, y: 0)); $0.addLine(to: CGPoint(x: x, y: chartHPx)) },
+                                       with: .color(.gray.opacity(0.27)), lineWidth: 1)
+                            ctx.draw(Text(tick, format: .dateTime.hour().minute()).font(.system(size: 10)).foregroundStyle(axisColor),
+                                     at: CGPoint(x: x, y: totalH - 8))
+                            tick = cal.date(byAdding: .hour, value: 1, to: tick)!
+                        }
+                    }
+                    .frame(width: contentW, height: totalH)
                 }
             }
-
-            // Hour ticks.
-            let cal = Calendar.current
-            var tick = cal.nextDate(after: Date(ms: startMs), matching: DateComponents(minute: 0, second: 0),
-                                    matchingPolicy: .nextTime)!
-            let end = Date(ms: endMs)
-            while tick <= end {
-                let x = labelW + CGFloat(tick.timeIntervalSince1970 * 1000 - Double(startMs)) / dur * chartW
-                ctx.stroke(Path { $0.move(to: CGPoint(x: x, y: 0)); $0.addLine(to: CGPoint(x: x, y: chartH)) },
-                           with: .color(.gray.opacity(0.27)), lineWidth: 1)
-                ctx.draw(Text(tick, format: .dateTime.hour().minute()).font(.system(size: 10)).foregroundStyle(axisColor),
-                         at: CGPoint(x: x, y: size.height - 8))
-                tick = cal.date(byAdding: .hour, value: 1, to: tick)!
-            }
         }
-        .frame(height: 240)
+        .frame(height: totalH)
         .accessibilityElement()
         .accessibilityLabel(accessibilitySummary)
     }
