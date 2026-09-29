@@ -8,6 +8,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — Versioning:
 ### Changed
 - Relicensed from GPLv3 to MIT to allow distribution through the Apple App Store (planned iOS port); added the missing `LICENSE` file
 
+## [0.3.1] - 2026-09-29
+
+### Fixed
+- Night-summary hypnogram was congested and hard to read: a full night was squeezed into one screen width and Awake phases, apnea markers, and snore markers shared near-identical reds. The chart area now scrolls horizontally (fixed Y-axis labels, hour gridlines scroll with the data), acoustic events sit in a reserved top strip with apnea/hypopnea and snore in separate lanes, apnea markers are dark maroon with a light outline instead of Awake-identical red, and the full-height snore wash is faint; covered by a new `HypnogramReadabilityTest` (Android and iOS)
+
 ## [0.3.0] - 2026-09-28
 
 ### Fixed
