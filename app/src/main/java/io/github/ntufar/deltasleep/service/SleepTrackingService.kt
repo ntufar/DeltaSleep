@@ -46,6 +46,9 @@ class SleepTrackingService : Service() {
     private var sessionId: Long = -1L
     private var captureJob: Job? = null
 
+    /** DSP start and capture launch. Stop waits for it, so no capture job is missed. */
+    private var startupJob: Job? = null
+
     /** Wall-clock time (ms) when dsp.startSession() was last called. Used for event timestamping. */
     private var dspStartWallMs: Long = 0L
 
@@ -73,11 +76,7 @@ class SleepTrackingService : Service() {
                 }
                 sessionId = intent.getLongExtra(EXTRA_SESSION_ID, -1L)
                 prefs.edit().putLong(KEY_SESSION_ID, sessionId).apply()
-                // Full DSP session reset; record wall time for event offset conversion
-                dsp.startSession()
-                applyAudioSettings()
-                dspStartWallMs = System.currentTimeMillis()
-                startCapture()
+                startDspAndCapture()
                 _isTracking.value = true
                 _activeSessionId.value = sessionId
             }
@@ -89,11 +88,12 @@ class SleepTrackingService : Service() {
                 if (apneaPrefs.screeningEnabled && sessionId != -1L) {
                     val db = AppDatabase.getInstance(this)
                     val capturedSessionId = sessionId
-                    val jobToCancel = captureJob
+                    val startup = startupJob
                     scope.launch(Dispatchers.IO) {
                         // Cancel capture first so no new epochs land in the DB
                         // after summarize begins reading.
-                        jobToCancel?.cancelAndJoin()
+                        startup?.join()
+                        captureJob?.cancelAndJoin()
                         NightSummaryWriter.summarize(db, capturedSessionId)
                         // C-2: retention purge on session stop.
                         RetentionPolicy.purgeExpired(db, System.currentTimeMillis(), retention)
@@ -101,9 +101,10 @@ class SleepTrackingService : Service() {
                     }
                 } else {
                     val db = AppDatabase.getInstance(this)
-                    val jobToCancel = captureJob
+                    val startup = startupJob
                     scope.launch(Dispatchers.IO) {
-                        jobToCancel?.cancelAndJoin()
+                        startup?.join()
+                        captureJob?.cancelAndJoin()
                         RetentionPolicy.purgeExpired(db, System.currentTimeMillis(), retention)
                         stopSelf()
                     }
@@ -119,10 +120,7 @@ class SleepTrackingService : Service() {
                         return START_STICKY
                     }
                     // Full DSP reset on sticky-restart; previous session state is lost
-                    dsp.startSession()
-                    applyAudioSettings()
-                    dspStartWallMs = System.currentTimeMillis()
-                    startCapture()
+                    startDspAndCapture()
                     _isTracking.value = true
                     _activeSessionId.value = sessionId
                 } else {
@@ -146,6 +144,20 @@ class SleepTrackingService : Service() {
     private fun hasMicPermission(): Boolean =
         checkSelfPermission(Manifest.permission.RECORD_AUDIO) ==
             PackageManager.PERMISSION_GRANTED
+
+    /**
+     * Starts the DSP session, then the capture loop. The native calls block,
+     * so they run on [Dispatchers.Default] and not on the main thread (ANR, issue #7).
+     */
+    private fun startDspAndCapture() {
+        startupJob = scope.launch(Dispatchers.Default) {
+            // Full DSP session reset; record wall time for event offset conversion
+            dsp.startSession()
+            applyAudioSettings()
+            dspStartWallMs = System.currentTimeMillis()
+            startCapture()
+        }
+    }
 
     /**
      * D-3: apply the audio settings to the live pipeline. The snore toggle

@@ -8,11 +8,13 @@ import io.github.ntufar.deltasleep.audio.AudioCapture
 import io.github.ntufar.deltasleep.audio.DspBridge
 import io.github.ntufar.deltasleep.service.SleepTrackingService
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 
 /**
@@ -72,22 +74,25 @@ class ApneaSetupViewModel(app: Application) : AndroidViewModel(app) {
             _testState.value = TestState.RUNNING
             _breathingMarginDb.value = 0f
 
-            val dsp = DspBridge()
-            val capture = AudioCapture()
-
             try {
-                dsp.startSession()
-                // Collect 1000 frames (10 s at 10 ms/frame), updating the margin live.
-                // withTimeoutOrNull caps the test if audio stalls.
-                withTimeoutOrNull(12_000L) {
-                    capture.frames()
-                        .take(1000)
-                        .collect { frame ->
-                            val result = dsp.processFrame(frame)
-                            if (result.size > 4) {
-                                _breathingMarginDb.value = result[4]
+                // Native DSP calls block the caller. Run them off the main thread
+                // so touch input stays responsive (ANR, see issue #7).
+                withContext(Dispatchers.Default) {
+                    val dsp = DspBridge()
+                    val capture = AudioCapture()
+                    dsp.startSession()
+                    // Collect 1000 frames (10 s at 10 ms/frame), updating the margin live.
+                    // withTimeoutOrNull caps the test if audio stalls.
+                    withTimeoutOrNull(12_000L) {
+                        capture.frames()
+                            .take(1000)
+                            .collect { frame ->
+                                val result = dsp.processFrame(frame)
+                                if (result.size > 4) {
+                                    _breathingMarginDb.value = result[4]
+                                }
                             }
-                        }
+                    }
                 }
             } catch (_: CancellationException) {
                 // ViewModel scope cancelled — no action needed.
