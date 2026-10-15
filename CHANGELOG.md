@@ -5,6 +5,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — Versioning:
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-10-15
+
+### Fixed
+- ANR ("Input dispatching timed out") on Android 13: native DSP calls ran on the main thread. The apnea sound-level test and the tracking service now run DSP calls on a background thread, so touch input stays responsive. The service also waits for the DSP start before it stops capture; see issue #7
+
 ### Changed
 - Relicensed from GPLv3 to MIT to allow distribution through the Apple App Store (planned iOS port); added the missing `LICENSE` file
 
