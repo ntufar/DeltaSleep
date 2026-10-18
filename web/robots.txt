@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://ntufar.github.io/DeltaSleep/sitemap.xml
