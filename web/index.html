@@ -4,176 +4,243 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="DeltaSleep is a free, open-source sleep and snore tracker. It runs 100% offline and has no INTERNET permission." />
-  <title>DeltaSleep — Sleep unplugged</title>
+  <meta name="theme-color" content="#050b18" />
+  <title>DeltaSleep — Private sleep tracking</title>
   <link rel="canonical" href="https://ntufar.github.io/DeltaSleep/" />
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="alternate icon" type="image/png" href="favicon-32.png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-  <link rel="preload" href="fonts/erode-500.woff2" as="font" type="font/woff2" crossorigin />
   <meta property="og:url" content="https://ntufar.github.io/DeltaSleep/" />
   <meta property="og:image" content="https://ntufar.github.io/DeltaSleep/icon-512.png" />
-  <meta property="og:title" content="DeltaSleep — Sleep unplugged" />
+  <meta property="og:title" content="DeltaSleep — Private sleep tracking" />
   <meta property="og:description" content="Free, open-source sleep phase and snore tracking. 100% offline." />
   <link rel="stylesheet" href="site.css" />
   <script>document.documentElement.classList.add("js");</script>
 </head>
 <body>
 
-<header class="header" data-on="stone">
-  <a class="wordmark" href="#top">DeltaSleep</a>
-  <nav aria-label="Main">
-    <a href="#features">What it does</a>
-    <a href="#try">Try to connect</a>
-    <a href="manual.html">Manual</a>
-    <a href="privacy.html">Privacy</a>
-    <a class="btn" href="#get">Get the app</a>
-  </nav>
+<header class="header">
+  <div class="wrap header-in">
+    <a class="wordmark" href="#top"><img src="favicon.svg" alt="" width="30" height="30" />DeltaSleep</a>
+    <nav aria-label="Main">
+      <a href="#features">Features</a>
+      <a href="#privacy">Privacy</a>
+      <a href="manual.html">Manual</a>
+      <a class="btn btn-sm" href="#get">Get the app</a>
+    </nav>
+  </div>
 </header>
 
 <main id="top">
 
-  <!-- Hero: two fields, one headline across the seam -->
-  <section class="hero" data-chapter="stone" aria-label="DeltaSleep">
-    <div class="field-top"></div>
-    <h1>Sleep<br />unplugged.</h1>
-    <p class="hero-lede">A free, open-source sleep and snore tracker. It has no INTERNET permission, so it cannot send a single byte.</p>
-  </section>
-
-  <!-- Intro -->
-  <section class="chapter chapter-stone intro" data-chapter="stone" aria-label="What DeltaSleep is">
-    <p data-reveal>
-      DeltaSleep scores your night
-      <span class="thumb"><img src="img/02-session.jpg" alt="A hypnogram of one night" style="object-position:50% 50%" /></span>
-      on the phone, then deletes the audio. Nights
-      <span class="thumb"><img src="img/01-home.jpg" alt="A calendar of recorded nights" style="object-position:50% 52%" /></span>
-      and trends
-      <span class="thumb"><img src="img/03-trends.jpg" alt="A bar chart of sleep this week" style="object-position:50% 20%" /></span>
-      stay in one private file.
-    </p>
-  </section>
-
-  <!-- Features -->
-  <section id="features" class="chapter chapter-blue on-blue" data-chapter="blue" aria-label="What it does">
-    <div class="features-head"><h2 data-reveal>What the phone works out overnight</h2></div>
-    <div class="rows">
-      <article class="row">
-        <div class="row-text">
-          <h3 data-reveal>Sleep stages</h3>
-          <p data-reveal>Awake, light, deep and estimated REM, every 30 seconds. The phone uses movement and breathing sounds. You do not need a wearable.</p>
+  <section class="hero" aria-label="DeltaSleep">
+    <div class="wrap hero-in">
+      <div>
+        <span class="badge"><i></i>Free and open source · MIT licence</span>
+        <h1>Sleep tracking that <em>never leaves</em> your phone.</h1>
+        <p class="hero-lede">DeltaSleep scores your sleep stages and detects snoring on the device. It has no INTERNET permission, so it cannot send your data anywhere.</p>
+        <div class="hero-actions">
+          <a class="btn btn-lg" href="https://play.google.com/store/apps/details?id=io.github.ntufar.deltasleep&amp;pcampaignid=web_share">Get it on Google Play</a>
+          <a class="btn btn-lg btn-ghost on-dark" href="https://github.com/ntufar/DeltaSleep">View source on GitHub</a>
         </div>
-        <figure data-reveal><img src="img/02-session.jpg" alt="Hypnogram with awake, light, REM and deep stages" style="object-position:50% 50%" /></figure>
-      </article>
-      <article class="row">
-        <div class="row-text">
-          <h3 data-reveal>Snore detection</h3>
-          <p data-reveal>The app measures band power from 20 to 300 Hz. It marks each snore event with an intensity from 1 to 5. It saves no audio clip.</p>
-        </div>
-        <figure data-reveal><img src="img/03-trends.jpg" alt="Snore share for each weekday" style="object-position:50% 78%" /></figure>
-      </article>
-      <article class="row">
-        <div class="row-text">
-          <h3 data-reveal>Apnea screening</h3>
-          <p data-reveal>A breathing-pause report you can show to a doctor. It is a screening aid, not a medical device, and it does not diagnose.</p>
-        </div>
-        <figure data-reveal><img src="img/04-report.jpg" alt="Apnea risk report with a 30 night trend" style="object-position:50% 36%" /></figure>
-      </article>
-      <article class="row">
-        <div class="row-text">
-          <h3 data-reveal>Trends</h3>
-          <p data-reveal>See sleep time, deep sleep and snore share over 7, 30 and 90 nights. Export every epoch as CSV to a folder you choose.</p>
-        </div>
-        <figure data-reveal><img src="img/03-trends.jpg" alt="Sleep this week bar chart" style="object-position:50% 30%" /></figure>
-      </article>
-      <article class="row">
-        <div class="row-text">
-          <h3 data-reveal>Quiet on battery and music</h3>
-          <p data-reveal>The target is 3% battery for an 8 hour night. Spotify, Audible and podcasts keep playing, because the app mixes with other audio.</p>
-        </div>
-        <figure data-reveal><img src="img/01-home.jpg" alt="Home screen with the Start Sleep button" style="object-position:50% 22%" /></figure>
-      </article>
+        <ul class="hero-meta">
+          <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 10.5 4 4 8-9"/></svg>No account</li>
+          <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 10.5 4 4 8-9"/></svg>No ads or tracking</li>
+          <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 10.5 4 4 8-9"/></svg>Android and iPhone</li>
+        </ul>
+      </div>
+      <div class="hero-art">
+        <div class="phone"><img src="img/02-session.jpg" width="460" height="1000" alt="A hypnogram of one night with awake, light, REM and deep stages" /></div>
+        <div class="phone" aria-hidden="true"><img src="img/03-trends.jpg" width="460" height="1000" alt="" /></div>
+      </div>
     </div>
   </section>
 
-  <!-- How it works -->
-  <section class="chapter chapter-stone" data-chapter="stone" aria-label="How it works">
-    <ol class="steps">
-      <li data-reveal>
-        <h3>You tap Sleep.</h3>
-        <p>The microphone calibrates to the room noise. There is no account and no prompt to sign in.</p>
-      </li>
-      <li data-reveal>
-        <h3>A Rust core listens.</h3>
-        <p>It reads 10 ms frames and measures level, zero crossings and low-band power.</p>
-      </li>
-      <li data-reveal>
-        <h3>The audio is gone.</h3>
-        <p>Every 30 seconds the app writes one label to local SQLite. It discards the raw sound at once.</p>
-      </li>
-      <li data-reveal>
-        <h3>You wake to a chart.</h3>
-        <p>Tap Stop. The hypnogram appears with no sync and no spinner, because there is no server.</p>
-      </li>
-    </ol>
-  </section>
-
-  <!-- Live thing -->
-  <section id="try" class="chapter chapter-surface try" data-chapter="surface" aria-label="Try to connect">
-    <p class="try-lead soft" data-reveal>Type any server. Ask DeltaSleep to send your night there.</p>
-    <label class="visually-hidden" for="dest">Server address</label>
-    <input id="dest" class="try-input" data-ui type="text" value="cloud.sleepdata.com" autocomplete="off" spellcheck="false" />
-    <div class="panel" data-ui>
-      <dl>
-        <dt>Destination</dt><dd id="o-dest">cloud.sleepdata.com</dd>
-        <dt>INTERNET permission</dt><dd>Not declared</dd>
-        <dt>Network libraries</dt><dd>0</dd>
-        <dt>Bytes sent</dt><dd>0</dd>
-        <dt>Result</dt><dd id="o-res" class="refused">Refused by Android</dd>
-      </dl>
-    </div>
-    <p class="panel-note soft">Android blocks the connection before it starts. CI also fails the build if <code>http</code>, <code>socket</code> or <code>fetch</code> appears in the source.</p>
-    <div class="examples" aria-label="Examples">
-      <button type="button">analytics.example.com</button>
-      <button type="button">backup.cloud.io</button>
-      <button type="button">192.168.1.20</button>
+  <section class="facts" aria-label="Key facts">
+    <div class="wrap facts-in">
+      <div class="fact"><b>0</b><span>Network permissions</span></div>
+      <div class="fact"><b>0 bytes</b><span>Sent to any server</span></div>
+      <div class="fact"><b>30 s</b><span>Sleep stage resolution</span></div>
+      <div class="fact"><b>≤ 3%</b><span>Battery target per night</span></div>
     </div>
   </section>
 
-  <!-- Open stack -->
-  <section class="chapter chapter-stone" data-chapter="stone" aria-label="Open source">
-    <div class="stack">
-      <h2 data-reveal>Read every line.</h2>
-      <dl data-reveal>
-        <dt>Interface</dt><dd>Kotlin and Jetpack Compose on Android, SwiftUI on iOS</dd>
-        <dt>Signal core</dt><dd>Rust, shared by both apps</dd>
-        <dt>Storage</dt><dd>Room and SQLite in app-private storage</dd>
-        <dt>Minimum</dt><dd>Android 8.0, iOS 17</dd>
-        <dt>Licence</dt><dd>MIT</dd>
-      </dl>
+  <section id="features" class="section" aria-label="Features">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <span class="eyebrow">Features</span>
+        <h2>Everything your night has to tell you</h2>
+        <p>The phone listens to movement and breathing sounds, then writes a short summary and discards the audio.</p>
+      </div>
+      <div class="grid3">
+        <article class="card" data-reveal>
+          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17h4v-5h4V7h4v6h6"/></svg></div>
+          <h3>Sleep stages</h3>
+          <p>Awake, light, deep and estimated REM in 30 second epochs. You do not need a wearable.</p>
+        </article>
+        <article class="card" data-reveal>
+          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h2l2-6 3 12 3-9 2 5 2-2h4"/></svg></div>
+          <h3>Snore detection</h3>
+          <p>Band power from 20 to 300 Hz marks each snore with an intensity from 1 to 5. The app saves no audio clip.</p>
+        </article>
+        <article class="card" data-reveal>
+          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.6-7 10-7 10z"/></svg></div>
+          <h3>Apnea screening</h3>
+          <p>A breathing-pause report to show a doctor. It is a screening aid, not a medical device, and it does not diagnose.</p>
+        </article>
+        <article class="card" data-reveal>
+          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></div>
+          <h3>Trends</h3>
+          <p>Sleep time, deep sleep and snore share over 7, 30 and 90 nights.</p>
+        </article>
+        <article class="card" data-reveal>
+          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 20h16"/></svg></div>
+          <h3>Your data, your folder</h3>
+          <p>Export every epoch as CSV to a folder you choose. Delete everything at any time.</p>
+        </article>
+        <article class="card" data-reveal>
+          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="16" height="9" rx="2"/><path d="M21 11v3M7 12v1"/></svg></div>
+          <h3>Quiet on battery and music</h3>
+          <p>Spotify, Audible and podcasts keep playing, because the app mixes with other audio.</p>
+        </article>
+      </div>
     </div>
   </section>
 
-  <!-- Close -->
-  <section id="get" class="chapter chapter-surface close" data-chapter="surface" aria-label="Get DeltaSleep">
-    <h2 data-reveal>Install it, then unplug.</h2>
-    <div class="close-actions" data-reveal>
-      <a class="btn" href="https://play.google.com/store/apps/details?id=io.github.ntufar.deltasleep&amp;pcampaignid=web_share">Get it on Google Play</a>
-      <a class="btn btn-ink" href="https://github.com/ntufar/DeltaSleep/releases">Download the APK</a>
+  <section class="section section-alt" aria-label="Screenshots">
+    <div class="wrap">
+      <div class="section-head center" data-reveal>
+        <span class="eyebrow">The app</span>
+        <h2>Clear charts, no spinner</h2>
+        <p>Tap Stop and the result is there. There is no sync, because there is no server.</p>
+      </div>
+      <div class="screens">
+        <figure class="screen" data-reveal>
+          <div class="phone"><img src="img/01-home.jpg" width="460" height="1000" loading="lazy" alt="Home screen with the Start Sleep button" /></div>
+          <figcaption><h3>Home</h3><p>One tap starts a night.</p></figcaption>
+        </figure>
+        <figure class="screen" data-reveal>
+          <div class="phone"><img src="img/02-session.jpg" width="460" height="1000" loading="lazy" alt="Hypnogram of one night" /></div>
+          <figcaption><h3>Session</h3><p>Stages and snore events.</p></figcaption>
+        </figure>
+        <figure class="screen" data-reveal>
+          <div class="phone"><img src="img/03-trends.jpg" width="460" height="1000" loading="lazy" alt="Weekly sleep bar chart" /></div>
+          <figcaption><h3>Trends</h3><p>Weeks and months at a glance.</p></figcaption>
+        </figure>
+        <figure class="screen" data-reveal>
+          <div class="phone"><img src="img/04-report.jpg" width="460" height="1000" loading="lazy" alt="Apnea risk report with a 30 night trend" /></div>
+          <figcaption><h3>Report</h3><p>A summary for your doctor.</p></figcaption>
+        </figure>
+      </div>
     </div>
-    <p class="close-note" data-reveal>Free, with no ads and no account. The iOS app is in the repository under <code>ios/</code>.</p>
+  </section>
+
+  <section class="section on-dark" aria-label="How it works">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <span class="eyebrow">How it works</span>
+        <h2>From microphone to chart, on the device</h2>
+      </div>
+      <ol class="flow">
+        <li data-reveal><h3>You tap Sleep</h3><p>The microphone calibrates to the room noise. There is no account and no sign-in.</p></li>
+        <li data-reveal><h3>A Rust core listens</h3><p>It reads 10 ms frames and measures level, zero crossings and low-band power.</p></li>
+        <li data-reveal><h3>The audio is gone</h3><p>Every 30 seconds the app writes one label to local SQLite and discards the raw sound.</p></li>
+        <li data-reveal><h3>You wake to a chart</h3><p>Tap Stop. The hypnogram appears at once.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="privacy" class="section" aria-label="Privacy you can check">
+    <div class="wrap verify">
+      <div class="section-head" data-reveal>
+        <span class="eyebrow">Privacy you can check</span>
+        <h2>Ask it to send your night somewhere</h2>
+        <p>Type any server. Android refuses the connection, because the app does not declare the INTERNET permission.</p>
+        <p class="verify-note">CI also fails the build if <code>http</code>, <code>socket</code> or <code>fetch</code> appears in the source.</p>
+      </div>
+      <div class="console" data-reveal>
+        <div class="console-bar"><i></i><i></i><i></i><span>Connection test</span></div>
+        <div class="console-body">
+          <label for="dest">Server address</label>
+          <input id="dest" class="try-input" type="text" value="cloud.sleepdata.com" autocomplete="off" spellcheck="false" />
+          <dl>
+            <dt>Destination</dt><dd id="o-dest">cloud.sleepdata.com</dd>
+            <dt>INTERNET permission</dt><dd>Not declared</dd>
+            <dt>Network libraries</dt><dd>0</dd>
+            <dt>Bytes sent</dt><dd>0</dd>
+            <dt>Result</dt><dd id="o-res" class="refused">Refused by Android</dd>
+          </dl>
+        </div>
+        <div class="examples" aria-label="Examples">
+          <button type="button">analytics.example.com</button>
+          <button type="button">backup.cloud.io</button>
+          <button type="button">192.168.1.20</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-alt" aria-label="Open source">
+    <div class="wrap stack">
+      <div class="section-head" data-reveal>
+        <span class="eyebrow">Open source</span>
+        <h2>Read every line</h2>
+        <p>The full source is on GitHub under the MIT licence. Build it yourself and compare.</p>
+      </div>
+      <div class="spec" data-reveal>
+        <dl>
+          <dt>Interface</dt><dd>Kotlin and Jetpack Compose on Android, SwiftUI on iOS</dd>
+          <dt>Signal core</dt><dd>Rust, shared by both apps</dd>
+          <dt>Storage</dt><dd>Room and SQLite in app-private storage</dd>
+          <dt>Minimum</dt><dd>Android 8.0, iOS 17</dd>
+          <dt>Licence</dt><dd>MIT</dd>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <section id="get" class="section cta on-dark" aria-label="Get DeltaSleep">
+    <div class="wrap">
+      <h2 data-reveal>Install it, then unplug.</h2>
+      <p data-reveal>Free, with no ads and no account.</p>
+      <div class="cta-actions" data-reveal>
+        <a class="btn btn-lg btn-light" href="https://play.google.com/store/apps/details?id=io.github.ntufar.deltasleep&amp;pcampaignid=web_share">Get it on Google Play</a>
+        <a class="btn btn-lg btn-ghost" href="https://github.com/ntufar/DeltaSleep/releases">Download the APK</a>
+      </div>
+      <p class="cta-note" data-reveal>The iOS app is in the repository under <code>ios/</code>.</p>
+    </div>
   </section>
 
 </main>
 
-<footer class="footer on-blue" data-chapter="blue">
-  <div class="footer-top">
-    <p>DeltaSleep. A free sleep and snore tracker that stays on your phone.</p>
-    <a class="up" href="#top">Back to top</a>
-  </div>
-  <a class="footer-link" href="https://github.com/ntufar/DeltaSleep">github.com/<br />ntufar/DeltaSleep</a>
-  <div class="footer-meta">
-    <span><a href="manual.html">Manual</a> · <a href="privacy.html">Privacy</a> · <a href="https://github.com/ntufar/DeltaSleep/issues">Issues</a></span>
-    <span>Built with Rust and Kotlin. Zero network calls.</span>
-    <span>MIT licence · 2026</span>
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <a class="wordmark" href="#top"><img src="favicon.svg" alt="" width="30" height="30" />DeltaSleep</a>
+        <p>A free sleep and snore tracker that stays on your phone.</p>
+      </div>
+      <div>
+        <h4>Product</h4>
+        <ul>
+          <li><a href="#features">Features</a></li>
+          <li><a href="manual.html">Manual</a></li>
+          <li><a href="privacy.html">Privacy policy</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Project</h4>
+        <ul>
+          <li><a href="https://github.com/ntufar/DeltaSleep">GitHub</a></li>
+          <li><a href="https://github.com/ntufar/DeltaSleep/releases">Releases</a></li>
+          <li><a href="https://github.com/ntufar/DeltaSleep/issues">Issues</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-base">
+      <span>MIT licence · 2026</span>
+      <span>Built with Rust and Kotlin. Zero network calls.</span>
+    </div>
   </div>
 </footer>
 
