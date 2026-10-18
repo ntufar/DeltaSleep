@@ -8,237 +8,28 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="alternate icon" type="image/png" href="favicon-32.png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-  <style>
-    :root {
-      --bg:       #0a0e1a;
-      --surface:  #12192b;
-      --border:   #1e2d4a;
-      --primary:  #42a5f5;
-      --deep:     #1565c0;
-      --awake:    #e53935;
-      --rem:      #ab47bc;
-      --text:     #e0e8ff;
-      --muted:    #7a8fb5;
-      --radius:   12px;
-    }
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.7;
-    }
-
-    a { color: var(--primary); text-decoration: none; }
-    a:hover { text-decoration: underline; }
-
-    .container { max-width: 900px; margin: 0 auto; padding: 0 24px; }
-
-    /* ── Nav ── */
-    nav {
-      position: sticky; top: 0; z-index: 10;
-      background: rgba(10, 14, 26, 0.88);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--border);
-    }
-    nav .inner {
-      max-width: 900px; margin: 0 auto; padding: 0 24px;
-      display: flex; align-items: center; justify-content: space-between;
-      height: 56px;
-    }
-    nav .logo { font-weight: 700; font-size: 1.1rem; color: var(--text); letter-spacing: -.5px; display: flex; align-items: center; gap: 8px; }
-    nav .logo img { width: 28px; height: 28px; border-radius: 6px; }
-    nav .logo span { color: var(--primary); }
-    nav ul { list-style: none; display: flex; gap: 28px; }
-    nav ul a { color: var(--muted); font-size: 0.9rem; }
-    nav ul a:hover { color: var(--text); text-decoration: none; }
-
-    /* ── Page header ── */
-    .page-header {
-      padding: 64px 0 48px;
-      border-bottom: 1px solid var(--border);
-    }
-    .page-header .eyebrow {
-      display: inline-block;
-      font-size: 0.75rem; font-weight: 600; letter-spacing: 1.5px;
-      text-transform: uppercase; color: var(--primary);
-      background: rgba(66, 165, 245, 0.12);
-      border: 1px solid rgba(66, 165, 245, 0.25);
-      border-radius: 99px; padding: 4px 14px; margin-bottom: 20px;
-    }
-    .page-header h1 { font-size: clamp(1.8rem, 5vw, 2.8rem); font-weight: 800; letter-spacing: -1px; margin-bottom: 12px; }
-    .page-header p { color: var(--muted); font-size: 1.05rem; max-width: 560px; }
-
-    /* ── Two-column layout ── */
-    .layout {
-      display: grid;
-      grid-template-columns: 220px 1fr;
-      gap: 48px;
-      padding: 48px 0 96px;
-      align-items: start;
-    }
-    @media (max-width: 720px) {
-      .layout { grid-template-columns: 1fr; }
-      .sidebar { display: none; }
-    }
-
-    /* ── Sidebar TOC ── */
-    .sidebar {
-      position: sticky; top: 72px;
-    }
-    .sidebar nav ul { flex-direction: column; gap: 0; }
-    .sidebar nav ul li { border-left: 2px solid var(--border); }
-    .sidebar nav ul li a {
-      display: block; padding: 6px 14px;
-      color: var(--muted); font-size: 0.88rem;
-      transition: color .15s, border-color .15s;
-    }
-    .sidebar nav ul li a:hover { color: var(--text); text-decoration: none; }
-    .sidebar nav ul li.section-header > a { font-weight: 600; color: var(--text); font-size: 0.82rem; text-transform: uppercase; letter-spacing: .8px; margin-top: 16px; }
-    .sidebar nav ul li.section-header:first-child > a { margin-top: 0; }
-
-    /* ── Article ── */
-    article section { padding: 0 0 56px; }
-    article section:last-child { padding-bottom: 0; }
-
-    h2 {
-      font-size: 1.5rem; font-weight: 800; letter-spacing: -.5px;
-      margin-bottom: 16px;
-      padding-top: 8px;
-      display: flex; align-items: center; gap: 10px;
-    }
-    h2 .anchor { color: var(--muted); font-size: 1rem; font-weight: 400; }
-
-    h3 {
-      font-size: 1.1rem; font-weight: 700;
-      margin-top: 28px; margin-bottom: 10px;
-      color: var(--text);
-    }
-
-    p { color: var(--muted); margin-bottom: 14px; }
-    p:last-child { margin-bottom: 0; }
-
-    strong { color: var(--text); font-weight: 600; }
-
-    ul, ol { color: var(--muted); padding-left: 20px; margin-bottom: 14px; }
-    li { margin-bottom: 6px; }
-    li strong { color: var(--text); }
-
-    /* ── Callout boxes ── */
-    .callout {
-      border-radius: var(--radius); padding: 16px 20px;
-      margin: 20px 0; font-size: 0.92rem;
-    }
-    .callout-info { background: rgba(66,165,245,.08); border: 1px solid rgba(66,165,245,.2); }
-    .callout-tip  { background: rgba(0,230,118,.08);  border: 1px solid rgba(0,230,118,.2); }
-    .callout-warn { background: rgba(229,57,53,.08);  border: 1px solid rgba(229,57,53,.25); }
-    .callout-label { font-weight: 700; font-size: 0.78rem; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
-    .callout-info  .callout-label { color: var(--primary); }
-    .callout-tip   .callout-label { color: #00e676; }
-    .callout-warn  .callout-label { color: var(--awake); }
-
-    /* ── Screen mock ── */
-    .screen-mock {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 20px;
-      margin: 20px 0;
-      font-size: 0.88rem;
-    }
-    .screen-mock .screen-title { font-weight: 700; color: var(--text); margin-bottom: 12px; font-size: 0.95rem; }
-    .screen-mock .row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
-    .screen-mock .row:last-child { border-bottom: none; }
-    .screen-mock .label { color: var(--muted); }
-    .screen-mock .value { color: var(--text); font-weight: 600; }
-
-    /* ── Color legend ── */
-    .phase-legend { display: flex; gap: 18px; flex-wrap: wrap; margin: 12px 0; }
-    .phase-item { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: var(--muted); }
-    .phase-dot { width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0; }
-
-    /* ── Step list ── */
-    .steps { list-style: none; padding: 0; counter-reset: step; }
-    .steps li { counter-increment: step; padding: 10px 0 10px 48px; position: relative; border-bottom: 1px solid var(--border); color: var(--muted); }
-    .steps li:last-child { border-bottom: none; }
-    .steps li::before {
-      content: counter(step);
-      position: absolute; left: 0; top: 10px;
-      width: 28px; height: 28px; border-radius: 50%;
-      background: rgba(66,165,245,.15); border: 1px solid rgba(66,165,245,.3);
-      color: var(--primary); font-weight: 700; font-size: 0.85rem;
-      display: flex; align-items: center; justify-content: center;
-    }
-
-    /* ── Permission badge ── */
-    .perm-badge {
-      display: inline-block;
-      font-family: ui-monospace, "Cascadia Code", monospace;
-      font-size: 0.78rem;
-      background: rgba(229,57,53,.1); border: 1px solid rgba(229,57,53,.3);
-      color: #ef9a9a; border-radius: 4px; padding: 2px 7px;
-    }
-
-    .code-pill {
-      font-family: ui-monospace, "Cascadia Code", monospace;
-      font-size: 0.78rem;
-      background: rgba(66,165,245,.1); border: 1px solid rgba(66,165,245,.2);
-      color: var(--primary); border-radius: 4px; padding: 2px 6px;
-    }
-
-    /* ── Stat cards ── */
-    .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 16px 0; }
-    @media (max-width: 500px) { .stat-row { grid-template-columns: 1fr; } }
-    .stat-card {
-      background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
-      padding: 16px; text-align: center;
-    }
-    .stat-card .sv { font-size: 1.4rem; font-weight: 800; color: var(--text); }
-    .stat-card .sl { font-size: 0.8rem; color: var(--muted); margin-top: 4px; }
-
-    /* ── FAQ ── */
-    .faq-item { border-bottom: 1px solid var(--border); padding: 16px 0; }
-    .faq-item:last-child { border-bottom: none; }
-    .faq-q { font-weight: 700; color: var(--text); margin-bottom: 8px; }
-    .faq-a { color: var(--muted); font-size: 0.92rem; }
-
-    /* ── Footer ── */
-    footer {
-      border-top: 1px solid var(--border); padding: 32px 0;
-      text-align: center; color: var(--muted); font-size: 0.85rem;
-    }
-    footer a { color: var(--muted); }
-    footer a:hover { color: var(--text); }
-  </style>
+  <link rel="preload" href="fonts/erode-500.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="site.css" />
+  <link rel="stylesheet" href="docs.css" />
+  <script>document.documentElement.classList.add("js");</script>
 </head>
 <body>
+<header class="header" data-on="stone">
+  <a class="wordmark" href="index.html">DeltaSleep</a>
+  <nav aria-label="Main">
+    <a href="index.html#features">What it does</a>
+    <a href="manual.html" aria-current="page">Manual</a>
+    <a href="privacy.html">Privacy</a>
+    <a class="btn" href="index.html#get">Get the app</a>
+  </nav>
+</header>
 
-<!-- Nav -->
-<nav>
-  <div class="inner">
-    <a href="index.html" class="logo"><img src="favicon.svg" alt="" aria-hidden="true" />Delta<span>Sleep</span></a>
-    <ul>
-      <li><a href="index.html#features">Features</a></li>
-      <li><a href="manual.html" style="color:var(--text)">Manual</a></li>
-      <li><a href="privacy.html">Privacy</a></li>
-      <li><a href="https://github.com/ntufar/DeltaSleep">GitHub</a></li>
-    </ul>
-  </div>
-</nav>
-
-<!-- Page header -->
-<div class="page-header">
-  <div class="container">
-    <div class="eyebrow">Usage Manual · v0.1</div>
-    <h1>DeltaSleep User Guide</h1>
-    <p>Everything you need to know to track, review, and export your sleep — all processed on your phone, never sent anywhere.</p>
-  </div>
+<main>
+<div class="doc-head">
+  <h1>User guide</h1>
+  <p>Track, review and export your sleep. Everything runs on your phone and nothing is sent anywhere.</p>
 </div>
-
-<div class="container">
-  <div class="layout">
+<div class="doc-body"><div class="layout">
 
     <!-- Sidebar TOC -->
     <aside class="sidebar">
@@ -269,12 +60,13 @@
     </aside>
 
     <!-- Article -->
-    <article>
+    <article class="prose">
 
       <!-- ── Getting Started ── -->
       <section id="getting-started">
-        <h2>Getting started</h2>
+        <h2 data-reveal>Getting started</h2>
 
+        <figure class="shot" data-reveal><img src="img/01-home.jpg" alt="Home screen with the Start Sleep button" /></figure>
         <h3 id="install">Install &amp; first launch</h3>
         <p>DeltaSleep is distributed as a standard Android APK. No Play Store account or Google Services are required.</p>
         <ol class="steps">
@@ -295,15 +87,15 @@
         <div class="screen-mock">
           <div class="row">
             <span class="label"><span class="perm-badge">RECORD_AUDIO</span></span>
-            <span class="value" style="color:var(--muted);font-weight:400;max-width:55%;text-align:right">Analyzes room sounds to detect sleep phases and snoring. Raw audio is <strong>never</strong> saved to disk.</span>
+            <span class="value">Analyzes room sounds to detect sleep phases and snoring. Raw audio is <strong>never</strong> saved to disk.</span>
           </div>
           <div class="row">
             <span class="label"><span class="perm-badge">FOREGROUND_SERVICE</span></span>
-            <span class="value" style="color:var(--muted);font-weight:400;max-width:55%;text-align:right">Keeps the tracking service alive while the screen is off. Required by Android for long-running background tasks.</span>
+            <span class="value">Keeps the tracking service alive while the screen is off. Required by Android for long-running background tasks.</span>
           </div>
           <div class="row">
             <span class="label"><span class="perm-badge">POST_NOTIFICATIONS</span></span>
-            <span class="value" style="color:var(--muted);font-weight:400;max-width:55%;text-align:right">Shows a persistent notification while tracking so you can see it is running and stop it from the notification shade.</span>
+            <span class="value">Shows a persistent notification while tracking so you can see it is running and stop it from the notification shade.</span>
           </div>
         </div>
 
@@ -315,7 +107,7 @@
 
       <!-- ── Tracking ── -->
       <section id="tracking">
-        <h2>Tracking</h2>
+        <h2 data-reveal>Tracking</h2>
 
         <h3 id="start-session">Starting a session</h3>
         <p>Open DeltaSleep and tap <strong>Start Sleep</strong> on the home screen.</p>
@@ -349,18 +141,18 @@
 
         <p>The <strong>Live signal</strong> chart shows three separate signals for the last three minutes. Each is a smoothed line updated roughly every two seconds:</p>
         <ul>
-          <li><strong style="color:#00e676">Audio level</strong> — overall microphone RMS energy. Spikes when you move or speak.</li>
-          <li><strong style="color:#40c4ff">Sound texture</strong> — zero-crossing rate. High values indicate high-frequency content (e.g. breathing, rustling).</li>
-          <li><strong style="color:#ffab40">Snore band</strong> — spectral band power in the 20–300 Hz range. Elevated when snore-like sounds are present.</li>
+          <li><strong>Audio level</strong> — overall microphone RMS energy. Spikes when you move or speak.</li>
+          <li><strong>Sound texture</strong> — zero-crossing rate. High values indicate high-frequency content (e.g. breathing, rustling).</li>
+          <li><strong>Snore band</strong> — spectral band power in the 20–300 Hz range. Elevated when snore-like sounds are present.</li>
         </ul>
 
         <p>The <strong>Phase history</strong> chart scrolls automatically to the right edge as new epochs arrive. Each column is one 30-second epoch. A faint pink overlay on a column means a snore event was recorded for that epoch.</p>
 
         <div class="phase-legend">
-          <div class="phase-item"><div class="phase-dot" style="background:#e53935"></div> Awake</div>
-          <div class="phase-item"><div class="phase-dot" style="background:#42a5f5"></div> Light sleep</div>
-          <div class="phase-item"><div class="phase-dot" style="background:#1565c0"></div> Deep sleep</div>
-          <div class="phase-item"><div class="phase-dot" style="background:rgba(255,64,129,.5)"></div> Snore overlay</div>
+          <div class="phase-item"><div class="phase-dot"></div> Awake</div>
+          <div class="phase-item"><div class="phase-dot"></div> Light sleep</div>
+          <div class="phase-item"><div class="phase-dot"></div> Deep sleep</div>
+          <div class="phase-item"><div class="phase-dot"></div> Snore overlay</div>
         </div>
 
         <h3 id="stop-session">Stopping a session</h3>
@@ -375,8 +167,9 @@
 
       <!-- ── Results ── -->
       <section id="results">
-        <h2>Your results</h2>
+        <h2 data-reveal>Your results</h2>
 
+        <figure class="shot" data-reveal><img src="img/02-session.jpg" alt="Session screen with sleep stages and snore intensity" /></figure>
         <h3 id="session-screen">Session screen</h3>
         <p>After stopping, DeltaSleep shows three headline numbers at the top:</p>
 
@@ -395,11 +188,11 @@
         <h3 id="hypnogram">Reading the hypnogram</h3>
         <p>The hypnogram is a horizontal bar chart where the x-axis is clock time and colour represents the detected sleep stage. Time labels are shown below the chart every five minutes.</p>
 
-        <div class="phase-legend" style="margin-bottom:16px">
-          <div class="phase-item"><div class="phase-dot" style="background:#e53935"></div> Awake (red)</div>
-          <div class="phase-item"><div class="phase-dot" style="background:#42a5f5"></div> Light sleep (blue)</div>
-          <div class="phase-item"><div class="phase-dot" style="background:#1565c0"></div> Deep sleep (dark blue)</div>
-          <div class="phase-item"><div class="phase-dot" style="background:rgba(255,64,129,.7)"></div> Snore (pink overlay)</div>
+        <div class="phase-legend">
+          <div class="phase-item"><div class="phase-dot"></div> Awake (red)</div>
+          <div class="phase-item"><div class="phase-dot"></div> Light sleep (blue)</div>
+          <div class="phase-item"><div class="phase-dot"></div> Deep sleep (dark blue)</div>
+          <div class="phase-item"><div class="phase-dot"></div> Snore (pink overlay)</div>
         </div>
 
         <p>The chart scrolls horizontally for long sessions. Pinch-to-zoom is not yet supported — pan by swiping left and right.</p>
@@ -409,6 +202,7 @@
           Version 0.1 uses movement and audio heuristics — not a wearable or EEG. The algorithm analyses RMS energy, zero-crossing rate, and spectral band power to infer whether you are awake, in light sleep, or in deep sleep. REM detection is planned for v0.2.
         </div>
 
+        <figure class="shot" data-reveal><img src="img/03-trends.jpg" alt="Trends screen with weekly sleep bars" /></figure>
         <h3 id="stats">Sleep stats</h3>
         <p>The three stat cards are computed entirely on-device from the epoch data stored in the local SQLite database. No server calculation, no sync required.</p>
 
@@ -418,7 +212,7 @@
 
       <!-- ── Data & Export ── -->
       <section id="data">
-        <h2>Data &amp; export</h2>
+        <h2 data-reveal>Data &amp; export</h2>
 
         <h3 id="export-csv">Export CSV</h3>
         <p>Tap <strong>Export CSV</strong> on the session screen. Android's system file picker opens, letting you choose any folder — Downloads, a USB drive, a cloud folder you have mounted locally — wherever you want the file.</p>
@@ -465,8 +259,9 @@
 
       <!-- ── Tips & Troubleshooting ── -->
       <section id="tips">
-        <h2>Tips &amp; troubleshooting</h2>
+        <h2 data-reveal>Tips &amp; troubleshooting</h2>
 
+        <figure class="shot" data-reveal><img src="img/04-report.jpg" alt="Apnea risk report screen" /></figure>
         <h3 id="placement">Phone placement</h3>
         <p>The microphone is typically located at the bottom edge of the phone. For best results:</p>
         <ul>
@@ -537,22 +332,19 @@
       </section>
 
     </article>
-  </div>
-</div>
-
-<!-- Footer -->
-<footer>
-  <div class="container">
-    <p>
-      <a href="index.html">Home</a> ·
-      <a href="https://github.com/ntufar/DeltaSleep">GitHub</a> ·
-      <a href="https://github.com/ntufar/DeltaSleep/issues">Issues</a> ·
-      <a href="https://github.com/ntufar/DeltaSleep/blob/master/LICENSE">MIT</a> ·
-      <a href="privacy.html">Privacy Policy</a>
-    </p>
-    <p style="margin-top:8px">Built with Rust + Kotlin. Zero network calls.</p>
+  </div></div>
+</main>
+<footer class="footer on-blue">
+  <div class="footer-simple">
+    <a href="index.html">Home</a>
+    <a href="manual.html">Manual</a>
+    <a href="privacy.html">Privacy</a>
+    <a href="https://github.com/ntufar/DeltaSleep">GitHub</a>
+    <a href="https://github.com/ntufar/DeltaSleep/issues">Issues</a>
+    <span>MIT licence · Built with Rust and Kotlin. Zero network calls.</span>
   </div>
 </footer>
 
+<script src="site.js"></script>
 </body>
 </html>
