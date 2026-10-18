@@ -1,5 +1,5 @@
 /* Document pages: manual and privacy. Built on the tokens in site.css. */
-.doc-head { background: radial-gradient(800px 320px at 80% 0%, rgba(37, 99, 235, 0.28), transparent 70%), var(--navy-950); color: var(--on-dark); padding: clamp(48px, 7vw, 88px) 0; }
+.doc-head { background: var(--navy-950); color: var(--on-dark); padding: clamp(48px, 7vw, 88px) 0; }
 .doc-head h1 { font-size: clamp(2.125rem, 1.5rem + 2.6vw, 3.25rem); font-weight: 700; letter-spacing: -0.03em; color: #fff; }
 .doc-head p { margin-top: 14px; max-width: 46em; font-size: 1.125rem; color: var(--on-dark-muted); }
 .doc-body { padding: var(--section) var(--gutter); max-width: calc(var(--wrap) + 2 * var(--gutter)); margin: 0 auto; }
