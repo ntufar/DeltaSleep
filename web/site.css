@@ -135,7 +135,7 @@ h2 { font-size: clamp(1.75rem, 1.2rem + 2vw, 2.5rem); font-weight: 700; }
 .hero h1 { font-size: clamp(2.375rem, 1.5rem + 3.6vw, 4rem); font-weight: 700; letter-spacing: -0.03em; line-height: 1.07; color: #fff; }
 .hero h1 em { font-style: normal; color: inherit; }
 .hero-lede { margin-top: 22px; max-width: 34em; font-size: clamp(1.0625rem, 1rem + 0.3vw, 1.25rem); color: var(--on-dark-muted); }
-.hero-actions { margin-top: 32px; display: flex; flex-wrap: wrap; gap: 12px; }
+.hero-actions { margin-top: 32px; display: flex; flex-wrap: wrap; gap: 12px;  align-items: center; }
 .hero-meta { margin-top: 28px; display: flex; flex-wrap: wrap; gap: 8px 24px; list-style: none; font-size: 0.875rem; color: var(--on-dark-muted); }
 .hero-meta li { display: inline-flex; align-items: center; gap: 8px; }
 .hero-meta svg { width: 16px; height: 16px; color: #4ade80; flex-shrink: 0; }
@@ -261,7 +261,7 @@ h2 { font-size: clamp(1.75rem, 1.2rem + 2vw, 2.5rem); font-weight: 700; }
   .footer-grid > div:first-child { grid-column: 1 / -1; }
 }
 
-.btn .ico { width: 1.2em; height: 1.2em; flex: none; }
+.btn .ico { width: 20px; height: 20px; flex: none; }
 .badge-link { display: inline-flex; align-items: center; }
 .badge-link img { display: block; width: auto; }
 .badge-link:hover { opacity: .85; }
