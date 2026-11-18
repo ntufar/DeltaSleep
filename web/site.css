@@ -260,3 +260,8 @@ h2 { font-size: clamp(1.75rem, 1.2rem + 2vw, 2.5rem); font-weight: 700; }
   .footer-grid { grid-template-columns: 1fr 1fr; }
   .footer-grid > div:first-child { grid-column: 1 / -1; }
 }
+
+.btn .ico { width: 1.2em; height: 1.2em; flex: none; }
+.badge-link { display: inline-flex; align-items: center; }
+.badge-link img { display: block; width: auto; }
+.badge-link:hover { opacity: .85; }
